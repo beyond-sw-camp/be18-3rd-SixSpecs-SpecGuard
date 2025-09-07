@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학력·연구/NCS · 경력사항 (원페이지)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-900">
+  <!-- Title + Steps -->
+  <header class="bg-white shadow-sm">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-4 text-center">
+      <h1 class="text-lg sm:text-xl font-bold">[SIXSPEC] 2025 우수인재 경력 채용 (DATA Intelligence 사업개발 및 제안)</h1>
+    </div>
+    <div class="border-t border-slate-200 bg-white sticky top-0 z-30">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-5 text-sm font-semibold">
+          <div class="col-span-1 p-3 text-center border-b">1 기본정보</div>
+          <div class="col-span-1 p-3 text-center bg-sky-600 text-white rounded-t-md">2 학력/연구/NCS</div>
+          <div class="col-span-1 p-3 text-center border-b">3 어학/자격</div>
+          <div class="col-span-1 p-3 text-center border-b">4 자기소개서/역량기술서</div>
+          <div class="col-span-1 p-3 text-center border-b">5 최종제출</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+    <!-- High school -->
+    <section class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
+      <header class="flex items-center justify-between border-b pb-3">
+        <h2 class="font-bold">고등학교 <span class="text-rose-500 text-xs align-top">* 필수항목</span></h2>
+        <span class="text-xs text-slate-500">로그인 세션 남은시간 <strong class="text-amber-600">11분 15초 / 120분</strong></span>
+      </header>
+
+      <div class="mt-6 space-y-6">
+        <div class="flex flex-wrap gap-2 items-center text-sm">
+          <span class="font-semibold">입학구분</span>
+          <div class="flex flex-wrap gap-2">
+            <button class="px-3 py-1 rounded-md border">졸업</button>
+            <button class="px-3 py-1 rounded-md border">졸업예정</button>
+            <button class="px-3 py-1 rounded-md border">중퇴</button>
+            <button class="px-3 py-1 rounded-md border">휴학</button>
+            <button class="px-3 py-1 rounded-md border">재학</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <label class="col-span-12 sm:col-span-2 font-semibold">*학교명</label>
+          <input class="col-span-12 sm:col-span-4 rounded-md border border-slate-300 px-3 py-2"/>
+          <label class="col-span-12 sm:col-span-2 font-semibold sm:text-right">*학교소재지</label>
+          <select class="col-span-6 sm:col-span-2 rounded-md border border-slate-300 px-3 py-2"><option>시/도</option></select>
+          <select class="col-span-6 sm:col-span-2 rounded-md border border-slate-300 px-3 py-2"><option>구/군</option></select>
+        </div>
+
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <label class="col-span-12 sm:col-span-2 font-semibold">*재학기간</label>
+          <input type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2"/>
+          <span class="col-span-2 text-center">~</span>
+          <input type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2"/>
+          <p class="col-span-12 sm:col-span-4 text-xs text-slate-500">2025.08.01 이전 졸업(예정)만 최종학력으로 인정</p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-3">
+        <button class="rounded-md border px-5 py-2">임시저장</button>
+        <a href="#sec-univ" class="rounded-md bg-sky-600 px-6 py-2 text-white">다음</a>
+      </div>
+    </section>
+
+    <!-- University basic -->
+    <section id="sec-univ" class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
+      <header class="flex items-center justify-between border-b pb-3">
+        <h2 class="font-bold">대학교 <span class="text-rose-500 text-xs align-top">* 필수항목</span></h2>
+        <span class="text-xs text-slate-500">로그인 세션 남은시간 <strong class="text-amber-600">11분 15초 / 120분</strong></span>
+      </header>
+      <div class="mt-6 space-y-6">
+        <div class="flex flex-wrap gap-2 items-center text-sm">
+          <span class="font-semibold">학위구분</span>
+          <div class="flex flex-wrap gap-2">
+            <button class="px-3 py-1 rounded-md border">전문학사</button>
+            <button class="px-3 py-1 rounded-md border">학사</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <label class="col-span-12 sm:col-span-2 font-semibold">*학교명</label>
+          <input class="col-span-12 sm:col-span-4 rounded-md border px-3 py-2"/>
+          <label class="col-span-12 sm:col-span-2 font-semibold sm:text-right">*학교소재지</label>
+          <div class="col-span-12 sm:col-span-4 flex gap-2">
+            <select class="flex-1 rounded-md border px-3 py-2"><option>시/도</option></select>
+            <select class="flex-1 rounded-md border px-3 py-2"><option>구/군</option></select>
+          </div>
+        </div>
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <label class="col-span-12 sm:col-span-2 font-semibold">*재학기간</label>
+          <input type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2"/>
+          <span class="col-span-2 text-center">~</span>
+          <input type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2"/>
+          <p class="col-span-12 sm:col-span-4 text-xs text-slate-500">2025.08.01 이전 졸업(예정)만 최종학력으로 인정</p>
+        </div>
+        <div class="flex flex-wrap gap-2 items-center text-sm">
+          <span class="font-semibold">입학구분</span>
+          <div class="flex flex-wrap gap-2">
+            <button class="px-3 py-1 rounded-md border">일반</button>
+            <button class="px-3 py-1 rounded-md border">편입</button>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2 items-center text-sm">
+          <span class="font-semibold">졸업구분</span>
+          <div class="flex flex-wrap gap-2">
+            <button class="px-3 py-1 rounded-md border">졸업</button>
+            <button class="px-3 py-1 rounded-md border">수료</button>
+            <button class="px-3 py-1 rounded-md border">중퇴</button>
+            <button class="px-3 py-1 rounded-md border">재학</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- University major/grade -->
+    <section class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
+      <header class="border-b pb-3"><h2 class="font-bold">대학교 · 학과/전공 및 성적</h2></header>
+      <div class="mt-6 space-y-6">
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <label class="col-span-12 sm:col-span-2 font-semibold">*학과/전공</label>
+          <div class="col-span-12 sm:col-span-10 flex gap-2">
+            <select class="flex-1 rounded-md border px-3 py-2"><option>학과계열 선택</option></select>
+            <select class="flex-1 rounded-md border px-3 py-2"><option>전공계열 선택</option></select>
+          </div>
+        </div>
+        <div>
+          <div class="flex flex-wrap gap-2 items-center text-sm">
+            <span class="font-semibold">전공</span>
+            <button class="px-3 py-1 rounded-md border">주전공</button>
+            <button class="px-3 py-1 rounded-md border">복수전공</button>
+            <button class="px-3 py-1 rounded-md border">부전공</button>
+            <select class="rounded-md border px-3 py-1 text-sm"><option>전공세부 선택</option></select>
+          </div>
+        </div>
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <label class="col-span-12 sm:col-span-2 font-semibold">*성적</label>
+          <div class="col-span-12 sm:col-span-10 flex gap-2">
+            <select class="rounded-md border px-3 py-2"><option>평점(4.5 등)</option></select>
+            <select class="rounded-md border px-3 py-2"><option>반영학기</option></select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Graduate school -->
+    <section class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
+      <header class="flex items-center justify-between border-b pb-3">
+        <h2 class="font-bold">대학원 <span class="text-rose-500 text-xs align-top">* 필수항목</span></h2>
+        <span class="text-xs text-slate-500">로그인 세션 남은시간 <strong class="text-amber-600">11분 15초 / 120분</strong></span>
+      </header>
+      <div class="mt-6 space-y-6">
+        <div class="flex flex-wrap gap-2 items-center text-sm">
+          <span class="font-semibold">학위구분</span>
+          <button class="px-3 py-1 rounded-md border">석사</button>
+          <button class="px-3 py-1 rounded-md border">박사</button>
+        </div>
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <label class="col-span-12 sm:col-span-2 font-semibold">*학교명</label>
+          <input class="col-span-12 sm:col-span-4 rounded-md border px-3 py-2"/>
+          <label class="col-span-12 sm:col-span-2 font-semibold sm:text-right">*학교소재지</label>
+          <div class="col-span-12 sm:col-span-4 flex gap-2">
+            <select class="flex-1 rounded-md border px-3 py-2"><option>시/도</option></select>
+            <select class="flex-1 rounded-md border px-3 py-2"><option>구/군</option></select>
+          </div>
+        </div>
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <label class="col-span-12 sm:col-span-2 font-semibold">*재학기간</label>
+          <input type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2"/>
+          <span class="col-span-2 text-center">~</span>
+          <input type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2"/>
+          <p class="col-span-12 sm:col-span-4 text-xs text-slate-500">2025.08.01 이전 졸업(예정)만 최종학력으로 인정</p>
+        </div>
+        <div class="flex flex-wrap gap-2 items-center text-sm">
+          <span class="font-semibold">입학구분</span>
+          <button class="px-3 py-1 rounded-md border">일반</button>
+          <button class="px-3 py-1 rounded-md border">편입</button>
+        </div>
+        <div class="flex flex-wrap gap-2 items-center text-sm">
+          <span class="font-semibold">졸업구분</span>
+          <button class="px-3 py-1 rounded-md border">졸업</button>
+          <button class="px-3 py-1 rounded-md border">수료</button>
+          <button class="px-3 py-1 rounded-md border">중퇴</button>
+          <button class="px-3 py-1 rounded-md border">재학</button>
+        </div>
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <label class="col-span-12 sm:col-span-2 font-semibold">*학과/전공</label>
+          <div class="col-span-12 sm:col-span-10 flex gap-2">
+            <select class="flex-1 rounded-md border px-3 py-2"><option>학과계열 선택</option></select>
+            <select class="flex-1 rounded-md border px-3 py-2"><option>전공계열 선택</option></select>
+          </div>
+        </div>
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <label class="col-span-12 sm:col-span-2 font-semibold">*성적</label>
+          <div class="col-span-12 sm:col-span-10 flex gap-2">
+            <select class="rounded-md border px-3 py-2"><option>평점</option></select>
+            <select class="rounded-md border px-3 py-2"><option>반영학기</option></select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Career -->
+    <section class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
+      <header class="flex items-center justify-between border-b pb-3">
+        <h2 class="font-bold">경력사항 <span class="text-rose-500 text-xs align-top">* 필수항목</span></h2>
+        <span class="text-xs text-slate-500">로그인 세션 남은시간 <strong class="text-amber-600">11분 15초 / 120분</strong></span>
+      </header>
+      <div class="mt-6 space-y-6">
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <label class="col-span-12 sm:col-span-2 font-semibold">직장경력</label>
+          <select class="col-span-12 sm:col-span-4 rounded-md border px-3 py-2"><option>고용형태 선택</option></select>
+        </div>
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <label class="col-span-12 sm:col-span-2 font-semibold">*회사명</label>
+          <input class="col-span-12 sm:col-span-10 rounded-md border px-3 py-2" placeholder="회사명을 입력하세요"/>
+        </div>
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <label class="col-span-12 sm:col-span-2 font-semibold">*근무기간</label>
+          <input type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2"/>
+          <span class="col-span-2 text-center">~</span>
+          <input type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2"/>
+        </div>
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <label class="col-span-12 sm:col-span-2 font-semibold">부서</label>
+          <input class="col-span-12 sm:col-span-10 rounded-md border px-3 py-2" />
+        </div>
+        <div class="grid grid-cols-12 gap-3 items-start">
+          <label class="col-span-12 sm:col-span-2 font-semibold">*직급</label>
+          <input class="col-span-12 sm:col-span-4 rounded-md border px-3 py-2" placeholder="직급"/>
+          <label class="col-span-12 sm:col-span-2 font-semibold sm:text-right">담당업무</label>
+          <input class="col-span-12 sm:col-span-4 rounded-md border px-3 py-2" placeholder="담당업무를 입력하세요"/>
+        </div>
+        <div>
+          <label class="block font-semibold mb-2">경험 및 정량기술서</label>
+          <textarea rows="5" class="w-full rounded-md border px-3 py-2" placeholder="성과 중심으로 작성"></textarea>
+          <div class="text-right text-xs text-slate-500">0</div>
+        </div>
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <label class="col-span-12 sm:col-span-2 font-semibold">포트폴리오 첨부</label>
+          <input class="col-span-12 sm:col-span-10 rounded-md border px-3 py-2" placeholder="링크첨부"/>
+        </div>
+        <div class="grid grid-cols-12 gap-3 items-center">
+          <label class="col-span-12 sm:col-span-2 font-semibold">경력기술서 첨부</label>
+          <input class="col-span-12 sm:col-span-10 rounded-md border px-3 py-2" placeholder="링크첨부"/>
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end gap-3">
+        <button class="rounded-md border px-5 py-2">임시저장</button>
+        <button class="rounded-md bg-sky-600 px-6 py-2 text-white">다음</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="sticky bottom-0 bg-white border-t">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-end gap-3">
+      <button class="rounded-md border px-5 py-2">임시저장</button>
+      <button class="rounded-md bg-sky-600 px-6 py-2 text-white">다음</button>
+    </div>
+  </footer>
+</body>
+</html>
