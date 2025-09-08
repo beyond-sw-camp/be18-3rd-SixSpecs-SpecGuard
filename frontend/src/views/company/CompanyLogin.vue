@@ -58,7 +58,7 @@
         <div class="mt-6 grid grid-cols-3 text-center text-sm text-slate-800/90">
             <a href="#" class="hover:underline">아이디 찾기</a>
             <a href="#" class="hover:underline">비밀번호 찾기</a>
-            <a href="#" class="hover:underline">회원 가입</a>
+            <RouterLink to="/company/signup/choice" class="hover:underline">회원 가입</RouterLink>
         </div>
         </div>
     </section>
