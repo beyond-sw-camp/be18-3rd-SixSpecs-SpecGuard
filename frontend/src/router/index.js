@@ -7,6 +7,7 @@ import CompanySignupInfo from '../views/company/CompanySignupInfo.vue'
 import CompanySignupCondition from '@/views/company/CompanySignupCondition.vue'
 
 import ApplicantLogin from '../views/applicant/ApplicantLogin.vue'
+import ApplicantSignup from '../views/applicant/ApplicantSignup.vue'
 
 const routes = [
   { path: '/', component: MainPage },
@@ -16,6 +17,7 @@ const routes = [
   { path: '/company/signup/condition', name: CompanySignupCondition, component: CompanySignupCondition},
 
   { path: '/applicant/login', name: ApplicantLogin, component: ApplicantLogin },
+  { path: '/applicant/signup', name: ApplicantSignup, component: ApplicantSignup },
 ]
 
 

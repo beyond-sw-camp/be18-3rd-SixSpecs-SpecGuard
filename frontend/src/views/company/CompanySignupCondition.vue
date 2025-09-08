@@ -3,8 +3,10 @@
         <!-- Topbar -->
         <header class="bg-slate-800 text-white">
         <div class="mx-auto max-w-6xl h-16 px-6 flex items-center">
-            <span class="text-2xl font-extrabold tracking-tight">SPECGUARD</span>
-            <span class="ml-3 text-[11px] leading-none text-slate-300">이력 검증 시스템</span>
+            <div class="flex items-end gap-3">
+                <span class="text-2xl font-extrabold tracking-tight">SPECGUARD</span>
+                <span class="ml-3 text-[11px] leading-none text-slate-300">이력 검증 시스템</span>
+            </div>
         </div>
         </header>
 

@@ -53,7 +53,7 @@
                     <RouterLink to="/find-id" class="underline underline-offset-2">아이디 찾기</RouterLink>
                     <RouterLink to="/reset-password" class="underline underline-offset-2">비밀번호 찾기</RouterLink>
                 </div>
-                <RouterLink to="/signup" class="underline underline-offset-2">회원 가입</RouterLink>
+                <RouterLink to="/applicant/signup" class="underline underline-offset-2">회원 가입</RouterLink>
                 </div>
             </form>
             </section>
