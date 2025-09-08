@@ -15,19 +15,16 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
     <!-- 기업 회원가입 -->
     <RouterLink
-        to="/company/register"
+        to="/company/signup/info"
         class="block rounded-[28px] bg-amber-400 p-10 shadow-sm ring-1 ring-black/5 hover:brightness-95 transition"
     >
         <div class="mx-auto flex h-56 w-full items-center justify-center">
         <!-- building icon -->
         <svg class="w-40 h-40 text-white" viewBox="0 0 64 64" fill="currentColor" aria-hidden="true">
-            <rect x="10" y="18" width="44" height="34" rx="2"></rect>
-            <rect x="18" y="26" width="6" height="6" fill="#fff"></rect>
-            <rect x="28" y="26" width="6" height="6" fill="#fff"></rect>
-            <rect x="38" y="26" width="6" height="6" fill="#fff"></rect>
-            <rect x="18" y="36" width="6" height="6" fill="#fff"></rect>
-            <rect x="28" y="36" width="6" height="6" fill="#fff"></rect>
-            <rect x="38" y="36" width="6" height="6" fill="#fff"></rect>
+            stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="7" width="12" height="14" rx="2"></rect>
+            <path d="M9 7V4a2 2 0 0 1 2-2h7v19H15"></path>
+            <path d="M6 10h2M10 10h2M6 14h2M10 14h2M6 18h2M10 18h2M16 10h2M16 14h2M16 18h2"></path>
         </svg>
         </div>
         <h3 class="mt-6 text-center text-2xl font-extrabold">기업 회원가입</h3>
@@ -44,8 +41,9 @@
         <div class="mx-auto flex h-56 w-full items-center justify-center">
         <!-- person icon -->
         <svg class="w-40 h-40 text-white" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="6">
-            <circle cx="32" cy="22" r="10" fill="white" stroke="white"></circle>
-            <path d="M12 52c0-8 12-14 20-14s20 6 20 14" stroke="white" stroke-linecap="round"></path>
+            <circle cx="12" cy="8" r="4" fill="#fff"></circle>
+            <path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="#fff"
+            stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         </div>
         <h3 class="mt-6 text-center text-2xl font-extrabold">기업개인 회원가입</h3>
