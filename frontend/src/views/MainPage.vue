@@ -20,7 +20,7 @@
         </div>
         <div class="flex items-center gap-4">
           <!-- 라우팅 사용할 거면 RouterLink로 교체 -->
-          <a href="/company/login" class="hidden sm:inline-block rounded-full px-4 py-2 text-sm font-semibold bg-amber-400 hover:bg-amber-300 transition">무료로 시작하기</a>
+          <RouterLink to="/company/login" class="rounded-xl px-6 py-3 font-semibold bg-amber-400 hover:bg-amber-300">무료로 시작하기</RouterLink>
           <div class="flex items-center gap-4 text-slate-300">
             <button aria-label="알림" class="p-1 hover:text-white">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6 6 0 1 0-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9"/></svg>
@@ -44,7 +44,7 @@
       </h1>
       <p class="mt-6 text-lg text-slate-600">채용 프로세스에 필요한 모든 것을 원하는 대로 자동화할 수 있는 채용 관리 솔루션, SpecGuard</p>
       <div class="mt-8 flex items-center justify-center gap-4">
-        <a href="/company/login" class="rounded-xl px-6 py-3 font-semibold bg-amber-400 hover:bg-amber-300">무료로 시작하기</a>
+        <RouterLink to="/company/login" class="rounded-xl px-6 py-3 font-semibold bg-amber-400 hover:bg-amber-300">무료로 시작하기</RouterLink>
         <a href="/company/join" class="rounded-xl px-6 py-3 font-semibold bg-slate-900 text-white hover:bg-slate-800">멤버십 가입하기</a>
       </div>
     </section>
