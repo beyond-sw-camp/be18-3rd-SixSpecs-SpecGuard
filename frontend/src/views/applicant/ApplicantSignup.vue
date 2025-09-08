@@ -38,34 +38,14 @@
             <div class="grid grid-cols-12 items-center gap-4">
                 <label class="col-span-5 sm:col-span-3 text-slate-700 font-semibold">휴대전화</label>
                 <div class="col-span-7 sm:col-span-9 flex items-center gap-3">
-                <input
-                    v-model.trim="form.phone1"
-                    type="text"
-                    class="w-20 rounded-md border border-slate-300 px-3 py-2 text-center"
-                    maxlength="3"
-                    placeholder="010"
-                />
+                <input v-model.trim="form.phone1" type="text" class="w-20 rounded-md border border-slate-300 px-3 py-2 text-center" maxlength="3" placeholder="010"/>
                 <span>-</span>
-                <input
-                    v-model.trim="form.phone2"
-                    type="text"
-                    class="w-24 rounded-md border border-slate-300 px-3 py-2 text-center"
-                    maxlength="4"
-                    placeholder="1234"
-                />
+                <input v-model.trim="form.phone2" type="text" class="w-24 rounded-md border border-slate-300 px-3 py-2 text-center" maxlength="4" placeholder="1234"/>
                 <span>-</span>
-                <input
-                    v-model.trim="form.phone3"
-                    type="text"
-                    class="w-24 rounded-md border border-slate-300 px-3 py-2 text-center"
-                    maxlength="4"
-                    placeholder="5678"
-                />
+                <input v-model.trim="form.phone3" type="text" class="w-24 rounded-md border border-slate-300 px-3 py-2 text-center" maxlength="4" placeholder="5678"/>
                 </div>
             </div>
-            <p class="mt-2 ml-0 sm:ml-40 text-sm text-slate-500">
-                전형결과와 알림에 사용되오니 반드시 연결가능한 번호로 입력하세요
-            </p>
+            <p class="mt-2 ml-0 sm:ml-40 text-sm text-slate-500">전형결과와 알림에 사용되오니 반드시 연결가능한 번호로 입력하세요</p>
             <div class="mt-3 h-px bg-slate-200"></div>
             </div>
 
@@ -74,21 +54,9 @@
             <div class="grid grid-cols-12 items-start gap-4">
                 <label class="col-span-5 sm:col-span-3 text-slate-700 font-semibold pt-2">이메일</label>
                 <div class="col-span-7 sm:col-span-9 w-full space-y-3">
-                <input
-                    v-model.trim="form.email"
-                    type="email"
-                    placeholder="이메일을 입력해주세요"
-                    class="w-full rounded-md border border-slate-300 px-4 py-2"
-                />
-                <input
-                    v-model.trim="form.email2"
-                    type="email"
-                    placeholder="이메일 확인을 위해 다시 한번 입력해주세요"
-                    class="w-full rounded-md border border-slate-300 px-4 py-2"
-                />
-                <p class="text-sm text-slate-500">
-                    비밀번호 찾기 및 전형결과 알림에 이용되오니 자주 사용하는 메일 주소를 입력해주세요.
-                </p>
+                <input v-model.trim="form.email" type="email" placeholder="이메일을 입력해주세요" class="w-full rounded-md border border-slate-300 px-4 py-2"/>
+                <input v-model.trim="form.email2" type="email" placeholder="이메일 확인을 위해 다시 한번 입력해주세요" class="w-full rounded-md border border-slate-300 px-4 py-2"/>
+                <p class="text-sm text-slate-500">비밀번호 찾기 및 전형결과 알림에 이용되오니 자주 사용하는 메일 주소를 입력해주세요.</p>
                 </div>
             </div>
             <div class="mt-3 h-px bg-slate-200"></div>
@@ -99,21 +67,9 @@
             <div class="grid grid-cols-12 items-start gap-4">
                 <label class="col-span-5 sm:col-span-3 text-slate-700 font-semibold pt-2">비밀번호</label>
                 <div class="col-span-7 sm:col-span-9 w-full space-y-3">
-                <input
-                    v-model.trim="form.password"
-                    type="password"
-                    placeholder="비밀번호를 입력해주세요"
-                    class="w-full rounded-md border border-slate-300 px-4 py-2"
-                />
-                <input
-                    v-model.trim="form.password2"
-                    type="password"
-                    placeholder="비밀번호 확인을 위해 다시 한번 입력해주세요"
-                    class="w-full rounded-md border border-slate-300 px-4 py-2"
-                />
-                <p class="text-sm text-slate-500">
-                    8~9자 영문 대문자/소문자/특수문자/숫자 중 3종류, 혹은 10자 이상의 영문/숫자/특수문자 중 2종류를 사용하세요
-                </p>
+                <input v-model.trim="form.password" type="password" placeholder="비밀번호를 입력해주세요" class="w-full rounded-md border border-slate-300 px-4 py-2"/>
+                <input v-model.trim="form.password2" type="password" placeholder="비밀번호 확인을 위해 다시 한번 입력해주세요" class="w-full rounded-md border border-slate-300 px-4 py-2"/>
+                <p class="text-sm text-slate-500">8~9자 영문 대문자/소문자/특수문자/숫자 중 3종류, 혹은 10자 이상의 영문/숫자/특수문자 중 2종류를 사용하세요</p>
                 </div>
             </div>
             <div class="mt-3 h-px bg-slate-200"></div>
@@ -138,23 +94,14 @@
 
             <!-- Action buttons -->
             <div class="flex justify-end gap-3 pt-2">
-            <button type="button" class="rounded-md border border-slate-300 px-5 py-2" @click="onCancel">
-                취소
-            </button>
-            <button type="submit" class="rounded-md bg-amber-500 px-6 py-2 text-white font-semibold">
-                가입하기
-            </button>
+            <button type="button" class="rounded-md border border-slate-300 px-5 py-2" @click="onCancel">취소</button>
+            <button type="submit" class="rounded-md bg-amber-500 px-6 py-2 text-white font-semibold">가입하기</button>
             </div>
         </form>
         </main>
 
-        <!-- Phone Verify Modal -->
-        <div
-        v-if="showPhoneModal"
-        class="fixed inset-0 z-50 flex items-center justify-center"
-        @keydown.esc="closePhoneModal"
-        tabindex="0"
-        >
+        <!-- Verify Modal (iframe 방식) -->
+        <div v-if="showPhoneModal" class="fixed inset-0 z-50 flex items-center justify-center" tabindex="0">
         <div class="absolute inset-0 bg-black/50" @click="closePhoneModal"></div>
         <div class="relative w-[960px] max-w-[96vw]">
             <div class="rounded-2xl bg-white shadow-2xl overflow-hidden">
@@ -189,7 +136,7 @@
     const phoneFrameSrc = ref('')
 
     function openPhoneModal() {
-    phoneFrameSrc.value = 'phoneVerification.html' // 필요 시 라우트로 교체: '/verify/phone'
+    phoneFrameSrc.value = '/applicant/verify'
     showPhoneModal.value = true
     document.body.classList.add('overflow-hidden')
     }
@@ -207,7 +154,6 @@
 
     function onSubmit() {
     // TODO: 회원가입 API 연동
-    // 예: await api.post('/api/v1/auth/signup', payload)
     }
 
     function handleEsc(e) {
