@@ -19,15 +19,6 @@
                 @click="handleTabClick(tab.to)">
                 {{ tab.label }}
             </button>
-            <!-- <RouterLink
-            v-for="tab in tabs"
-            :key="tab.to"
-            :to="tab.to"
-            class="col-span-1 p-3 text-center border-b-4 hover:bg-slate-100"
-            :class="isActive(tab.to) ? 'border-sky-600 text-sky-600 font-bold' : 'border-transparent'"
-            >
-            {{ tab.label }}
-            </RouterLink> -->
         </nav>
         </header>
 
@@ -74,7 +65,10 @@
 
             <!-- 성별 / 국적 -->
             <div class="grid grid-cols-12 gap-4 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold"> 성별</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">성별</span>
+                </label>
                 <div class="col-span-12 sm:col-span-4 flex gap-4">
                 <label class="inline-flex items-center gap-2">
                     <input type="radio" value="M" v-model="form.gender" /> 남
@@ -280,10 +274,10 @@
         alert('지원분야를 선택해주세요.')
         return false
     }
-    // if (!form.value.) {
-    //     alert('사진을 첨부해주세요.')
-    //     return false
-    // }
+    if (!fileInput.value?.files?.length) {
+        alert('사진을 첨부해주세요.'); 
+        return false 
+    }
     if (!form.value.address) {
         alert('주소를 입력해주세요.')
         return false
