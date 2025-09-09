@@ -171,7 +171,7 @@
     const tabs = [
     { label: '1 기본정보', to: '/resume/basic-info' },
     { label: '2 학력/연구/NCS', to: '/resume/academic-info' },
-    { label: '3 어학/자격', to: '/resume/language-certificate' },
+    { label: '3 어학/자격', to: '/resume/certificate-info' },
     { label: '4 자기소개서/역량기술서', to: '/resume/essay' },
     { label: '5 최종제출', to: '/resume/final-submit' },
     ]

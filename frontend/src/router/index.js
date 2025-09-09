@@ -13,6 +13,7 @@ import ApplicantVerify from '../views/applicant/ApplicantVerify.vue'
 import ResumeBasicInfo from '../views/resume/ResumeBasicInfo.vue'
 import ResumeAcademicInfo from '../views/resume/ResumeAcademicInfo.vue'
 import ResumeCertificateInfo from '../views/resume/ResumeCertificateInfo.vue'
+import ResumeEssay from '../views/resume/ResumeEssay.vue'
 
 
 
@@ -29,7 +30,8 @@ const routes = [
 
   { path: '/resume/basic-info', name: ResumeBasicInfo, component: ResumeBasicInfo},
   { path: '/resume/academic-info', name: ResumeAcademicInfo, component: ResumeAcademicInfo},
-  { path: '/resume/certificate-info', name: ResumeCertificateInfo, component: ResumeCertificateInfo}
+  { path: '/resume/certificate-info', name: ResumeCertificateInfo, component: ResumeCertificateInfo},
+  { path: '/resume/essay', name: ResumeEssay, component: ResumeEssay}
 ]
 
 
