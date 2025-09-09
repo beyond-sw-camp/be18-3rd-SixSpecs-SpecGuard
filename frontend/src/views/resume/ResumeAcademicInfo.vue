@@ -86,14 +86,20 @@
         </section>
 
         <!-- University basic -->
+        <section v-if="univ.length === 0" class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
+            <header class="flex items-center justify-between border-b pb-3">
+                <h2 class="font-bold">대학교</h2>
+                <button type="button" class="rounded-md border px-3 py-1" @click="addUniv">추가</button>
+            </header>
+            <p class="mt-4 text-sm text-slate-500">등록된 대학교가 없습니다.</p>
+        </section>
         <section v-for="(u, i) in univ" :key="i" class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
             <header class="flex items-center justify-between border-b pb-3">
-            <h2 class="font-bold">대학교 {{ i+1 }}<span class="text-rose-500 text-xs align-top">* 필수항목</span></h2>
-            <div class="flex gap-2">
+                <h2 class="font-bold">대학교 {{ i+1 }} <span class="text-rose-500 text-xs align-top">* 필수항목</span></h2>
+                <div class="flex gap-2">
                 <button type="button" class="rounded-md border px-3 py-1" @click="addUniv">추가</button>
-                <button v-if="univ.length>1" type="button" class="rounded-md border px-3 py-1"
-                        @click="removeUniv(i)">삭제</button>
-            </div>
+                <button type="button" class="rounded-md border px-3 py-1" @click="removeUniv(i)">삭제</button>
+                </div>
             </header>
 
             <div class="mt-6 space-y-6">
@@ -198,14 +204,21 @@
         </section>
 
         <!-- Graduate school -->
+        <section v-if="grad.length === 0" class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
+            <header class="flex items-center justify-between border-b pb-3">
+                <h2 class="font-bold">대학원</h2>
+                <button type="button" class="rounded-md border px-3 py-1" @click="addGrad">추가</button>
+            </header>
+            <p class="mt-4 text-sm text-slate-500">등록된 대학원이 없습니다.</p>
+        </section>
+
         <section v-for="(g, i) in grad" :key="i" class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
             <header class="flex items-center justify-between border-b pb-3">
-            <h2 class="font-bold">대학원 {{ i+1 }}<span class="text-rose-500 text-xs align-top">* 필수항목</span></h2>
-            <div class="flex gap-2">
+                <h2 class="font-bold">대학원 {{ i+1 }} <span class="text-rose-500 text-xs align-top">* 필수항목</span></h2>
+                <div class="flex gap-2">
                 <button type="button" class="rounded-md border px-3 py-1" @click="addGrad">추가</button>
-                <button v-if="grad.length>1" type="button" class="rounded-md border px-3 py-1"
-                        @click="removeGrad(i)">삭제</button>
-            </div>
+                <button type="button" class="rounded-md border px-3 py-1" @click="removeGrad(i)">삭제</button>
+                </div>
             </header>
 
             <div class="mt-6 space-y-6">
@@ -291,15 +304,22 @@
         </section>
 
         <!-- Career -->
-        <section v-for="(c, i) in career" :key="i" class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
+        <section v-if="career.length === 0" class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
             <header class="flex items-center justify-between border-b pb-3">
+                <h2 class="font-bold">경력사항</h2>
+                <button type="button" class="rounded-md border px-3 py-1" @click="addCareer">추가</button>
+            </header>
+            <p class="mt-4 text-sm text-slate-500">등록된 경력이 없습니다.</p>
+        </section>
+
+        <section v-for="(c, i) in career" :key="i" class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
+        <header class="flex items-center justify-between border-b pb-3">
             <h2 class="font-bold">경력사항 {{ i+1 }} <span class="text-rose-500 text-xs align-top">* 필수항목</span></h2>
             <div class="flex gap-2">
-                <button type="button" class="rounded-md border px-3 py-1" @click="addCareer">추가</button>
-                <button v-if="career.length>1" type="button" class="rounded-md border px-3 py-1"
-                        @click="removeCareer(i)">삭제</button>
+            <button type="button" class="rounded-md border px-3 py-1" @click="addCareer">추가</button>
+            <button type="button" class="rounded-md border px-3 py-1" @click="removeCareer(i)">삭제</button>
             </div>
-            </header>
+        </header>
 
             <div class="mt-6 space-y-6">
             <div class="grid grid-cols-12 gap-3 items-center">
