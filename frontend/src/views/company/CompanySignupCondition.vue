@@ -107,13 +107,13 @@ const s = reactive({ all: false, terms: false, privacy: false, mktEmail: false, 
 const requiredOk = computed(() => s.terms && s.privacy)
 
 function toggleAll() {
-  s.terms = s.all; s.privacy = s.all; s.mktEmail = s.all; s.mktSms = s.all
+    s.terms = s.all; s.privacy = s.all; s.mktEmail = s.all; s.mktSms = s.all
 }
 function syncAll() {
-  s.all = s.terms && s.privacy && s.mktEmail && s.mktSms
+    s.all = s.terms && s.privacy && s.mktEmail && s.mktSms
 }
 function goNext() {
-  router.push('/company/register') // 다음 단계 경로
+    router.push('/company/register')
 }
 
 const { all, terms, privacy, mktEmail, mktSms } = s
