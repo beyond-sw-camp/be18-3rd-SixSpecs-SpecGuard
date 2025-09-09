@@ -11,7 +11,15 @@
 
         <!-- Step Tabs -->
         <nav class="grid grid-cols-5 border-b text-sm font-semibold">
-            <RouterLink
+            <button
+                v-for="tab in tabs"
+                :key="tab.to"
+                class="col-span-1 p-3 text-center border-b-4 hover:bg-slate-100"
+                :class="isActive(tab.to) ? 'border-sky-600 text-sky-600 font-bold' : 'border-transparent'"
+                @click="handleTabClick(tab.to)">
+                {{ tab.label }}
+            </button>
+            <!-- <RouterLink
             v-for="tab in tabs"
             :key="tab.to"
             :to="tab.to"
@@ -19,7 +27,7 @@
             :class="isActive(tab.to) ? 'border-sky-600 text-sky-600 font-bold' : 'border-transparent'"
             >
             {{ tab.label }}
-            </RouterLink>
+            </RouterLink> -->
         </nav>
         </header>
 
@@ -35,19 +43,28 @@
             <div class="mt-6 space-y-6">
             <!-- 영문이름 / 생년월일 -->
             <div class="grid grid-cols-12 gap-4 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">*한글이름</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-balck">한글이름</span>
+                </label>
                 <input 
                 v-model.trim="form.korName"
                 class="col-span-12 sm:col-span-4 rounded-md border border-slate-300 px-3 py-2"
                 placeholder="성명"
                 />
-                <label class="col-span-12 sm:col-span-2 font-semibold">*영문이름</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">영문이름</span>
+                </label>
                 <input
                 v-model.trim="form.engName"
                 class="col-span-12 sm:col-span-4 rounded-md border border-slate-300 px-3 py-2"
                 placeholder="First Last"
                 />
-                <label class="col-span-12 sm:col-span-2 font-semibold">*생년월일</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">생년월일</span>
+                </label>
                 <input
                 v-model="form.birth"
                 type="date"
@@ -57,7 +74,7 @@
 
             <!-- 성별 / 국적 -->
             <div class="grid grid-cols-12 gap-4 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">성별</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold"> 성별</label>
                 <div class="col-span-12 sm:col-span-4 flex gap-4">
                 <label class="inline-flex items-center gap-2">
                     <input type="radio" value="M" v-model="form.gender" /> 남
@@ -66,7 +83,10 @@
                     <input type="radio" value="F" v-model="form.gender" /> 여
                 </label>
                 </div>
-                <label class="col-span-12 sm:col-span-2 font-semibold sm:text-right">국적</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold sm:text-right">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">국적</span>
+                </label>
                 <select v-model="form.nationality" class="col-span-12 sm:col-span-4 rounded-md border border-slate-300 px-3 py-2">
                 <option disabled value="">----- 선택 -----</option>
                 <option value="KOR">대한민국</option>
@@ -76,7 +96,10 @@
 
             <!-- 지원분야 -->
             <div class="grid grid-cols-12 gap-4 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">*지원분야</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">지원분야</span>
+                </label>
                 <select v-model="form.position" class="col-span-12 sm:col-span-10 rounded-md border border-slate-300 px-3 py-2">
                 <!-- DB 연동 필요 -->
                 <option disabled value="">----- 선택 -----</option>
@@ -162,7 +185,7 @@
 
     <script setup>
     import { ref, onBeforeUnmount } from 'vue'
-    import { useRoute, useRouter, RouterLink } from 'vue-router'
+    import { useRoute, useRouter,} from 'vue-router'
 
     const router = useRouter()
     const route = useRoute()
@@ -231,12 +254,59 @@
     if (objectUrl) URL.revokeObjectURL(objectUrl)
     })
 
+    //필수 항목 체크
+    function validateForm() {
+    if (!form.value.korName) {
+        alert('한글이름을 입력해주세요.')
+        return false
+    }
+    if (!form.value.engName) {
+        alert('영문이름을 입력해주세요.')
+        return false
+    }
+    if (!form.value.birth) {
+        alert('생년월일을 입력해주세요.')
+        return false
+    }
+    if (!form.value.nationality) {
+        alert('국적을 선택해주세요.')
+        return false
+    }
+    if (!form.value.gender) {
+        alert('성별을 입력해주세요.')
+        return false
+    }
+    if (!form.value.position) {
+        alert('지원분야를 선택해주세요.')
+        return false
+    }
+    // if (!form.value.) {
+    //     alert('사진을 첨부해주세요.')
+    //     return false
+    // }
+    if (!form.value.address) {
+        alert('주소를 입력해주세요.')
+        return false
+    }
+    if (!form.value.zip) {
+        alert('우편번호를 입력해주세요.')
+        return false
+    }
+    return true
+    }
+
+    function handleTabClick(to) {
+    if (!validateForm()) return
+    router.push(to)
+    }
+
     // 하단 버튼
     function saveDraft() {
     // TODO: 임시저장 API 연동
     alert('임시저장 되었다고 가정')
     }
     function goNext() {
+    if (!validateForm()) return
     router.push('/resume/academic-info')
     }
 </script>
