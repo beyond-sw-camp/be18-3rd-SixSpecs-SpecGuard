@@ -8,7 +8,12 @@ import CompanySignupCondition from '@/views/company/CompanySignupCondition.vue'
 
 import ApplicantLogin from '../views/applicant/ApplicantLogin.vue'
 import ApplicantSignup from '../views/applicant/ApplicantSignup.vue'
-import ApplicantVerify from '@/views/applicant/ApplicantVerify.vue'
+import ApplicantVerify from '../views/applicant/ApplicantVerify.vue'
+
+import ResumeBasicInfo from '../views/resume/resumeBasicInfo.vue'
+import ResumeAcademicInfo from '../views/resume/ResumeAcademicInfo.vue'
+
+
 
 const routes = [
   { path: '/', component: MainPage },
@@ -19,7 +24,10 @@ const routes = [
 
   { path: '/applicant/login', name: ApplicantLogin, component: ApplicantLogin },
   { path: '/applicant/signup', name: ApplicantSignup, component: ApplicantSignup },
-  { path: '/applicant/verify', name: ApplicantVerify, component: ApplicantVerify}
+  { path: '/applicant/verify', name: ApplicantVerify, component: ApplicantVerify},
+
+  { path: '/resume/basic-info', name: ResumeBasicInfo, component: ResumeBasicInfo},
+  { path: '/resume/academic-info', name: ResumeAcademicInfo, component: ResumeAcademicInfo}
 ]
 
 
