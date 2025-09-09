@@ -10,15 +10,14 @@
         </div>
         <!-- Step Tabs -->
         <nav class="grid grid-cols-5 border-b text-sm font-semibold">
-            <RouterLink
-            v-for="tab in tabs"
-            :key="tab.to"
-            :to="tab.to"
-            class="col-span-1 p-3 text-center border-b-4 hover:bg-slate-100"
-            :class="isActive(tab.to) ? 'border-sky-600 text-sky-600 font-bold' : 'border-transparent'"
-            >
-            {{ tab.label }}
-            </RouterLink>
+            <button
+                v-for="tab in tabs"
+                :key="tab.to"
+                class="col-span-1 p-3 text-center border-b-4 hover:bg-slate-100"
+                :class="isActive(tab.to) ? 'border-sky-600 text-sky-600 font-bold' : 'border-transparent'"
+                @click="handleTabClick(tab.to)">
+                {{ tab.label }}
+            </button>
         </nav>
         </header>
 
@@ -49,9 +48,15 @@
             </div>
 
             <div class="grid grid-cols-12 gap-3 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">*학교명</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">학교명</span>
+                </label>
                 <input v-model.trim="hs.school" class="col-span-12 sm:col-span-3 rounded-md border border-slate-300 px-3 py-2" />
-                <label class="col-span-12 sm:col-span-2 font-semibold sm:text-right">*학교소재지</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold sm:text-right">
+                    <span class="text-red-500">* </span>    
+                    <span class="text-black">학교소재지</span>
+                </label>
 
                 <!-- 시/도 -->
                 <select
@@ -74,7 +79,10 @@
             </div>
 
             <div class="grid grid-cols-12 gap-3 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">*재학기간</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">재학기간</span>
+                </label>
                 <input v-model="hs.periodStart" type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2" />
                 <span class="col-span-0 text-center">~</span>
                 <input v-model="hs.periodEnd" type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2" />
@@ -122,9 +130,15 @@
             </div>
 
             <div class="grid grid-cols-12 gap-3 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">*학교명</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">학교명</span>
+                </label>
                 <input v-model.trim="u.school" class="col-span-12 sm:col-span-3 rounded-md border px-3 py-2" />
-                <label class="col-span-12 sm:col-span-2 font-semibold sm:text-right">*학교소재지</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold sm:text-right">
+                    <span class="text-red-500">* </span>
+                    <span class="text-balck">학교소재지</span>
+                </label>
                 <div class="col-span-12 sm:col-span-4 flex gap-2">
                 <select v-model="u.city" class="flex-1 rounded-md border px-3 py-2">
                     <option value="">시/도</option>
@@ -139,7 +153,10 @@
             </div>
 
             <div class="grid grid-cols-12 gap-3 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">*재학기간</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">재학기간</span>
+                </label>
                 <input v-model="u.periodStart" type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2" />
                 <span class="col-span-0 text-center">~</span>
                 <input v-model="u.periodEnd" type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2" />
@@ -167,7 +184,7 @@
         
             <div class="mt-6 space-y-6"> -->
             <div class="grid grid-cols-12 gap-3 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">*학과/전공</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">학과/전공</label>
                 <div class="col-span-12 sm:col-span-10 flex gap-2">
                 <select v-model="u.majorGroup" class="flex-1 rounded-md border px-3 py-2">
                     <option value="" disabled>학과계열 선택</option>
@@ -181,7 +198,10 @@
             </div>
 
             <div class="grid grid-cols-12 gap-3 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">*성적</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">성적</span>
+                </label>
                 <div class="col-span-12 sm:col-span-10 flex gap-2">
                 <input 
                     type="number"
@@ -229,9 +249,15 @@
             </div>
 
             <div class="grid grid-cols-12 gap-3 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">*학교명</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">학교명</span>
+                </label>
                 <input v-model.trim="g.school" class="col-span-12 sm:col-span-4 rounded-md border px-3 py-2" />
-                <label class="col-span-12 sm:col-span-2 font-semibold sm:text-right">*학교소재지</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold sm:text-right">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">학교소재지</span>
+                </label>
                 <div class="col-span-12 sm:col-span-4 flex gap-2">
                 <select v-model="g.city" class="flex-1 rounded-md border px-3 py-2">
                     <option value="">시/도</option>
@@ -245,7 +271,10 @@
             </div>
 
             <div class="grid grid-cols-12 gap-3 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">*재학기간</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-balck">재학기간</span>
+                </label>
                 <input v-model="g.periodStart" type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2" />
                 <span class="col-span-0 text-center">~</span>
                 <input v-model="g.periodEnd" type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2" />
@@ -267,7 +296,7 @@
             </div>
 
             <div class="grid grid-cols-12 gap-3 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">*학과/전공</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">학과/전공</label>
                 <div class="col-span-12 sm:col-span-10 flex gap-2">
                 <select v-model="g.majorGroup" class="flex-1 rounded-md border px-3 py-2">
                     <option value="" disabled>학과계열 선택</option>
@@ -281,7 +310,10 @@
             </div>
 
             <div class="grid grid-cols-12 gap-3 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">*성적</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">성적</span>
+                </label>
                 <div class="col-span-12 sm:col-span-10 flex gap-2">
                 <input 
                     type="number"
@@ -332,24 +364,36 @@
             </div>
 
             <div class="grid grid-cols-12 gap-3 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">*회사명</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">회사명</span>
+                </label>
                 <input v-model.trim="c.company" class="col-span-12 sm:col-span-10 rounded-md border px-3 py-2" placeholder="회사명을 입력하세요" />
             </div>
 
             <div class="grid grid-cols-12 gap-3 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">*근무기간</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">근무기간</span>
+                </label>
                 <input v-model="c.periodStart" type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2" />
                 <span class="col-span-0 text-center">~</span>
                 <input v-model="c.periodEnd" type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2" />
             </div>
 
             <div class="grid grid-cols-12 gap-3 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">부서</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">부서</span>
+                </label>
                 <input v-model.trim="c.department" class="col-span-12 sm:col-span-10 rounded-md border px-3 py-2" />
             </div>
 
             <div class="grid grid-cols-12 gap-3 items-start">
-                <label class="col-span-12 sm:col-span-2 font-semibold">*직급</label>
+                <label class="col-span-12 sm:col-span-2 font-semibold">
+                    <span class="text-red-500">* </span>
+                    <span class="text-black">직급</span>
+                </label>
                 <input v-model.trim="c.rank" class="col-span-12 sm:col-span-4 rounded-md border px-3 py-2" placeholder="직급" />
                 <label class="col-span-12 sm:col-span-2 font-semibold sm:text-right">담당업무</label>
                 <input v-model.trim="c.role" class="col-span-12 sm:col-span-4 rounded-md border px-3 py-2" placeholder="담당업무를 입력하세요" />
@@ -393,7 +437,7 @@
 
     <script setup>
     import { ref, computed } from 'vue'
-    import { useRoute, useRouter, RouterLink } from 'vue-router'
+    import { useRoute, useRouter} from 'vue-router'
 
     const router = useRouter()
     const route = useRoute()
@@ -563,7 +607,55 @@
 
     function addCareer(){ career.value.push(makeCareer()) }
     function removeCareer(i){ career.value.splice(i,1) }
+
+    function validateForm() {
+        if (!hs.value.school)      return alert('고등학교 학교명을 입력하세요.'), false
+        if (!hs.value.city)        return alert('고등학교 시/도를 선택하세요.'), false
+        if (!hs.value.district)    return alert('고등학교 구/군을 선택하세요.'), false
+        if (!hs.value.periodStart) return alert('고등학교 재학 시작일을 입력하세요.'), false
+        if (!hs.value.periodEnd)   return alert('고등학교 재학 종료일을 입력하세요.'), false
+
+        if (univ.value.length > 0) {
+            for (const [i, u] of univ.value.entries()) {
+                if (!u.school)      return alert(`대학교 ${i+1}: 학교명`), false
+                if (!u.city)        return alert(`대학교 ${i+1}: 시/도`), false
+                if (!u.district)    return alert(`대학교 ${i+1}: 구/군`), false
+                if (!u.periodStart) return alert(`대학교 ${i+1}: 재학 시작일`), false
+                if (!u.periodEnd)   return alert(`대학교 ${i+1}: 재학 종료일`), false
+                if (u.gpa == null || u.gpa === '') return alert(`대학교 ${i+1}: 평점`), false
+                if (!u.semesters)   return alert(`대학교 ${i+1}: 총점`), false
+            }
+        }
+
+        if (grad.value.length > 0) {
+            for (const [i, g] of grad.value.entries()) {
+                if (!g.degree)      return alert(`대학원 ${i+1}: 학위구분`), false
+                if (!g.school)      return alert(`대학원 ${i+1}: 학교명`), false
+                if (!g.city)        return alert(`대학원 ${i+1}: 시/도`), false
+                if (!g.district)    return alert(`대학원 ${i+1}: 구/군`), false
+                if (!g.periodStart) return alert(`대학원 ${i+1}: 재학 시작일`), false
+                if (!g.periodEnd)   return alert(`대학원 ${i+1}: 재학 종료일`), false
+                if (g.gpa == null || g.gpa === '') return alert(`대학원 ${i+1}: 평점`), false
+                if (!g.semesters)   return alert(`대학원 ${i+1}: 총점`), false
+            }
+        }
+
+        if (career.value.length > 0) {
+            for (const [i, c] of career.value.entries()) {
+                if (!c.company)     return alert(`경력 ${i+1}: 회사명`), false
+                if (!c.periodStart) return alert(`경력 ${i+1}: 근무 시작일`), false
+                if (!c.periodEnd)   return alert(`경력 ${i+1}: 근무 종료일`), false
+                if (!c.department)  return alert(`경력 ${i+1}: 부서`), false
+                if (!c.rank)        return alert(`경력 ${i+1}: 직급`), false
+            }
+        }
+    return true
+    }
     
+    function handleTabClick(to) {
+    if (!validateForm()) return
+    router.push(to)
+    }
 
 
     function saveDraft() {
@@ -571,6 +663,7 @@
     alert('임시저장 처리 가정')
     }
     function goNext() {
+    if (!validateForm()) return
     router.push('/resume/certificate-info')
     }
 </script>
