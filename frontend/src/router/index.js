@@ -9,7 +9,7 @@ import CompanySignupCondition from '@/views/company/CompanySignupCondition.vue'
 
 // 기업 쉘
 import CompanyShell from '../views/company/CompanyShell.vue'
-import CompanyDashboard from '@/views/company/CompanyDashboard.vue'
+import CompanyDashboard from '../views/company/CompanyDashboard.vue'
 
 // 지원자 로그인/회원가입
 import ApplicantLogin from '../views/applicant/ApplicantLogin.vue'
@@ -32,15 +32,15 @@ const routes = [
   { path: '/', component: MainPage },
 
   // 기업 회원가입
-  { path: '/company/login', name: CompanyLogin, component: CompanyLogin },
-  { path: '/company/signup/choice', name: CompanySignupChoice, component: CompanySignupChoice },
-  { path: '/company/signup/info', name: CompanySignupInfo, component: CompanySignupInfo },
-  { path: '/company/signup/condition', name: CompanySignupCondition, component: CompanySignupCondition},
+  { path: '/company/login', name: 'CompanyLogin', component: CompanyLogin },
+  { path: '/company/signup/choice', name: 'CompanySignupChoice', component: CompanySignupChoice },
+  { path: '/company/signup/info', name: 'CompanySignupInfo', component: CompanySignupInfo },
+  { path: '/company/signup/condition', name: 'CompanySignupCondition', component: CompanySignupCondition},
 
   // 지원자 회원가입
-  { path: '/applicant/login', name: ApplicantLogin, component: ApplicantLogin },
-  { path: '/applicant/signup', name: ApplicantSignup, component: ApplicantSignup },
-  { path: '/applicant/verify', name: ApplicantVerify, component: ApplicantVerify},
+  { path: '/applicant/login', name: 'ApplicantLogin', component: ApplicantLogin },
+  { path: '/applicant/signup', name: 'ApplicantSignup', component: ApplicantSignup },
+  { path: '/applicant/verify', name: 'ApplicantVerify', component: ApplicantVerify},
 
   // 지원자 이력서
   // { path: '/resume/basic-info', name: ResumeBasicInfo, component: ResumeBasicInfo},
@@ -54,8 +54,8 @@ const routes = [
     component: CompanyShell,
     props: true,
     children: [
-      { path: '', redirect: {name: CompanyDashboard}},
-      { path: 'dashboard', name: CompanyDashboard, component: CompanyDashboard, props: true }
+      { path: '', redirect: {name: 'CompanyDashboard'}},
+      { path: 'dashboard', name: 'CompanyDashboard', component: CompanyDashboard, props: true }
     ],
   },
 
@@ -64,12 +64,12 @@ const routes = [
     component: ApplicantShell,
     props: true,
     children: [
-      { path: '', redirect: {name: ResumeBasicInfo}},
-      { path: 'basic-info', name: ResumeBasicInfo, component: ResumeBasicInfo, props: true },
-      { path: 'academic-info', name: ResumeAcademicInfo, component: ResumeAcademicInfo, props: true },
-      { path: 'certificate-info', name: ResumeCertificateInfo, component: ResumeCertificateInfo, props: true },
-      { path: 'essay', name: ResumeEssay, component: ResumeEssay, props: true },
-      { path: 'submit', name: ResumeSubmit, component: ResumeSubmit, props: true }
+      { path: '', redirect: {name: 'ResumeBasicInfo'}},
+      { path: 'basic-info', name: 'ResumeBasicInfo', component: ResumeBasicInfo, props: true },
+      { path: 'academic-info', name: 'ResumeAcademicInfo', component: ResumeAcademicInfo, props: true },
+      { path: 'certificate-info', name: 'ResumeCertificateInfo', component: ResumeCertificateInfo, props: true },
+      { path: 'essay', name: 'ResumeEssay', component: ResumeEssay, props: true },
+      { path: 'submit', name: 'ResumeSubmit', component: ResumeSubmit, props: true }
     ]
   },
   // 임시
