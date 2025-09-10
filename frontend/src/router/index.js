@@ -11,6 +11,7 @@ import CompanySignupCondition from '@/views/company/CompanySignupCondition.vue'
 import CompanyShell from '../views/company/CompanyShell.vue'
 import CompanyDashboard from '../views/company/CompanyDashboard.vue'
 import CompanyCreatePostBasic from '../views/company/CompanyCreatePostBasic.vue'
+import CompanyCreatePostDetail from '../views/company/CompanyCreatePostDetail.vue'
 
 // 지원자 로그인/회원가입
 import ApplicantLogin from '../views/applicant/ApplicantLogin.vue'
@@ -24,6 +25,7 @@ import ResumeAcademicInfo from '../views/resume/ResumeAcademicInfo.vue'
 import ResumeCertificateInfo from '../views/resume/ResumeCertificateInfo.vue'
 import ResumeEssay from '../views/resume/ResumeEssay.vue'
 import ResumeSubmit from '../views/resume/ResumeSubmit.vue'
+
 
 
 
@@ -58,7 +60,8 @@ const routes = [
     children: [
       { path: '', redirect: {name: 'CompanyDashboard'}},
       { path: 'dashboard', name: 'CompanyDashboard', component: CompanyDashboard, props: true },
-      { path: 'create/post/basic', name: 'CompanyCreatePostBasic', component: CompanyCreatePostBasic, props: true }
+      { path: 'create/post/basic', name: 'CompanyCreatePostBasic', component: CompanyCreatePostBasic, props: true },
+      { path: 'create/post/detail', name: 'CompanyCreatePostDetail', component: CompanyCreatePostDetail, props: true }
     ],
   },
 

@@ -78,8 +78,8 @@
                     </summary>
                     <div class="mt-2 rounded-xl bg-white/80 p-3 shadow-sm">
                     <ul class="list-disc pl-5 text-sm leading-8">
-                        <li><button class="hover:underline" @click="sidebarGo('CompanyDashboard')">채용공고 조회</button></li>
-                        <li><button class="hover:underline" @click="sidebarGo('CompanyCreatePostBasic')">채용공고 생성</button></li>
+                        <li><button class="hover:underline" @click="pageMove('CompanyDashboard')">채용공고 조회</button></li>
+                        <li><button class="hover:underline" @click="pageMove('CompanyCreatePostBasic')">채용공고 생성</button></li>
                         <li><button class="hover:underline" @click="onReport('dashboard')">채용공고 수정</button></li>
                     </ul>
                     </div>
@@ -260,7 +260,7 @@
             <!-- Right: 미리보기 (폭 축소) -->
             <div class="col-span-12 md:col-span-3">
                 <div class="rounded-2xl bg-white p-5 shadow-sm sticky top-20">
-                <div class="text-2xl font-extrabold mb-4">확인해주세요!</div>
+                <div class="text-2xl font-extrabold mb-4">기본정보 요약</div>
                 <div class="space-y-2 text-lg">
                     <div>{{ preview.title }}</div>
                     <div>{{ preview.department || '○○팀' }}</div>
@@ -268,8 +268,8 @@
                     <div>{{ preview.years }}년차</div>
                 </div>
                 <div class="mt-6">
-                    <button class="w-full rounded-md bg-slate-900 px-5 py-2 font-semibold text-white hover:bg-slate-800">
-                    맞습니까?
+                    <button class="w-full rounded-md bg-slate-900 px-5 py-2 font-semibold text-white hover:bg-slate-800"
+                    @click="pageMove('CompanyCreatePostDetail')">다음
                     </button>
                 </div>
                 </div>
@@ -292,7 +292,7 @@
     const route = useRoute()
     const companySlug = route.params.companySlug
 
-    function sidebarGo(name, extraParams = {}, query) {
+    function pageMove(name, extraParams = {}, query) {
     router.push({
         name,
         params: { companySlug, ...extraParams },
