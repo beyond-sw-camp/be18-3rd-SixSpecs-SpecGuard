@@ -268,6 +268,7 @@
     setPeriod(period.value)
     })
 
+
     function sample(title, email) {
     return {
         id: cryptoRandom(),
@@ -320,9 +321,14 @@
     })
 
     /* actions */
+
     function goEdit(post) {
-    router.push({ name: 'CompanyWeightSetting', params: { companySlug, postSlug: post.id } })
+    router.push({
+        name: 'CompanySetEvaluationWeight',
+        params: { companySlug, postId: post.id }
+    })
     }
+
     function contact(person) { alert(`${person.name}에게 연락합니다`) }
 
     /* chart data adapter */
@@ -335,12 +341,6 @@
         { label: 'GitHub', value: +w.github || 0, color: colors.github },
     ]
     }
-    </script>
-
-    <script>
-    /* lightweight donut pie (no deps) */
-    export default {}
-
     const DonutPie = defineComponent({
     name: 'DonutPie',
     props: { data: { type: Array, required: true } },
@@ -376,7 +376,15 @@
         </svg>
     `
     })
+
     </script>
+
+    <!-- <script>
+    /* lightweight donut pie (no deps) */
+    export default {}
+
+    
+    </script> -->
 
     <style scoped>
     .fade-slide-enter-active,

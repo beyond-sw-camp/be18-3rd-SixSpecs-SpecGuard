@@ -67,7 +67,7 @@ const routes = [
       { path: 'create/post/basic', name: 'CompanyCreatePostBasic', component: CompanyCreatePostBasic, props: true },
       { path: 'create/post/detail', name: 'CompanyCreatePostDetail', component: CompanyCreatePostDetail, props: true },
       { path: 'evaluation/list', name: 'CompanyEvaluationWeightList', component: CompanyEvaluationWeightList, props: true },
-      { path: 'set/evaluation', name: 'CompanySetEvaluationWeight', component: CompanySetEvaluationWeight, props: true }
+      { path: 'post/:companyTemplateId/weight', name: 'CompanySetEvaluationWeight', component: CompanySetEvaluationWeight, props: true }
     ],
   },
 
