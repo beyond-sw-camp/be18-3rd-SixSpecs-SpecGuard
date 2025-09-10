@@ -78,8 +78,8 @@
               </summary>
               <div class="mt-2 rounded-xl bg-white/80 p-3 shadow-sm">
                 <ul class="list-disc pl-5 text-sm leading-8">
-                  <li><button class="hover:underline" @click="onReport('dashboard')">채용공고 조회</button></li>
-                  <li><button class="hover:underline" @click="onReport('dashboard')">채용공고 생성</button></li>
+                  <li><button class="hover:underline" @click="sidebarGo('CompanyDashboard')">채용공고 조회</button></li>
+                  <li><button class="hover:underline" @click="sidebarGo('CompanyCreatePostBasic')">채용공고 생성</button></li>
                   <li><button class="hover:underline" @click="onReport('dashboard')">채용공고 수정</button></li>
                 </ul>
               </div>
@@ -219,6 +219,19 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRoute, useRouter,} from 'vue-router'
+
+const router = useRouter()
+const route = useRoute()
+const companySlug = route.params.companySlug
+
+function sidebarGo(name, extraParams = {}, query) {
+  router.push({
+    name,
+    params: { companySlug, ...extraParams },
+    query,
+  })
+}
 
 // 사이드바 오픈
 const sidebarOpen = ref(true)

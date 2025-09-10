@@ -10,7 +10,7 @@ import CompanySignupCondition from '@/views/company/CompanySignupCondition.vue'
 // 기업 쉘
 import CompanyShell from '../views/company/CompanyShell.vue'
 import CompanyDashboard from '../views/company/CompanyDashboard.vue'
-import CompanyCreatePostBasic from '@/views/company/CompanyCreatePostBasic.vue'
+import CompanyCreatePostBasic from '../views/company/CompanyCreatePostBasic.vue'
 
 // 지원자 로그인/회원가입
 import ApplicantLogin from '../views/applicant/ApplicantLogin.vue'
