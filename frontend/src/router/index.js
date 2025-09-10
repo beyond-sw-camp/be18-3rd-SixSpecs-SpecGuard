@@ -10,6 +10,7 @@ import CompanySignupCondition from '@/views/company/CompanySignupCondition.vue'
 // 기업 쉘
 import CompanyShell from '../views/company/CompanyShell.vue'
 import CompanyDashboard from '../views/company/CompanyDashboard.vue'
+import CompanyCreatePostBasic from '@/views/company/CompanyCreatePostBasic.vue'
 
 // 지원자 로그인/회원가입
 import ApplicantLogin from '../views/applicant/ApplicantLogin.vue'
@@ -23,6 +24,7 @@ import ResumeAcademicInfo from '../views/resume/ResumeAcademicInfo.vue'
 import ResumeCertificateInfo from '../views/resume/ResumeCertificateInfo.vue'
 import ResumeEssay from '../views/resume/ResumeEssay.vue'
 import ResumeSubmit from '../views/resume/ResumeSubmit.vue'
+
 
 
 
@@ -42,7 +44,7 @@ const routes = [
   { path: '/applicant/signup', name: 'ApplicantSignup', component: ApplicantSignup },
   { path: '/applicant/verify', name: 'ApplicantVerify', component: ApplicantVerify},
 
-  // 지원자 이력서
+  // 지원자 이력서 (테스트 작성용 url)
   // { path: '/resume/basic-info', name: ResumeBasicInfo, component: ResumeBasicInfo},
   // { path: '/resume/academic-info', name: ResumeAcademicInfo, component: ResumeAcademicInfo},
   // { path: '/resume/certificate-info', name: ResumeCertificateInfo, component: ResumeCertificateInfo},
@@ -55,7 +57,8 @@ const routes = [
     props: true,
     children: [
       { path: '', redirect: {name: 'CompanyDashboard'}},
-      { path: 'dashboard', name: 'CompanyDashboard', component: CompanyDashboard, props: true }
+      { path: 'dashboard', name: 'CompanyDashboard', component: CompanyDashboard, props: true },
+      { path: 'create/post/basic', name: 'CompanyCreatePostBasic', component: CompanyCreatePostBasic, props: true }
     ],
   },
 
