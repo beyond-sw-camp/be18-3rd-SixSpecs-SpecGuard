@@ -184,12 +184,13 @@
     const router = useRouter();
     const route = useRoute();
 
+    const applicantSlug = route.params.applicantSlug
     const tabs = [
-    { label: "1 기본정보", to: "/resume/basic-info" },
-    { label: "2 학력/연구/NCS", to: "/resume/academic-info" },
-    { label: "3 어학/자격", to: "/resume/certificate-info" },
-    { label: "4 자기소개서/역량기술서", to: "/resume/essay" },
-    { label: "5 최종제출", to: "/resume/submit" },
+    { label: "1 기본정보", to: { name: 'ResumeBasicInfo', params: { applicantSlug }}},
+    { label: "2 학력/연구/NCS", to: { name: 'ResumeAcademicInfo', params: { applicantSlug }}},
+    { label: "3 어학/자격", to: { name: 'ResumeCertificateInfo', params: { applicantSlug }}},
+    { label: "4 자기소개서/역량기술서", to: { name: 'ResumeEssay', params: { applicantSlug }}},
+    { label: "5 최종제출", to: { name: 'ResumeSubmit', params: { applicantSlug }}},
     ];
 
     // const go = (to) => router.push(to);s
