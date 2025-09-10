@@ -110,7 +110,11 @@
                     </div>
                 </details>
 
-                <div class="mt-2 text-right text-sm text-slate-800/80">설정</div>
+                <div class="mt-2 text-right text-sm text-slate-800/80">
+                    <button class="hover:underline" @click="pageMove('CompanyEvaluationWeightList')">
+                        설정
+                    </button>
+                </div>
                 </div>
             </aside>
 

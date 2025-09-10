@@ -78,8 +78,8 @@
               </summary>
               <div class="mt-2 rounded-xl bg-white/80 p-3 shadow-sm">
                 <ul class="list-disc pl-5 text-sm leading-8">
-                  <li><button class="hover:underline" @click="sidebarGo('CompanyDashboard')">채용공고 조회</button></li>
-                  <li><button class="hover:underline" @click="sidebarGo('CompanyCreatePostBasic')">채용공고 생성</button></li>
+                  <li><button class="hover:underline" @click="pageMove('CompanyDashboard')">채용공고 조회</button></li>
+                  <li><button class="hover:underline" @click="pageMove('CompanyCreatePostBasic')">채용공고 생성</button></li>
                   <li><button class="hover:underline" @click="onReport('dashboard')">채용공고 수정</button></li>
                 </ul>
               </div>
@@ -110,7 +110,11 @@
               </div>
             </details>
 
-            <div class="mt-2 text-right text-sm text-slate-800/80">설정</div>
+            <div class="mt-2 text-right text-sm text-slate-800/80">
+              <button class="hover:underline" @click="pageMove('CompanyEvaluationWeightList')">
+                설정
+              </button>
+            </div>
           </div>
         </aside>
 
@@ -225,7 +229,7 @@ const router = useRouter()
 const route = useRoute()
 const companySlug = route.params.companySlug
 
-function sidebarGo(name, extraParams = {}, query) {
+function pageMove(name, extraParams = {}, query) {
   router.push({
     name,
     params: { companySlug, ...extraParams },

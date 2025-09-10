@@ -145,7 +145,7 @@
             <div class="border-2 border-sky-500 rounded-xl p-6">
             <div class="flex items-start justify-between">
                 <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">
-                {{ year }}년 상반기 개발 공고 가중치 설정
+                {{ companyTemplateName || '가중치 설정' }}
                 </h1>
                 <div class="flex items-center gap-3">
                 <div class="rounded-full bg-slate-100 px-4 py-1.5 text-sm font-semibold">
@@ -232,7 +232,7 @@
     import { reactive, computed, ref, onMounted } from 'vue'
 
 
-    const weight = ref(null)
+    
     
 
     /* sidebar basics */
@@ -245,10 +245,22 @@
     const companySlug = route.params.companySlug
     const postSlug = route.params.postSlug
     const { companyTemplateId } = route.params
+    const companyTemplateName = ref('')
+    const weight = ref(null)
     onMounted(async () => {
-    const res = await fetch(`/api/companiy/post/${companyTemplateId}/weight`)
-    if (res.ok) {
-        weight.value = await res.json()
+    try {
+        // 1) 공고 제목 로딩
+        const r1 = await fetch(`/api/company/post/${companyTemplateId}`)
+        if (r1.ok) {
+        const post = await r1.json()
+        companyTemplateName.value = post.title ?? ''
+        }
+
+        // 2) 가중치 로딩 (경로 오타 수정: companiy -> company)
+        const r2 = await fetch(`/api/company/post/${companyTemplateId}/weight`)
+        if (r2.ok) weight.value = await r2.json()
+    } catch (e) {
+        console.error(e)
     }
     })
 
@@ -264,8 +276,8 @@
     evt.target.value = metric.v                        // 썸 위치 동기화
     }
 
-    /* year badge */
-    const year = new Date().getFullYear()
+    // /* year badge */
+    // const year = new Date().getFullYear()
 
     /* sections + metrics */
     const sections = reactive({

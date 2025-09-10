@@ -325,7 +325,7 @@
     function goEdit(post) {
     router.push({
         name: 'CompanySetEvaluationWeight',
-        params: { companySlug, postId: post.id }
+        params: { companySlug, companyTemplateId: post.id }
     })
     }
 
