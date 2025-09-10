@@ -129,20 +129,21 @@
     const router = useRouter()
     const route = useRoute()
 
+    const applicantSlug = route.params.applicantSlug
     const tabs = [
-    { label: "1 기본정보", to: "/resume/basic-info" },
-    { label: "2 학력/연구/NCS", to: "/resume/academic-info" },
-    { label: "3 어학/자격", to: "/resume/certificate-info" },
-    { label: "4 자기소개서/역량기술서", to: "/resume/essay" },
-    { label: "5 최종제출", to: "/resume/submit" },
+    { label: "1 기본정보", to: { name: 'ResumeBasicInfo', params: { applicantSlug }}},
+    { label: "2 학력/연구/NCS", to: { name: 'ResumeAcademicInfo', params: { applicantSlug }}},
+    { label: "3 어학/자격", to: { name: 'ResumeCertificateInfo', params: { applicantSlug }}},
+    { label: "4 자기소개서/역량기술서", to: { name: 'ResumeEssay', params: { applicantSlug }}},
+    { label: "5 최종제출", to: { name: 'ResumeSubmit', params: { applicantSlug }}},
     ]
 
-    // const go = (to) => router.push(to)
-    const isActive = (to) => {
-    const a = router.resolve(to).path.replace(/\/+$/, "")
-    const b = route.path.replace(/\/+$/, "")
-    return a === b
+    function isActive(to) {
+        const a = router.resolve(to).path.replace(/\/+$/, '')
+        const b = route.path.replace(/\/+$/, '')
+        return a === b
     }
+
 
     // 자격증: 0개 허용
     const makeCert = () => ({
@@ -184,10 +185,10 @@
     function saveDraft() {
     alert("임시저장 되었습니다.")
     }
-
     function goNext() {
     if (!validateForm()) return
-    router.push("/resume/essay")
+    const applicantSlug = route.params.applicantSlug
+    router.push({ name: 'ResumeEssay', params: { applicantSlug } })
     }
 </script>
 
