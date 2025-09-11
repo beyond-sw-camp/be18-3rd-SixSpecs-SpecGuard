@@ -101,6 +101,7 @@
 <script setup>
 import { reactive, computed, toRefs } from 'vue'
 import { useRouter } from 'vue-router'
+import { signup } from '@/api/auth.js'
 
 const router = useRouter()
 
@@ -132,9 +133,40 @@ const requiredOk = computed(() => {
     return checked >= 2
 })
 
-function goNext() {
+async function goNext() {
     if (!requiredOk.value) return
-    router.push('/company/login')
+    const raw = sessionStorage.getItem('specguard.signup.form')
+    if (!raw) { alert('가입 정보가 없습니다. 처음부터 진행하세요.'); return }
+
+    const form = JSON.parse(raw)
+
+    // 백엔드가 기대하는 DTO에 맞게 매핑
+    const payload = {
+        username: form.username,
+        password: form.password,
+        phone: form.phone,
+        email: form.email,
+        companyName: form.companyName,
+        bizRegNo: form.bizRegNo,
+        managerName: form.managerName,
+        managerPhone: form.managerPhone,
+        managerEmail: form.managerEmail,
+        agreePrivacy: s.privacy,
+        agreeTerms: s.terms,
+        agreeMktEmail: s.mktEmail,
+        agreeMktSms: s.mktSms,
+    }
+
+    try {
+        await signup(payload)
+        sessionStorage.removeItem('specguard.signup.form')
+        alert('회원가입이 완료되었습니다.')
+        router.push('/company/login') // 필요 경로로 변경
+    } catch (e) {
+        const msg = e.response?.data?.message || e.message
+        alert(`회원가입 실패: ${msg}`)
+    }
 }
+
 
 </script>

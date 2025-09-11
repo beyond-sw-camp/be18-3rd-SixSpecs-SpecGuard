@@ -128,8 +128,7 @@
 
     function nextStep() {
     if (!validateAll()) return
-    // TODO: 서버 전송
-    // console.log('submit payload', { ...form })
+    sessionStorage.setItem('specguard.signup.form', JSON.stringify({ ...form }))
     router.push('/company/signup/condition')
     }
 </script>
