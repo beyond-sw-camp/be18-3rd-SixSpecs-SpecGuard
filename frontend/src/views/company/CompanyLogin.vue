@@ -22,20 +22,23 @@
         <div class="mt-6 rounded-3xl bg-amber-400/90 p-8 shadow-sm ring-1 ring-black/5">
         <label class="block text-sm font-semibold text-slate-900">아이디</label>
         <input
-            type="text"
+            v-model.trim="email"
+            type="email"
             placeholder="아이디를 입력해주세요."
             class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"
         />
 
         <label class="mt-5 block text-sm font-semibold text-slate-900">비밀번호</label>
         <input
+            v-model="password"
             type="password"
             placeholder="비밀번호를 입력해주세요."
             class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"
         />
 
-        <button class="mt-6 w-full rounded-md bg-slate-800 py-2 text-white font-semibold hover:bg-slate-700">
-            기업 회원 로그인
+        <button @click="doLogin" 
+                class="mt-6 w-full rounded-md bg-slate-800 py-2 text-white font-semibold hover:bg-slate-700">
+                기업 회원 로그인
         </button>
 
         <p class="mt-6 text-center text-sm">SNS 계정으로 간편하게 시작하기</p>
@@ -119,8 +122,57 @@
 </div>
 </template>
 
-<script>
-export default { name: 'CompanyLogin' }
+<script setup>
+import { ref } from 'vue'
+import axios from 'axios'
+import { jwtDecode } from 'jwt-decode'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const email = ref('')
+const password = ref('')
+
+async function doLogin() {
+    try {
+        const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/v1/auth/login`,
+        { email: email.value, password: password.value }
+        )
+
+        // 토큰 추출
+        const hdr = res.headers?.authorization || res.headers?.Authorization
+        const token = hdr?.startsWith('Bearer ') ? hdr.slice(7) : (res.data?.accessToken || res.data?.token)
+        if (!token) { alert('토큰 없음'); return }
+        sessionStorage.setItem('specguard.token', token)
+
+        // slug 추출: 응답 바디 → JWT 클레임 순으로 시도
+        let slug =
+        res.data?.company?.slug ||
+        (() => {
+            try {
+            const p = jwtDecode(token)
+            return p.companySlug || p.company?.slug
+            } catch { return null }
+        })()
+
+        // 최후 수단: 프로필 API에서 가져오기(엔드포인트는 프로젝트에 맞게)
+        if (!slug) {
+        const me = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        slug = me.data?.company?.slug
+        }
+
+        if (!slug) { alert('companySlug 없음'); return }
+
+        sessionStorage.setItem('specguard.company.slug', slug)
+        router.push({ name: 'CompanyDashboard', params: { companySlug: slug } }) // → /c/:slug/dashboard
+    } catch (e) {
+        alert(`로그인 실패: ${e.response?.data?.message || e.message}`)
+    }
+}
+
+// export default { name: 'CompanyLogin' }
 </script>
 
 <style scoped>
