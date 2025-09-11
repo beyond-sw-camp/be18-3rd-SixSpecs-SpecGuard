@@ -99,22 +99,42 @@
 </template>
 
 <script setup>
-import { reactive, computed } from 'vue'
+import { reactive, computed, toRefs } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const s = reactive({ all: false, terms: false, privacy: false, mktEmail: false, mktSms: false })
-const requiredOk = computed(() => s.terms && s.privacy)
 
+const s = reactive({
+    all: false,
+    terms: false,     // (필수)
+    privacy: false,   // (필수)
+    mktEmail: false,
+    mktSms: false,
+})
+const { all, terms, privacy, mktEmail, mktSms } = toRefs(s)
+
+// 전체동의 
 function toggleAll() {
-    s.terms = s.all; s.privacy = s.all; s.mktEmail = s.all; s.mktSms = s.all
+    s.terms = s.all
+    s.privacy = s.all
+    s.mktEmail = s.all
+    s.mktSms = s.all
 }
+
+// 개별 체크 변경 시 전체동의 상태 동기화
 function syncAll() {
     s.all = s.terms && s.privacy && s.mktEmail && s.mktSms
 }
+
+// (필수) 2개 이상 체크 시 활성화
+const requiredOk = computed(() => {
+    const checked = [s.terms, s.privacy].filter(Boolean).length
+    return checked >= 2
+})
+
 function goNext() {
-    router.push('/company/register')
+    if (!requiredOk.value) return
+    router.push('/company/login')
 }
 
-const { all, terms, privacy, mktEmail, mktSms } = s
 </script>
