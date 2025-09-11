@@ -15,6 +15,7 @@ import CompanyCreatePostDetail from '../views/company/CompanyCreatePostDetail.vu
 import CompanySetEvaluationWeight from '../views/company/CompanySetEvaluationWeight.vue'
 import CompanyEvaluationWeightList from '../views/company/CompanyEvaluationWeightList.vue'
 import CompanyTemplateApplicant from '../views/company/CompanyTemplateApplicant.vue'
+import CompanyApplicantDetail from '@/views/company/CompanyApplicantDetail.vue'
 
 // 지원자 로그인/회원가입
 import ApplicantLogin from '../views/applicant/ApplicantLogin.vue'
@@ -28,6 +29,7 @@ import ResumeAcademicInfo from '../views/resume/ResumeAcademicInfo.vue'
 import ResumeCertificateInfo from '../views/resume/ResumeCertificateInfo.vue'
 import ResumeEssay from '../views/resume/ResumeEssay.vue'
 import ResumeSubmit from '../views/resume/ResumeSubmit.vue'
+
 
 
 
@@ -56,7 +58,8 @@ const routes = [
       { path: 'create/post/detail', name: 'CompanyCreatePostDetail', component: CompanyCreatePostDetail, props: true },
       { path: 'evaluation/list', name: 'CompanyEvaluationWeightList', component: CompanyEvaluationWeightList, props: true },
       { path: 'post/:companyTemplateId/weight', name: 'CompanySetEvaluationWeight', component: CompanySetEvaluationWeight, props: true },
-      { path: 'post/:companyTemplateId/applicant', name:'CompanyTemplateApplicant', component:CompanyTemplateApplicant, props: true }
+      { path: 'post/:companyTemplateId/applicant', name:'CompanyTemplateApplicant', component:CompanyTemplateApplicant, props: true },
+      { path: 'post/:companyTemplateId/applicant/:resumeId', name: 'CompanyApplicantDetail', component:CompanyApplicantDetail, props: true }
     ],
   },
 
