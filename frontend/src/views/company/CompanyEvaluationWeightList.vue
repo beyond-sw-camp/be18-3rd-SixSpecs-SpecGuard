@@ -1,28 +1,6 @@
 <!-- WeightMixList.vue -->
 <template>
     <div class="min-h-screen bg-white text-slate-900">
-        <!-- Topbar -->
-        <header class="sticky top-0 z-30 bg-slate-800 text-white">
-        <div class="mx-auto max-w-10xl h-14 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-            <div class="flex items-end gap-3">
-            <span class="text-2xl font-extrabold tracking-tight">SPECGUARD</span>
-            <span class="text-[11px] leading-none text-slate-300 mb-1">이력 검증 시스템</span>
-            </div>
-            <div class="flex items-center gap-6">
-            <button class="rounded-md bg-amber-400 text-slate-900 px-4 py-1.5 text-sm font-semibold hover:bg-amber-300">초대 하기</button>
-            <button class="p-1 hover:text-amber-300" aria-label="알림">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1"/></svg>
-            </button>
-            <button class="p-1 hover:text-amber-300" aria-label="계정">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A7 7 0 0112 15a7 7 0 016.879 2.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            </button>
-            <button class="p-1 hover:text-amber-300" aria-label="공유">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 12h6M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-            </button>
-            </div>
-        </div>
-        </header>
-
         <div class="mx-auto max-w-10xl grid grid-cols-12 gap-6 px-4 sm:px-6 lg:px-8 py-6">
         <!-- ===== Sidebar (use exactly as given) ===== -->
         <transition name="fade-slide" mode="out-in">
