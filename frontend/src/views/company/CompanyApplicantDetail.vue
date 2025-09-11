@@ -10,7 +10,7 @@
             </h1>
 
             <!-- 상단 카드 -->
-            <div class="mt-4 grid grid-cols-12 gap-4">
+            <div class="mt-4 grid grid-cols-12 gap-4">s
             <div class="col-span-12 xl:col-span-7 rounded-xl border p-4">
                 <div class="flex items-start gap-4">
                 <img :src="resume?.avatarUrl || fallbackAvatar" class="w-20 h-20 rounded-xl object-cover ring-1 ring-slate-200" alt="">

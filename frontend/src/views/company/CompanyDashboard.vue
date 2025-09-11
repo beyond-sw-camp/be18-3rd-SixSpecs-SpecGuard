@@ -131,7 +131,7 @@ async function fetchJobs() {
     // 검색어는 서버 필터로 넘기거나 클라이언트에서만 필터링
     // params.set('q', query.value)
 
-    const res = await fetch(`/api/v1/jobs?${params.toString()}`, {
+    const res = await fetch(`/api/v1/company/template?${params.toString()}`, {
       headers: { Accept: 'application/json' },
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
