@@ -133,38 +133,49 @@ const requiredOk = computed(() => {
     return checked >= 2
 })
 
+const onlyDigits = s => (s||'').replace(/[^\d]/g,'')
+const slugify = s => (s||'')
+    .toLowerCase()
+  .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // 악센트 제거
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')
+
+const mapToDto = f => ({
+company: {
+    name: f.companyName?.trim(),
+    businessNumber: onlyDigits(f.bizRegNo),        // 키 변경
+    slug: slugify(f.companyName),
+    managerName: f.managerName?.trim(),
+    managerPosition: f.managerPosition?.trim() || '담당자', // 폼에 없으면 기본값
+    contactEmail: f.managerEmail?.trim().toLowerCase(),
+    contactMobile: onlyDigits(f.managerPhone),
+},
+user: {
+    email: f.email?.trim().toLowerCase(),
+    password: f.password,
+    name: f.username?.trim(),
+    phone: onlyDigits(f.phone),
+}
+})
+
+
 async function goNext() {
-    if (!requiredOk.value) return
+    if(!requiredOk.value) return
     const raw = sessionStorage.getItem('specguard.signup.form')
-    if (!raw) { alert('가입 정보가 없습니다. 처음부터 진행하세요.'); return }
-
+    if(!raw){ alert('가입 정보가 없습니다. 처음부터 진행하세요.'); return }
     const form = JSON.parse(raw)
+    console.log('[SG] signup.form.load:', JSON.stringify(form,null,2))   // ← 로드 확인
 
-    // 백엔드가 기대하는 DTO에 맞게 매핑
-    const payload = {
-        username: form.username,
-        password: form.password,
-        phone: form.phone,
-        email: form.email,
-        companyName: form.companyName,
-        bizRegNo: form.bizRegNo,
-        managerName: form.managerName,
-        managerPhone: form.managerPhone,
-        managerEmail: form.managerEmail,
-        agreePrivacy: s.privacy,
-        agreeTerms: s.terms,
-        agreeMktEmail: s.mktEmail,
-        agreeMktSms: s.mktSms,
-    }
+    const payload = mapToDto(form)
+    console.log('[SG] signup.payload:', JSON.stringify(payload,null,2))  // ← 전송 직전 확인
 
-    try {
+    try{
         await signup(payload)
         sessionStorage.removeItem('specguard.signup.form')
         alert('회원가입이 완료되었습니다.')
-        router.push('/company/login') // 필요 경로로 변경
-    } catch (e) {
-        const msg = e.response?.data?.message || e.message
-        alert(`회원가입 실패: ${msg}`)
+        router.push('/company/login')
+    }catch(e){
+        console.log('[SG] signup.error:', e.response?.status, e.response?.data || e.message)
+        alert(`회원가입 실패: ${e.response?.data?.message || e.message}`)
     }
 }
 
