@@ -125,7 +125,7 @@
     onMounted(async () => {
     try {
         const qs = new URLSearchParams({ companySlug }).toString()
-        const res = await fetch(`/api/companies/${companySlug}/posts/weights?${qs}`)
+        const res = await fetch(`/api/companiy/${companySlug}/post/weight?${qs}`)
         if (!res.ok) throw new Error('bad status')
         const data = await res.json()
         posts.value = data
