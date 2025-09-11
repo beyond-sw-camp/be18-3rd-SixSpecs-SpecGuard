@@ -14,7 +14,7 @@
 <main class="mx-auto max-w-6xl px-6 py-12">
     <div class="grid grid-cols-12 gap-10 items-start">
     <!-- Left: Login card -->
-    <section class="col-span-12 md:col-span-7">
+    <section class="col-span-12 md:col-span-6">
         <h1 class="text-3xl font-extrabold tracking-tight">
         SPECGUARD <span class="sr-only">기업회원 로그인</span>
         </h1>
@@ -69,9 +69,9 @@
     </div>
 
     <!-- Right: Benefits -->
-    <aside class="col-span-12 md:col-span-4">
+    <aside class="col-span-12 md:col-span-5">
         <h2 class="text-3xl font-extrabold tracking-tight">
-        <span class="text-amber-500">SPECGUARD</span> 기업회원 서비스
+        <span class="text-amber-500">SPECGUARD</span>기업회원 서비스
         </h2>
         <ul class="mt-8 space-y-8">
         <li class="flex items-start gap-4">
