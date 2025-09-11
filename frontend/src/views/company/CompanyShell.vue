@@ -141,12 +141,40 @@
 
 <script setup>
 
-import { ref, } from 'vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 import { useRoute, useRouter,} from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()
 const companySlug = route.params.companySlug
+
+onMounted(async () => {
+    userName.value =
+        sessionStorage.getItem('specguard.managerName') ||
+        sessionStorage.getItem('specguard.user.name') || '사용자'
+
+    if (!sessionStorage.getItem('specguard.managerName')) {
+        const token = sessionStorage.getItem('specguard.token')
+        if (token) {
+        try {
+            const { data } = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/v1/me`,
+            { headers: { Authorization: `Bearer ${token}` } }
+            )
+            const name = data?.company?.managerName ?? data?.user?.name
+            if (name) {
+            userName.value = name
+            sessionStorage.setItem('specguard.managerName', name)
+            }
+        } catch (e) {
+            console.debug('[SG]/me fetch failed', e?.response?.status, e?.message)
+        }
+        }
+    }
+})
+
+    
 
 function pageMove(name, extraParams = {}, query) {
     router.push({
