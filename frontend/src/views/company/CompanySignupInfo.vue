@@ -27,14 +27,26 @@
 
                 <label class="mt-5 block text-sm font-semibold">이메일 *</label>
                 <div class="mt-2 flex gap-3">
-                <input v-model.trim="form.email" type="email" required
-                    class="flex-1 rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
-                <button type="button" @click="verifyEmail"
-                    class="shrink-0 rounded-md bg-slate-800 px-4 py-2 text-white font-semibold hover:bg-slate-700">
-                    인증 확인
-                </button>
+                    <input v-model.trim="form.email" type="email" required
+                            class="flex-1 rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
+                    <button type="button" @click="verifyEmail" :disabled="ui.sending"
+                            class="shrink-0 rounded-md bg-slate-800 px-4 py-2 text-white font-semibold hover:bg-slate-700 disabled:bg-slate-400">
+                        {{ ui.sending ? '요청 중' : '인증 번호 요청' }}
+                    </button>
                 </div>
                 <p v-if="errors.email" class="mt-1 text-xs text-red-600">{{ errors.email }}</p>
+                
+                <label class="mt-5 block text-sm font-semibold">인증번호</label>
+                <div class="mt-2 flex gap-3">
+                    <input v-model.trim="form.code"
+                            type="text" inputmode="numeric" pattern="\d*" maxlength="6" required
+                            autocomplete="one-time-code"
+                            class="w-28 rounded-md border border-slate-300 bg-slate-100 px-2 py-2 outline-none"/>
+                    <button type="button" @click="confirmCode" :disabled="ui.confirming"
+                            class="shrink-0 rounded-md bg-slate-800 px-4 py-2 text-white font-semibold hover:bg-slate-700 disabled:bg-slate-400">
+                        {{ ui.confirming ? '확인 중' : '인증 하기' }}
+                    </button>
+                </div>
             </div>
 
             <!-- 기업/담당자 정보 -->
@@ -86,31 +98,74 @@
     </template>
 
     <script setup>
-    import { reactive, computed } from 'vue'
+    import { reactive, computed, ref, watch, onMounted } from 'vue'
     import { useRouter } from 'vue-router'
+
+    const API = `${(import.meta.env.VITE_API_URL ?? 'http://localhost:8080').replace(/\/$/,'')}/api/v1`
 
     const router = useRouter()
     const form = reactive({
     username:'', password:'', phone:'', email:'',
     companyName:'', bizRegNo:'', managerName:'',
-    managerPhone:'', managerEmail:''
+    managerPhone:'', managerEmail:'', code:''
     })
+    const ui = reactive({ sending:false, confirming:false })
     const errors = reactive({})
+
+    const emailVerified = ref(false)
 
     const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
     const isPhone = v => /^[0-9\-+()\s]{7,20}$/.test(v)
     const isBizNo = v => /^\d{10}$/.test(v)
 
-    const isValid = computed(() => {
-    // 실시간 간단 검증
-    return form.username && form.password && isPhone(form.phone) && isEmail(form.email) &&
-            form.companyName && isBizNo(form.bizRegNo) &&
-            form.managerName && isPhone(form.managerPhone) && isEmail(form.managerEmail)
-    })
+    form.email = form.email.trim().toLowerCase()
+    form.code  = (form.code ?? '').trim().replace(/\D/g,'')
 
-    function verifyEmail() {
-    alert(`인증 메일 발송: ${form.email || '입력 없음'}`)
+    const isValid = computed(() =>
+    form.username && form.password && isPhone(form.phone) && isEmail(form.email) &&
+    form.companyName && isBizNo(form.bizRegNo) &&
+    form.managerName && isPhone(form.managerPhone) && isEmail(form.managerEmail) &&
+    emailVerified.value
+    )
+
+    // 인증번호 요청
+    async function verifyEmail() {
+        if (!isEmail(form.email)) { errors.email='이메일 형식이 올바르지 않습니다.'; return }
+        ui.sending = true
+        try {
+            const r = await fetch(`${API}/verify/company/request`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ email: form.email }) })
+            if (!r.ok) throw new Error()
+            alert('인증번호를 이메일로 발송했습니다.')
+        } catch (e) {
+            console.error(e); alert('인증번호 발송 실패')
+        } finally { ui.sending=false }
     }
+
+    // 인증번호 검증
+    async function confirmCode() {
+        if (!/^\d{6,10}$/.test(form.code)) { alert('인증번호를 확인하세요.'); return }
+        ui.confirming = true
+        try {
+            const r = await fetch(`${API}/verify/company/confirm`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ email: form.email, code: form.code }) })
+            if (!r.ok) throw new Error()
+            await loadEmailStatus()
+            if (!emailVerified.value) throw new Error('verify-failed')
+            alert('이메일 인증이 완료되었습니다.')
+        } catch (e) {
+            console.error(e); alert('인증 실패. 코드와 이메일을 확인하세요.')
+        } finally { ui.confirming=false }
+    }
+
+    async function loadEmailStatus() {
+        if (!isEmail(form.email)) { emailVerified.value = false; return }
+            try {
+                const r = await fetch(`${API}/verify/company/status?email=${encodeURIComponent(form.email)}`)
+                emailVerified.value = r.ok && (await r.json()).verified === true
+            } catch { emailVerified.value = false }
+    }
+
+    watch(() => form.email, () => { emailVerified.value = false; form.code=''; })
+    onMounted(() => { if (form.email) loadEmailStatus() })
 
     function validateAll() {
     errors.username = form.username ? '' : '아이디를 입력하세요.'
@@ -126,9 +181,12 @@
     return Object.values(errors).every(v => !v)
     }
 
-    function nextStep() {
+    async function nextStep() {
+    await loadEmailStatus()
+    if (!emailVerified.value) { errors.email='이메일 인증이 필요합니다.'; return }
     if (!validateAll()) return
     sessionStorage.setItem('specguard.signup.form', JSON.stringify({ ...form }))
     router.push('/company/signup/condition')
     }
+    console.log('API=', API)
 </script>
