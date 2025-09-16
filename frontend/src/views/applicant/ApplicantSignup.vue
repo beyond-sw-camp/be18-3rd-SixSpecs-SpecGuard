@@ -85,7 +85,7 @@
                     class="rounded-md bg-slate-800 px-4 py-2 text-white font-semibold"
                     @click="openPhoneModal"
                 >
-                    휴대전화 인증
+                    이메일 인증
                 </button>
                 </div>
             </div>
@@ -120,6 +120,8 @@
     import { useRouter } from 'vue-router'
 
     const router = useRouter()
+    const STORAGE_KEY = 'specguard.applicant.email.verified'
+    const applicantEmailVerified = ref(false)
 
     const form = ref({
     name: '',
@@ -145,6 +147,12 @@
     showPhoneModal.value = false
     phoneFrameSrc.value = ''
     document.body.classList.remove('overflow-hidden')
+    // 닫힐 때 세션에서 복구
+    try {
+        const saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || 'null')
+        applicantEmailVerified.value = !!saved?.verified
+        if (saved?.email) form.value.email = saved.email
+    } catch {sessionStorage.removeItem(STORAGE_KEY)}
     }
 
     function onCancel() {
@@ -153,15 +161,38 @@
     }
 
     function onSubmit() {
-    // TODO: 회원가입 API 연동
+        if (!applicantEmailVerified.value) {
+            alert('이메일 인증이 필요합니다.')
+            return
+        }
     }
 
     function handleEsc(e) {
     if (e.key === 'Escape' && showPhoneModal.value) closePhoneModal()
     }
 
-onMounted(() => window.addEventListener('keydown', handleEsc))
-onBeforeUnmount(() => window.removeEventListener('keydown', handleEsc))
+function onMessage(e) {
+    if (e?.data?.type === 'applicant-email-verified') {
+        applicantEmailVerified.value = true
+        closePhoneModal()
+    }
+}
+
+onMounted(() => {
+    window.addEventListener('keydown', handleEsc)
+    window.addEventListener('message', onMessage)
+  // 새로고침 복구
+    try {
+    const saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || 'null')
+    applicantEmailVerified.value = !!saved?.verified
+    if (saved?.email) form.value.email = saved.email
+    } catch {sessionStorage.removeItem(STORAGE_KEY)}
+})
+
+onBeforeUnmount(() => {
+    window.removeEventListener('keydown', handleEsc)
+    window.removeEventListener('message', onMessage)
+})
 </script>
 
 <style scoped></style>
