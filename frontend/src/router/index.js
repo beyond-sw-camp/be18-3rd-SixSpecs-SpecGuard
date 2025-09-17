@@ -5,7 +5,7 @@ import MainPage from '../views/MainPage.vue'
 import CompanyLogin from '../views/company/CompanyLogin.vue'
 import CompanySignupChoice from'../views/company/CompanySignupChoice.vue'
 import CompanySignupInfo from '../views/company/CompanySignupInfo.vue'
-import CompanySignupCondition from '@/views/company/CompanySignupCondition.vue'
+import CompanySignupCondition from '../views/company/CompanySignupCondition.vue'
 
 // 기업 쉘
 import CompanyShell from '../views/company/CompanyShell.vue'
@@ -15,8 +15,8 @@ import CompanyCreatePostDetail from '../views/company/CompanyCreatePostDetail.vu
 import CompanySetEvaluationWeight from '../views/company/CompanySetEvaluationWeight.vue'
 import CompanyEvaluationWeightList from '../views/company/CompanyEvaluationWeightList.vue'
 import CompanyTemplateApplicant from '../views/company/CompanyTemplateApplicant.vue'
-import CompanyApplicantDetail from '@/views/company/CompanyApplicantDetail.vue'
-import CompanyDeptSet from '@/views/company/CompanyDeptSet.vue'
+import CompanyApplicantDetail from '../views/company/CompanyApplicantDetail.vue'
+import CompanyDeptSet from '../views/company/CompanyDeptSet.vue'
 
 // 지원자 로그인/회원가입
 import ApplicantLogin from '../views/applicant/ApplicantLogin.vue'
