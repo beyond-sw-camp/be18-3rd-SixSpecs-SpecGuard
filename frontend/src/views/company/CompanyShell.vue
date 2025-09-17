@@ -109,11 +109,20 @@
                 </div>
                 </details>
 
-                <div class="mt-2 text-right text-sm text-slate-800/80">
-                <button class="hover:underline" @click="pageMove('CompanyEvaluationWeightList')">
-                    설정
-                </button>
+                <details class="group">
+                <summary class="list-none flex items-center justify-between rounded-lg bg-slate-900/10 px-3 py-2 font-semibold">
+                    <span>설정</span>
+                    <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/>
+                    </svg>
+                </summary>
+                <div class="mt-2 rounded-xl bg-white/80 p-3 shadow-sm">
+                    <ul class="list-disc pl-5 text-sm leading-8">
+                    <li><button class="hover:underline" @click="pageMove('CompanyEvaluationWeightList')">가중치</button></li>
+                    <li><button class="hover:underline" @click="pageMove('CompanyDeptSet')">부서/직무(미구현)</button></li>
+                    </ul>
                 </div>
+                </details>
             </div>
             </aside>
 
