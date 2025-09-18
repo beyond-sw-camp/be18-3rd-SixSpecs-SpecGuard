@@ -95,7 +95,7 @@
             <!-- Action buttons -->
             <div class="flex justify-end gap-3 pt-2">
             <button type="button" class="rounded-md border border-slate-300 px-5 py-2" @click="onCancel">취소</button>
-            <button type="submit" class="rounded-md bg-amber-500 px-6 py-2 text-white font-semibold">가입하기</button>
+            <button type="button" class="rounded-md bg-amber-500 px-6 py-2 text-white font-semibold" @click="onSubmit">가입하기</button>
             </div>
         </form>
         </main>
@@ -118,7 +118,11 @@
     <script setup>
     import { ref, onMounted, onBeforeUnmount } from 'vue'
     import { useRouter } from 'vue-router'
+    import { useRoute } from 'vue-router'
+    import axios from 'axios'
+    const API = import.meta.env.VITE_API_URL
 
+    const route = useRoute()
     const router = useRouter()
     const STORAGE_KEY = 'specguard.applicant.email.verified'
     const applicantEmailVerified = ref(false)
@@ -136,9 +140,11 @@
 
     const showPhoneModal = ref(false)
     const phoneFrameSrc = ref('')
+    const companySlug = route.params.companySlug
+    const applicantSlug = route.params.applicantSlug
 
     function openPhoneModal() {
-    phoneFrameSrc.value = '/applicant/verify'
+    phoneFrameSrc.value = "verify"
     showPhoneModal.value = true
     document.body.classList.add('overflow-hidden')
     }
@@ -160,10 +166,69 @@
     else router.push('/')
     }
 
-    function onSubmit() {
+    async function onSubmit() {
         if (!applicantEmailVerified.value) {
             alert('이메일 인증이 필요합니다.')
             return
+        }
+
+        if (!form.value.name) {
+            alert('성명을 입력하세요.')
+            return
+        }
+
+        if (!/^\d{3}$/.test(form.value.phone1) || !/^\d{3,4}$/.test(form.value.phone2) || !/^\d{4}$/.test(form.value.phone3)) {
+            alert('휴대전화 번호를 올바르게 입력하세요.')
+            return
+        }
+
+        if (!form.value.email || !form.value.email2) {
+            alert('이메일과 이메일 확인을 입력하세요.')
+            return
+        }
+
+        if (form.value.email !== form.value.email2) {
+            alert('이메일과 이메일 확인이 일치하지 않습니다.')
+            return
+        }
+
+        if (!form.value.password || !form.value.password2) {
+            alert('비밀번호와 비밀번호 확인을 입력하세요.')
+            return
+        }
+
+        if (form.value.password !== form.value.password2) {
+            alert('비밀번호와 비밀번호 확인이 일치하지 않습니다.')
+            return
+        }
+
+        console.log('Submitting signup with:', form.value)
+
+        try {
+            const res = await axios.post(`${API}/api/v1/resumes`, {
+                templateId: route.params.applicantSlug,
+                name: form.value.name,
+                phone: form.value.phone1 + form.value.phone2 + form.value.phone3,
+                email: form.value.email,
+                password: form.value.password
+            });
+            
+            console.log("Signup response:", res.data);
+
+            const loginRes = await axios.post(`${API}/api/v1/auth/login`, {
+                email: form.value.email,
+                password: form.value.password
+            });
+
+            console.log("Login response:", loginRes.data);
+
+            resumeStore.resume = loginRes.data.resume // 또는 loginRes.data 바로 내려오는 경우
+
+            router.push('basic-info');
+
+        } catch (error) {
+            console.error("Login error:", error);
+            alert("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
         }
     }
 

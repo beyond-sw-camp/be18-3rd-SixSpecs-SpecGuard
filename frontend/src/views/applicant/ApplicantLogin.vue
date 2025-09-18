@@ -23,12 +23,12 @@
             >
                 <h2 class="text-2xl font-extrabold mb-6">로그인</h2>
 
-                <label for="userid" class="block text-sm font-semibold mb-2">아이디</label>
+                <label for="userid" class="block text-sm font-semibold mb-2">이메일</label>
                 <input
                 id="userid"
                 v-model.trim="userId"
                 type="text"
-                placeholder="아이디를 입력해주세요."
+                placeholder="이메일을 입력해주세요."
                 class="w-full h-12 rounded-md border border-slate-300 px-4 bg-white/70 placeholder-slate-500"
                 />
 
@@ -83,11 +83,14 @@
 
             <!-- 채용 공고 리스트 (더미) -->
             <ul class="mt-6 space-y-6">
-                <li v-for="job in filteredJobs" :key="job.title">
-                <a href="#" class="block">
-                    <h3 class="text-lg font-extrabold text-slate-700">{{ job.title }}</h3>
-                    <p class="text-slate-500 text-sm mt-1">{{ job.period }}</p>
-                </a>
+                <li v-for="job in filteredJobs" :key="job.id" @click="selectedTemplateId = job.id" class="cursor-pointer">
+                <div 
+                    class="block p-4 rounded-lg border"
+                    :class="selectedTemplateId === job.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200'"
+                    >
+                    <h3 class="text-lg font-extrabold text-slate-700">{{ job.name }}</h3>
+                    <p class="text-slate-500 text-sm mt-1">{{ job.description }}</p>
+                </div>
                 </li>
             </ul>
             </section>
@@ -100,20 +103,24 @@
     </template>
 
     <script setup>
-    import { ref, computed } from 'vue'
-    import { useRouter, RouterLink } from 'vue-router'
+    import { ref, computed, onMounted } from 'vue'
+    import { useRouter, RouterLink, useRoute } from 'vue-router'
+    import { resumeStore } from '@/stores/resumeStore'
+    import axios from 'axios'
 
     const router = useRouter()
+    const route = useRoute()
+
+    // 로그인 폼
     const userId = ref('')
     const password = ref('')
+
+    // 검색어
     const q = ref('')
 
-    const jobs = ref([
-    { title: 'BackEnd 경력', period: '2025/07/05 ~ 2025/09/10' },
-    { title: '데이터 분석 전문가 (계약직)', period: '2025/09/06 ~ 2025/10/01' },
-    { title: '급여/복리후생 담당 계약직 채용', period: '2025/09/01 ~ 2025/09/30' },
-    { title: '설비담당 엔지니어 모집 (울산)', period: '2025/08/17 ~ 2025/09/30' },
-    ])
+    const jobs = ref([])
+
+    const selectedTemplateId =ref(null);
 
     const filteredJobs = computed(() => {
     if (!q.value) return jobs.value
@@ -121,11 +128,48 @@
     return jobs.value.filter(j => j.title.toLowerCase().includes(term))
     })
 
-    function onSubmit() {
-    // TODO: 실제 로그인 API 연동
-    // 예: await api.post('/api/v1/auth/login', { userId: userId.value, password: password.value })
-    // 성공 시 라우팅
-    router.push('/dashboard')
+    const companySlug = route.params.companySlug;
+    const API = import.meta.env.VITE_API_URL;
+
+    console.log("companySlug:", companySlug);
+
+    onMounted(async () => {
+    try {
+        const response = await axios.get(`${API}/api/v1/resumes/companies/${companySlug}/templates`);
+        jobs.value = response.data.templates || [];
+        console.log(response.data.templates);
+    } catch (error) {
+        console.error("Error fetching jobs:", error);
+    }
+    });
+
+
+    async function onSubmit() {
+        if (!selectedTemplateId.value) {
+            alert("템플릿을 선택해주세요.");
+            return;
+        }
+        
+        console.log("Submitting login with:", { userId: userId.value, password: password.value, templateId: selectedTemplateId.value });
+        
+        try {
+            const res = await axios.post(`${API}/api/v1/resumes/login`, {
+                email: userId.value,
+                password: password.value,
+                templateId: selectedTemplateId.value
+            }, {
+                withCredentials: true
+            });
+
+            resumeStore.resume = res.data // 또는 loginRes.data 바로 내려오는 경우
+            console.log("Login successful:", res.data);
+
+            router.push(`/${companySlug}/registerResume/${selectedTemplateId.value}/basic-info`);
+
+        } catch (error) {
+            console.error("Login error:", error);
+            alert("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
+        }
 }
 
 function onSearch() {
