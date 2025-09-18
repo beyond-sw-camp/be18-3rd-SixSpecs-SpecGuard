@@ -1,4 +1,4 @@
-<!-- JobList.vue -->
+<!-- TemplateList.vue -->
 <template>
   <div class="w-full grid grid-cols-12 gap-6">
     <!-- Main -->
@@ -12,15 +12,15 @@
           </div>
         </div>
       </div>
-      <p class="mb-6 font-semibold">총 <span class="text-rose-500">{{ filteredJobs.length }}</span> 건의 채용이 진행중 입니다.</p>
+      <p class="mb-6 font-semibold">총 <span class="text-rose-500">{{ filteredTemplates.length }}</span> 건의 채용이 진행중 입니다.</p>
 
-      <!-- Job cards -->
+      <!-- Templates cards -->
       <section class="space-y-6">
         <article
-          v-for="job in filteredJobs"
-          :key="job.id"
+          v-for="template in filteredTemplates"
+          :key="template.id"
           class="rounded-2xl border border-slate-200 shadow-sm cursor-pointer"
-          @click="goDetail(job.id)"
+          @click="goDetail(template.id)"
         >
           <div class="flex items-start justify-between p-6">
             <div class="flex items-start gap-4">
@@ -31,18 +31,18 @@
               </div>
               <div>
                 <h3 class="text-2xl font-extrabold">
-                  <button class="hover:underline" @click.stop="goDetail(job.id)">{{ job.title }}</button>
+                  <button class="hover:underline" @click.stop="goDetail(template.id)">{{ template.title }}</button>
                 </h3>
-                <p class="mt-2 text-slate-600">{{ job.desc }}</p>
+                <p class="mt-2 text-slate-600">{{ template.desc }}</p>
                 <div class="mt-3 flex gap-2 text-sm">
-                  <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="goDetail(job.id)">조회</button>
+                  <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="goDetail(template.id)">조회</button>
                   <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="onCreate()">생성</button>
-                  <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="onEdit(job)">수정</button>
-                  <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="onDelete(job)">삭제</button>
+                  <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="onEdit(template)">수정</button>
+                  <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="onDelete(template)">삭제</button>
                 </div>
               </div>
             </div>
-            <div class="text-2xl font-extrabold pr-4 pt-1">D-{{ dday(job.endAt) }}</div>
+            <div class="text-2xl font-extrabold pr-4 pt-1">D-{{ dday(template.endAt) }}</div>
           </div>
         </article>
 
@@ -116,15 +116,15 @@ const sort = ref('createdAt,DESC')
 const total = ref(0)
 
 // 데이터 상태
-const jobs = ref([])
+const templates = ref([])
 const loading = ref(false)
 const error = ref('')
 
 // 로드 및 필터 변경 시 재조회
-onMounted(fetchJobs)
-watch([dept, role, status, years, startDate, endDate, page, size, sort], fetchJobs)
+onMounted(fetchTemplates)
+watch([dept, role, status, years, startDate, endDate, page, size, sort], fetchTemplates)
 
-async function fetchJobs () {
+async function fetchTemplates () {
   loading.value = true; error.value = ''
   try {
     const { data } = await api.get('/companyTemplates', {
@@ -132,7 +132,7 @@ async function fetchJobs () {
     })
     const list = data.templates ?? data.content ?? []
     total.value = data.totalElements ?? list.length
-    jobs.value = list.map(t => ({
+    templates.value = list.map(t => ({
       id: t.id,
       title: t.name || '(제목 없음)',
       desc: t.description || '',
@@ -149,10 +149,10 @@ async function fetchJobs () {
 }
 
 // 검색 필터
-const filteredJobs = computed(() => {
+const filteredTemplates = computed(() => {
   const q = query.value.toLowerCase().trim()
-  if (!q) return jobs.value
-  return jobs.value.filter(j =>
+  if (!q) return templates.value
+  return templates.value.filter(j =>
     (j.title||'').toLowerCase().includes(q) ||
     (j.desc||'').toLowerCase().includes(q)
   )
@@ -172,25 +172,9 @@ async function goDetail(id) {
   router.push({ path: `/c/${companySlug}/post/${id}/applicant` })
 }
 
-// async function goDetail(id) {
-//   try {
-//     loading.value = true
-//     // 존재/권한 확인용. 필요 없으면 이 줄은 제거 가능.
-//     await api.get(`/companyTemplates/${id}`)   // baseURL = '/api/v1'
-
-//     router.push({
-//       name: 'CompanyTemplateApplicant',              // 실제 등록된 라우트 이름으로 교체
-//       params: { companySlug: route.params.companySlug, templateId: id }
-//     })
-//   } catch (e) {
-//     error.value = e.response?.data?.message || e.message || String(e)
-//   } finally {
-//     loading.value = false
-//   }
-// }
 function onCreate() {}
-function onEdit(_job) {}
-function onDelete(_job) {}
+function onEdit(_template) {}
+function onDelete(_template) {}
 </script>
 
 
