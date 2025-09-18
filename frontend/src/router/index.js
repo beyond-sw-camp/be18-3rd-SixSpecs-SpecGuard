@@ -57,7 +57,7 @@ const routes = [
       { path: '', redirect: {name: 'CompanyDashboard'}},
       { path: 'dashboard', name: 'CompanyDashboard', component: CompanyDashboard, props: true },
       { path: 'create/post/basic', name: 'CompanyCreatePostBasic', component: CompanyCreatePostBasic, props: true },
-      { path: 'create/post/detail', name: 'CompanyCreatePostDetail', component: CompanyCreatePostDetail, props: true },
+      { path: 'create/post/detail/:templateId', name: 'CompanyCreatePostDetail', component: CompanyCreatePostDetail, props: true },
       { path: 'evaluation/list', name: 'CompanyEvaluationWeightList', component: CompanyEvaluationWeightList, props: true },
       { path: 'post/:companyTemplateId/weight', name: 'CompanySetEvaluationWeight', component: CompanySetEvaluationWeight, props: true },
       { path: 'post/:companyTemplateId/applicant', name:'CompanyTemplateApplicant', component:CompanyTemplateApplicant, props: true },

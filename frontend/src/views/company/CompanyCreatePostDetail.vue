@@ -38,7 +38,7 @@
             <!-- 가운데: 커스텀 이력서 -->
             <div class="col-span-12 md:col-span-6 relative">
               <div class="mx-auto text-center">
-                <span class="inline-block rounded-2xl bg-slate-200 px/6 py-2 text-2xl font-extrabold">자기소개서 등록</span>
+                <span class="inline-block rounded-2xl bg-slate-200 px-6 py-2 text-2xl font-extrabold">자기소개서 등록</span>
               </div>
 
               <div class="mt-5 space-y-6 border-l pl-6">
@@ -129,26 +129,21 @@
 </template>
 
 <script setup>
-import { ref, computed, defineComponent, watch } from 'vue'
+import { reactive, ref, computed, defineComponent, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import api from '@/api/axios'
 
-const API = '/api/v1'
-const token = () => localStorage.getItem('access_token') || ''
-
-const route = useRoute()
 const router = useRouter()
+const route = useRoute()
 const companySlug = route.params.companySlug
 const templateId = route.params.templateId
 
-/* 기간 */
+/* 입력값 */
 const startDate = ref('')
 const startTime = ref('')
 const endDate = ref('')
 const endTime = ref('')
 
-/* 커스텀 필드 */
-const itemTitle = ref('')
-const types = ['텍스트','숫자','날짜','선택']
 const type = ref('텍스트')
 const required = ref(true)
 const minLen = ref(0)
@@ -159,23 +154,18 @@ const prompts = ref([
   '현대로템의 인재상과 본인이 얼마나 부합하는지 구체적인 사례를 바탕으로 작성해주세요.'
 ])
 
-function addPrompt() {
-  const t = (itemTitle.value || '').trim()
-  if (!t) return
-  prompts.value.push(t)
-  itemTitle.value = ''
-}
-function removePrompt() { if (prompts.value.length) prompts.value.pop() }
-
 /* 유틸 */
-function formatted(d, t) {
-  if (!d && !t) return '—'
-  const date = new Date(`${d || todayISO()}T${t || '00:00'}`)
-  return date.toLocaleString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'short', hour:'2-digit', minute:'2-digit', hour12:false })
-}
-function todayISO() {
+function todayISO () {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
+function formatted (d, t) {
+  if (!d && !t) return '—'
+  const dt = new Date(`${d || todayISO()}T${t || '00:00'}`)
+  return dt.toLocaleString('ko-KR', {
+    year:'numeric', month:'long', day:'numeric',
+    weekday:'short', hour:'2-digit', minute:'2-digit', hour12:false
+  })
 }
 
 /* 경량 캘린더 */
@@ -183,14 +173,14 @@ const Calendar = defineComponent({
   name: 'PostCalendar',
   props: { modelValue: { type: String, default: '' } },
   emits: ['update:modelValue'],
-  setup(props, { emit }) {
+  setup (props, { emit }) {
     const cur = ref(props.modelValue || todayISO())
     watch(() => props.modelValue, v => { if (v) cur.value = v })
-    const ym = computed(() => { const d = new Date(cur.value); return { y: d.getFullYear(), m: d.getMonth() } })
-    function toISO(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` }
-    function setDay(day){ const d=new Date(ym.value.y, ym.value.m, day); emit('update:modelValue', toISO(d)) }
-    function prev(){ cur.value = toISO(new Date(ym.value.y, ym.value.m-1,1)) }
-    function next(){ cur.value = toISO(new Date(ym.value.y, ym.value.m+1,1)) }
+    const ym = computed(() => { const d=new Date(cur.value); return { y:d.getFullYear(), m:d.getMonth() } })
+    const toISO = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+    const setDay = day => emit('update:modelValue', toISO(new Date(ym.value.y, ym.value.m, day)))
+    const prev = () => { cur.value = toISO(new Date(ym.value.y, ym.value.m-1,1)) }
+    const next = () => { cur.value = toISO(new Date(ym.value.y, ym.value.m+1,1)) }
     const weeks = computed(() => {
       const first=new Date(ym.value.y, ym.value.m,1)
       const last=new Date(ym.value.y, ym.value.m+1,0)
@@ -200,7 +190,6 @@ const Calendar = defineComponent({
       while(cells.length%7) cells.push(null)
       const out=[]; for(let i=0;i<cells.length;i+=7) out.push(cells.slice(i,i+7)); return out
     })
-    function todayISO(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` }
     return { ym, weeks, prev, next, setDay }
   },
   template: `
@@ -223,66 +212,74 @@ const Calendar = defineComponent({
   `
 })
 
-/* 저장 */
-const saving = ref(false)
+/* 상태 */
 const err = ref('')
-const ok = ref(false)
+const submitting = ref(false)
 
-const fieldTypeEnum = (k) => ({
-  '텍스트':'TEXT',
-  '숫자':'NUMBER',
-  '날짜':'DATE',
-  '선택':'SELECT'
-}[k] || 'TEXT')
+const fieldTypeEnum = k => ({ '텍스트':'TEXT','숫자':'NUMBER','날짜':'DATE','선택':'SELECT' }[k] || 'TEXT')
 
-async function createPosting() {
-  err.value = ''; ok.value = false; saving.value = true
+async function createPosting () {
+  err.value = ''
+  if (!templateId) { err.value = 'templateId 없음'; return }
+
+  const token = localStorage.getItem('accessToken') || ''
+  if (!token) { err.value = '로그인 필요'; return }
+
+  submitting.value = true
   try {
-    if (!templateId) throw new Error('templateId 없음')
-
-    // 1) 기간 업데이트 (ERD: company_post.start_date, end_date)
     const startISO = startDate.value ? `${startDate.value}T${startTime.value || '00:00'}:00` : null
     const endISO   = endDate.value   ? `${endDate.value}T${endTime.value || '23:59'}:00` : null
-    if (startISO || endISO) {
-      const res1 = await fetch(`${API}/companyTemplates/${templateId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': token() ? `Bearer ${token()}` : '' },
-        body: JSON.stringify({ startDate: startISO, endDate: endISO })
-      })
-      if (!res1.ok) throw new Error(`기간 저장 실패 HTTP ${res1.status}`)
-    }
 
-    // 2) 커스텀 이력서 필드들 생성
-    let order = 1
-    for (const p of prompts.value) {
-      const body = {
+    const ft = fieldTypeEnum(type.value)
+    const fieldsPayload = prompts.value.map((p, i) => ({
+      fieldName: p,
+      fieldType: ft,
+      isRequired: !!required.value,
+      fieldOrder: i + 1,
+      options: ft === 'SELECT' ? ['예','아니오'] : [],
+      minLength: +minLen.value || 0,
+      maxLength: +maxLen.value || 0,
+    }))
+
+    
+    const body1 = {
+      detailDto: {
         templateId,
-        fieldName: p,
-        fieldType: fieldTypeEnum(type.value),
-        isRequired: !!required.value,
-        fieldOrder: order++,
-        options: fieldTypeEnum(type.value) === 'SELECT' ? { items: [] } : null,
-        minLength: Number(minLen.value) || 0,
-        maxLength: Number(maxLen.value) || 0
-      }
-      const r = await fetch(`${API}/companyTemplates/${templateId}/customFields`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': token() ? `Bearer ${token()}` : '' },
-        body: JSON.stringify(body)
-      })
-      if (!r.ok) throw new Error(`필드 저장 실패 HTTP ${r.status}`)
+        startDate: startISO,
+        endDate: endISO,
+      },
+      fields: fieldsPayload,
     }
 
-    ok.value = true
-    // 3) 완료 후 이동
+    // 생성 → 409면 업데이트(경로 파라미터 사용)
+    await api.post('/companyTemplates/detail', body1)
+      .catch(async e => {
+        if (e?.response?.status === 409) {
+          return api.put(`/companyTemplates/detail/${templateId}`, body1)
+        }
+        throw e
+      })
+
+    // 채용공고 생성
+    await api.post('/companyPosts', {
+      companySlug,
+      templateId,
+      startDate: startISO,
+      endDate: endISO,
+      status: 'OPEN',
+    })
+
     router.push({ name: 'CompanyPostList', params: { companySlug } })
   } catch (e) {
-    err.value = String(e.message || e)
+    console.log('DETAIL ERR:', e?.response?.data || e)
+    err.value = e?.response?.data?.message || e.message || String(e)
   } finally {
-    saving.value = false
+    submitting.value = false
   }
 }
 </script>
+
+
 
 <style scoped>
 .fade-slide-enter-active,.fade-slide-leave-active{ transition: opacity .2s cubic-bezier(.22,.61,.36,1), transform .2s cubic-bezier(.22,.61,.36,1); will-change: transform, opacity;}
