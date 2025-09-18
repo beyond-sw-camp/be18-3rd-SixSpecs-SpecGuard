@@ -168,7 +168,26 @@ function dday(endIso) {
   return days > 0 ? days : 0
 }
 
-function goDetail(id){ router.push({ name:'JobDetail', params:{ id } }) }
+async function goDetail(id) {
+  router.push({ path: `/c/${companySlug}/post/${id}/applicant` })
+}
+
+// async function goDetail(id) {
+//   try {
+//     loading.value = true
+//     // 존재/권한 확인용. 필요 없으면 이 줄은 제거 가능.
+//     await api.get(`/companyTemplates/${id}`)   // baseURL = '/api/v1'
+
+//     router.push({
+//       name: 'CompanyTemplateApplicant',              // 실제 등록된 라우트 이름으로 교체
+//       params: { companySlug: route.params.companySlug, templateId: id }
+//     })
+//   } catch (e) {
+//     error.value = e.response?.data?.message || e.message || String(e)
+//   } finally {
+//     loading.value = false
+//   }
+// }
 function onCreate() {}
 function onEdit(_job) {}
 function onDelete(_job) {}
