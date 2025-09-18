@@ -133,8 +133,8 @@ const filteredRoleTags = computed(() => roleTags.filter(t => t.toLowerCase().inc
 const filteredCategories = computed(() => categories.filter(c => c.toLowerCase().includes(categoryQuery.value.toLowerCase())))
 
 const form = reactive({
-    title: '개발 공채',
-    description: '26년 2월까지 개발자 TO 1자리 수 모집해야 합니다.',
+    title: '채용 공고 명을 입력하십시오.',
+    description: '채용 내용을 입력하십시오',
     department: '',
     role: '',
     careerType: '',

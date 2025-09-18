@@ -38,7 +38,7 @@
             <!-- 가운데: 커스텀 이력서 -->
             <div class="col-span-12 md:col-span-6 relative">
               <div class="mx-auto text-center">
-                <span class="inline-block rounded-2xl bg-slate-200 px-6 py-2 text-2xl font-extrabold">자기소개서 등록</span>
+                <span class="inline-block rounded-2xl bg-slate-200 px-6 py-2 text-2xl font-extrabold">질문 항목 등록</span>
               </div>
 
               <div class="mt-5 space-y-6 border-l pl-6">
@@ -100,11 +100,11 @@
             <div class="col-span-12 md:col-span-3">
               <div class="flex justify-end mb-3">
                 <button class="rounded-xl bg-amber-400 px-5 py-2 font-bold text-slate-900 shadow hover:bg-amber-300"
-                        :disabled="saving" @click="createPosting">자소서 생성하기</button>
+                        :disabled="saving" @click="createPosting">채용공고 생성하기</button>
               </div>
 
               <div class="rounded-2xl bg-white p-5 shadow-sm border sticky top-20">
-                <div class="text-2xl font-extrabold mb-4">확인해주세요!</div>
+                <div class="text-2xl font-extrabold mb-4">문항 요약</div>
                 <div class="text-sm space-y-1 mb-4">
                   <div>시작일: {{ formatted(startDate, startTime) }}</div>
                   <div>마감일: {{ formatted(endDate, endTime) }}</div>
@@ -118,7 +118,7 @@
                 </div>
 
                 <p v-if="err" class="mt-4 text-rose-600 text-sm">오류: {{ err }}</p>
-                <p v-if="ok" class="mt-2 text-green-700 text-sm">생성 완료</p>
+                <p v-else-if="ok" class="mt-2 text-green-700 text-sm">생성 완료</p>
               </div>
             </div>
           </div>
@@ -129,7 +129,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, defineComponent, watch } from 'vue'
+import { ref, computed, defineComponent, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/api/axios'
 
@@ -137,6 +137,9 @@ const router = useRouter()
 const route = useRoute()
 const companySlug = route.params.companySlug
 const templateId = route.params.templateId
+
+const itemTitle = ref('');
+const types = ['텍스트','숫자','날짜','선택'];
 
 /* 입력값 */
 const startDate = ref('')
@@ -149,10 +152,19 @@ const required = ref(true)
 const minLen = ref(0)
 const maxLen = ref(0)
 const prompts = ref([
-  '현대로템에 지원한 이유와 입사 후 본인이 보유한 경험을 어떻게 활용할 계획인지 작성해주세요.',
-  '지원 직무를 수행하기 위해 필요한 핵심 역량은 무엇이며, 본인이 해당 역량을 갖추고 있는지 경험과 성과를 중심으로 작성해주세요.',
-  '현대로템의 인재상과 본인이 얼마나 부합하는지 구체적인 사례를 바탕으로 작성해주세요.'
+  '...에 지원한 이유와 입사 후 본인이 보유한 경험을 어떻게 활용할 계획인지 작성해주세요.',
+  '...의 인재상과 본인이 얼마나 부합하는지 구체적인 사례를 바탕으로 작성해주세요.'
 ])
+
+const addPrompt = () => {
+  const t = itemTitle.value.trim();
+  prompts.value.push(t || `새 문항 ${prompts.value.length + 1}`);
+  itemTitle.value = '';
+};
+
+const removePrompt = () => {
+  if (prompts.value.length) prompts.value.pop();
+};
 
 /* 유틸 */
 function todayISO () {
@@ -215,71 +227,69 @@ const Calendar = defineComponent({
 /* 상태 */
 const err = ref('')
 const submitting = ref(false)
+const ok = ref(false)
+const saving = computed(() => submitting.value)
 
 const fieldTypeEnum = k => ({ '텍스트':'TEXT','숫자':'NUMBER','날짜':'DATE','선택':'SELECT' }[k] || 'TEXT')
 
 async function createPosting () {
-  err.value = ''
-  if (!templateId) { err.value = 'templateId 없음'; return }
-
-  const token = localStorage.getItem('accessToken') || ''
-  if (!token) { err.value = '로그인 필요'; return }
-
-  submitting.value = true
+  err.value=''; submitting.value=true; ok.value=false
   try {
-    const startISO = startDate.value ? `${startDate.value}T${startTime.value || '00:00'}:00` : null
-    const endISO   = endDate.value   ? `${endDate.value}T${endTime.value || '23:59'}:00` : null
+    if (!templateId) throw new Error('templateId 없음')
+    if (!localStorage.getItem('accessToken')) throw new Error('로그인 필요')
+
+    // ISO(UTC)로 맞춤 – Z 붙이기
+    const startISO = startDate.value ? new Date(`${startDate.value}T${startTime.value||'00:00'}:00`).toISOString() : null
+    const endISO   = endDate.value   ? new Date(`${endDate.value}T${endTime.value||'23:59'}:00`).toISOString()   : null
 
     const ft = fieldTypeEnum(type.value)
-    const fieldsPayload = prompts.value.map((p, i) => ({
+    const fields = prompts.value.map((p,i)=>({
       fieldName: p,
       fieldType: ft,
-      isRequired: !!required.value,
+      isRequired: !!required.value,  
       fieldOrder: i + 1,
       options: ft === 'SELECT' ? ['예','아니오'] : [],
       minLength: +minLen.value || 0,
       maxLength: +maxLen.value || 0,
     }))
 
-    
-    const body1 = {
-      detailDto: {
+    if (!fields.length) { err.value='최소 하나 이상의 필드가 필요합니다.'; return }
+
+    const body = {
+      fields,
+      detail: {
         templateId,
         startDate: startISO,
         endDate: endISO,
-      },
-      fields: fieldsPayload,
+      }
     }
 
-    // 생성 → 409면 업데이트(경로 파라미터 사용)
-    await api.post('/companyTemplates/detail', body1)
-      .catch(async e => {
-        if (e?.response?.status === 409) {
-          return api.put(`/companyTemplates/detail/${templateId}`, body1)
-        }
-        throw e
-      })
+    console.log('routes:', router.getRoutes().map(r => r.name))
+    await api.post('/companyTemplates/detail', body)
 
-    // 채용공고 생성
-    await api.post('/companyPosts', {
-      companySlug,
-      templateId,
-      startDate: startISO,
-      endDate: endISO,
-      status: 'OPEN',
-    })
+    const to = { name: 'CompanyDashboard', params: { companySlug } }
+    const hasRoute = router.resolve(to).matched.length > 0
+    if (!hasRoute) {
+      
+      throw new Error('라우트 "CompanyPostList" 가 없습니다')
+    }
 
-    router.push({ name: 'CompanyPostList', params: { companySlug } })
+    if (router.hasRoute && router.hasRoute('CompanyDashboard')) {
+      await router.push({ name: 'CompanyDashboard', params: { companySlug } })
+    } else if (router.hasRoute && router.hasRoute('CompanyPostList')) {
+      await router.push({ name: 'CompanyPostList', params: { companySlug } })
+    } else {
+      await router.push({ path: `/c/${companySlug}/dashboard` })
+    }
+    
+    ok.value = true
   } catch (e) {
-    console.log('DETAIL ERR:', e?.response?.data || e)
-    err.value = e?.response?.data?.message || e.message || String(e)
+    err.value = e?.message || e?.response?.data?.message || String(e)
   } finally {
     submitting.value = false
   }
 }
 </script>
-
-
 
 <style scoped>
 .fade-slide-enter-active,.fade-slide-leave-active{ transition: opacity .2s cubic-bezier(.22,.61,.36,1), transform .2s cubic-bezier(.22,.61,.36,1); will-change: transform, opacity;}
