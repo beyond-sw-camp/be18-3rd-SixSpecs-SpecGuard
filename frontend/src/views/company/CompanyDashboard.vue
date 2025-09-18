@@ -93,75 +93,74 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import api from '@/api/axios'
 
+const route = useRoute()
 const router = useRouter()
+const companySlug = route.params.companySlug || ''
 
-// 검색 및 필터
+// UI 상태
 const query = ref('')
 const dept = ref('')
 const role = ref('')
+const status = ref('')
+const years = ref('')
 const startDate = ref('')
-const startTime = ref('')
+const startTime = ref('')   // 추가
 const endDate = ref('')
-const endTime = ref('')
+const endTime = ref('')     // 추가
+const page = ref(0)
+const size = ref(10)
+const sort = ref('createdAt,DESC')
+const total = ref(0)
 
-// 서버 데이터
+// 데이터 상태
 const jobs = ref([])
 const loading = ref(false)
 const error = ref('')
 
-// 최초 로드
+// 로드 및 필터 변경 시 재조회
 onMounted(fetchJobs)
+watch([dept, role, status, years, startDate, endDate, page, size, sort], fetchJobs)
 
-// 필터 변경 시 서버에 다시 요청하고 싶으면 아래 watch를 사용
-watch([dept, role, startDate, startTime, endDate, endTime], fetchJobs)
-
-async function fetchJobs() {
+async function fetchJobs () {
+  loading.value = true; error.value = ''
   try {
-    loading.value = true
-    error.value = ''
-
-    // 필요 시 쿼리 파라미터 구성 (백엔드에 맞춰 수정)
-    const params = new URLSearchParams()
-    if (dept.value) params.set('dept', dept.value)
-    if (role.value) params.set('role', role.value)
-    if (startDate.value) params.set('start', combine(startDate.value, startTime.value).toISOString())
-    if (endDate.value) params.set('end', combine(endDate.value, endTime.value).toISOString())
-    // 검색어는 서버 필터로 넘기거나 클라이언트에서만 필터링
-    // params.set('q', query.value)
-
-    const res = await fetch(`/api/v1/companyTemplates?${params.toString()}`, {
-    headers: { Accept: 'application/json' },
+    const { data } = await api.get('/companyTemplates', {
+      params: { page: page.value, size: size.value, sort: sort.value, companySlug }
     })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    jobs.value = await res.json()   // [{id,title,desc,dept,role,startAt,endAt}, ...]
+    const list = data.templates ?? data.content ?? []
+    total.value = data.totalElements ?? list.length
+    jobs.value = list.map(t => ({
+      id: t.id,
+      title: t.name || '(제목 없음)',
+      desc: t.description || '',
+      dept: t.department || '',
+      role: t.category || '',
+      startAt: t.startDate || null,
+      endAt: t.endDate || null,
+    }))
   } catch (e) {
-    error.value = String(e.message || e)
+    error.value = e.response?.data?.message || e.message || String(e)
   } finally {
     loading.value = false
   }
 }
 
-// 클라이언트 검색 필터
+// 검색 필터
 const filteredJobs = computed(() => {
   const q = query.value.toLowerCase().trim()
   if (!q) return jobs.value
   return jobs.value.filter(j =>
-    (j.title || '').toLowerCase().includes(q) ||
-    (j.desc || '').toLowerCase().includes(q)
+    (j.title||'').toLowerCase().includes(q) ||
+    (j.desc||'').toLowerCase().includes(q)
   )
 })
 
-// 날짜 결합
-function combine(date, time) {
-  if (!date && !time) return ''
-  const t = time || '00:00'
-  return new Date(`${date}T${t}`)
-}
-
 // D-day
 function dday(endIso) {
+  if (!endIso) return 0
   const end = new Date(endIso)
   const today = new Date()
   const ms = end.setHours(0,0,0,0) - today.setHours(0,0,0,0)
@@ -169,16 +168,12 @@ function dday(endIso) {
   return days > 0 ? days : 0
 }
 
-// 이동
-function goDetail(id) {
-  router.push({ name: 'JobDetail', params: { id } })  // /jobs/:id
-}
-
-// 기타 액션(더미)
-function onCreate() { /* 구현 */ }
-// function onEdit(job) { /* 구현 */ }
-// function onDelete(job) { /* 구현 */ }
+function goDetail(id){ router.push({ name:'JobDetail', params:{ id } }) }
+function onCreate() {}
+function onEdit(_job) {}
+function onDelete(_job) {}
 </script>
+
 
 <style scoped>
 .fade-slide-enter-active,.fade-slide-leave-active{transition:opacity .2s cubic-bezier(.22,.61,.36,1),transform .2s cubic-bezier(.22,.61,.36,1);will-change:transform,opacity}

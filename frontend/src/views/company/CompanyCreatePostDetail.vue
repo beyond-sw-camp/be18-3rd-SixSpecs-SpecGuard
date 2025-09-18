@@ -277,7 +277,7 @@ async function createPosting () {
     if (router.hasRoute && router.hasRoute('CompanyDashboard')) {
       await router.push({ name: 'CompanyDashboard', params: { companySlug } })
     } else if (router.hasRoute && router.hasRoute('CompanyPostList')) {
-      await router.push({ name: 'CompanyPostList', params: { companySlug } })
+      await router.push({ name: 'CompanyDashboard', params: { companySlug } })
     } else {
       await router.push({ path: `/c/${companySlug}/dashboard` })
     }
