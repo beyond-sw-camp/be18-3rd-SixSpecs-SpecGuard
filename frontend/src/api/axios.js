@@ -42,51 +42,59 @@ api.interceptors.response.use(
   async (error) => {
     const cfg = error.config || {};
 
-    // 퍼블릭 엔드포인트는 refresh/라우팅 모두 스킵
-    if (isPublic(cfg.url || "")) {
+    if (isPublic(cfg.url || "") || cfg._skipGlobalError) {
       return Promise.reject(error);
     }
 
     // 네트워크 에러 등
     if (!error.response) return Promise.reject(error);
 
-    // 401 + 만료코드 → Refresh 시도
-    if (
-      error.response.status === 401 &&
-      error.response.data?.code === "ACCESS_TOKEN_EXPIRED" &&
-      !cfg._retry
-    ) {
-      cfg._retry = true;
-      try {
-        const r = await refreshApi.post("/auth/token/refresh"); // withCredentials:true 인스턴스
-        const newToken = r.headers["authorization"]?.replace(/^Bearer\s+/i, "");
-        if (newToken) {
-          const store = useAuthStore();
-          store.accessToken = newToken;
-          localStorage.setItem("accessToken", newToken);
-          cfg.headers = cfg.headers || {};
-          cfg.headers.Authorization = `Bearer ${newToken}`;
-          return api(cfg); // 재시도
+    const { status, data } = error.response;
+
+    // 401만 전역 처리 (토큰 만료시 refresh)
+    if (status === 401) {
+      if (data?.code === "ACCESS_TOKEN_EXPIRED" && !cfg._retry) {
+        cfg._retry = true;
+        try {
+          const r = await refreshApi.post("/auth/token/refresh"); // withCredentials:true 인스턴스
+          const newToken = r.headers["authorization"]?.replace(/^Bearer\s+/i, "");
+          if (newToken) {
+            const store = useAuthStore();
+            store.accessToken = newToken;
+            localStorage.setItem("accessToken", newToken);
+            cfg.headers = cfg.headers || {};
+            cfg.headers.Authorization = `Bearer ${newToken}`;
+            return api(cfg); // 재시도
+          }
+        } catch {
+          useAuthStore().logout();
         }
-      } catch {
-        useAuthStore().logout();
       }
+      // refresh 실패 또는 기타 401 → 로그인으로
+      router.push({ path: "/login", query: { error: data?.code || "UNAUTHORIZED", message: data?.message } });
+      return Promise.reject(error);
     }
 
-    // 팀 라우팅 규칙
-    const { code, message } = error.response.data || {};
-    switch (code) {
-      case "EMAIL_MISMATCH":
-        router.push({ path: "/signup/invite", query: { error: code, message } }); break;
-      case "EXPIRED_TOKEN":
-        router.push({ path: "/invite/expired", query: { error: code, message } }); break;
-      case "ALREADY_REGISTERED":
-        router.push({ path: "/login", query: { error: code, message } }); break;
-      case "INVALID_TOKEN":
-        router.push({ path: "/error", query: { error: code, message } }); break;
-      default:
-        if (message) router.push({ path: "/error", query: { message } });
+    // 초대/검증 관련 특별 코드만 라우팅
+    const { code, message } = data || {};
+    if (code === "EMAIL_MISMATCH") {
+      router.push({ path: "/signup/invite", query: { error: code, message } });
+      return Promise.reject(error);
     }
+    if (code === "EXPIRED_TOKEN") {
+      router.push({ path: "/invite/expired", query: { error: code, message } });
+      return Promise.reject(error);
+    }
+    if (code === "ALREADY_REGISTERED") {
+      router.push({ path: "/login", query: { error: code, message } });
+      return Promise.reject(error);
+    }
+    if (code === "INVALID_TOKEN") {
+      router.push({ path: "/error", query: { error: code, message } });
+      return Promise.reject(error);
+    }
+
+    // 나머지(404/409/500 등)는 라우팅하지 않고 컴포넌트로 전달
     return Promise.reject(error);
   }
 );
