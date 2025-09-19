@@ -148,6 +148,21 @@ async function fetchTemplates () {
   }
 }
 
+async function onDelete(t) {
+  if (!t?.id) return
+  if (!confirm('이 채용공고를 삭제하시겠습니까?')) return
+  try {
+    await api.delete(`/companyTemplates/${t.id}`, {
+      headers: { 'X-Company-Slug': companySlug },
+      params: { companySlug }
+    })
+    templates.value = templates.value.filter(x => x.id !== t.id)
+    total.value = Math.max(0, total.value - 1)
+  } catch (e) {
+    alert(e.response?.data?.message || e.message || '삭제 실패')
+  }
+}
+
 // 검색 필터
 const filteredTemplates = computed(() => {
   const q = query.value.toLowerCase().trim()
@@ -174,7 +189,7 @@ async function goDetail(id) {
 
 function onCreate() {}
 function onEdit(_template) {}
-function onDelete(_template) {}
+
 </script>
 
 
