@@ -36,8 +36,7 @@
                 <p class="mt-2 text-slate-600">{{ template.desc }}</p>
                 <div class="mt-3 flex gap-2 text-sm">
                   <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="goDetail(template.id)">조회</button>
-                  <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="onCreate()">생성</button>
-                  <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="onEdit(template)">수정</button>
+                  <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="onEdit(template.id)">수정</button>
                   <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="onDelete(template)">삭제</button>
                 </div>
               </div>
@@ -168,6 +167,10 @@ async function fetchTemplates () {
   }
 }
 
+async function goDetail(id) {
+  router.push({ path: `/c/${companySlug}/post/${id}/detail` })
+}
+
 async function onDelete(t) {
   if (!t?.id) return
   if (!confirm('이 채용공고를 삭제하시겠습니까?')) return
@@ -182,6 +185,11 @@ async function onDelete(t) {
     alert(e.response?.data?.message || e.message || '삭제 실패')
   }
 }
+
+async function onEdit(id) {
+  router.push({ path: `/c/${companySlug}/modify/post/${id}/edit/basic` })
+}
+// { path: 'modify/post/:companyTemplateId/basic',
 
 function toLocalTs(dateStr, timeStr, endOfDay = false) {
   if (!dateStr) return null
@@ -246,12 +254,7 @@ function dday(endLike) {
   return days > 0 ? days : 0
 }
 
-async function goDetail(id) {
-  router.push({ path: `/c/${companySlug}/post/${id}/detail` })
-}
 
-function onCreate() {}
-function onEdit(_template) {}
 
 </script>
 
