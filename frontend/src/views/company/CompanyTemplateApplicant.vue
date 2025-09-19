@@ -1,25 +1,25 @@
-<!-- views/JobDetail.vue -->
+<!-- views/TemplateDetail.vue -->
 <template>
     <div class="grid grid-cols-12 gap-6">
         <!-- Main -->
         <section class="col-span-12 lg:col-span-9 space-y-6">
-        <!-- Job header -->
+        <!-- Template header -->
         <header class="rounded-2xl bg-white shadow-sm p-6">
             <div class="flex items-start justify-between">
             <div>
-                <h1 class="text-3xl font-extrabold">{{ job?.title || '채용 공고' }}</h1>
-                <p class="mt-2 text-slate-600">{{ job?.desc }}</p>
-                <p v-if="job" class="mt-1 text-slate-500">
+                <h1 class="text-3xl font-extrabold">{{ template?.title || '채용 공고' }}</h1>
+                <p class="mt-2 text-slate-600">{{ template?.desc }}</p>
+                <p v-if="template" class="mt-1 text-slate-500">
                 지원자 수 : <span class="font-semibold">{{ totalApplicants }}</span>
                 </p>
             </div>
-            <div v-if="job" class="text-2xl font-extrabold pr-2 pt-1">D-{{ dday(job.endAt) }}</div>
+            <div v-if="template" class="text-2xl font-extrabold pr-2 pt-1">D-{{ dday(template.endAt) }}</div>
             </div>
         </header>
 
         <!-- Applicants -->
         <section class="space-y-4">
-            <div v-if="loadingJob || loadingApplicants" class="text-sm text-slate-500 px-2">불러오는 중</div>
+            <div v-if="loadingTemplate || loadingApplicants" class="text-sm text-slate-500 px-2">불러오는 중</div>
             <div v-if="error" class="text-sm text-rose-600 px-2">오류: {{ error }}</div>
 
             <article v-for="a in applicants" :key="a.id" class="rounded-2xl bg-white shadow-sm border p-5">
@@ -76,19 +76,19 @@
         <div class="sticky top-20 space-y-6">
             <div class="rounded-2xl bg-white shadow-sm border p-6 space-y-3">
             <h4 class="text-xl font-extrabold">부서</h4>
-            <p class="text-slate-700">{{ job?.dept || '-' }}</p>
+            <p class="text-slate-700">{{ template?.dept || '-' }}</p>
             <h4 class="text-xl font-extrabold mt-4">직무</h4>
-            <p class="text-slate-700">{{ job?.role || '-' }}</p>
+            <p class="text-slate-700">{{ template?.role || '-' }}</p>
             <h4 class="text-xl font-extrabold mt-4">신입/경력</h4>
-            <p class="text-slate-700">{{ job?.careerType || '신입' }}</p>
+            <p class="text-slate-700">{{ template?.careerType || '신입' }}</p>
             <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
                 <div>
                 <div class="font-bold">시작일</div>
-                <div class="mt-1 rounded-md border px-3 py-1.5">{{ fmtDateTime(job?.startAt) }}</div>
+                <div class="mt-1 rounded-md border px-3 py-1.5">{{ fmtDateTime(template?.startAt) }}</div>
                 </div>
                 <div>
                 <div class="font-bold">마감일</div>
-                <div class="mt-1 rounded-md border px-3 py-1.5">{{ fmtDateTime(job?.endAt) }}</div>
+                <div class="mt-1 rounded-md border px-3 py-1.5">{{ fmtDateTime(template?.endAt) }}</div>
                 </div>
             </div>
             </div>
@@ -97,7 +97,7 @@
             <h4 class="text-xl font-extrabold mb-3">자소서 문항</h4>
             <div class="space-y-2">
                 <button
-                v-for="(q, idx) in job?.essayQuestions || []"
+                v-for="(q, idx) in template?.essayQuestions || []"
                 :key="idx"
                 class="w-full rounded-md border px-4 py-2 text-left hover:bg-slate-50"
                 @click="openQuestion(idx)"
@@ -111,93 +111,97 @@
     </div>
     </template>
 
-    <script setup>
-    import { ref, onMounted } from 'vue'
-    import { useRoute, useRouter } from 'vue-router'
+<script setup>
+import { ref, onMounted, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import api from '@/api/axios'
 
-    /* 쉘에서 내려오는 companySlug 사용 */
-    const props = defineProps({ companySlug: { type: String, required: false } })
+const props = defineProps({ companySlug: { type: String, required: false } })
+const route = useRoute()
+const router = useRouter()
 
-    const route = useRoute()
-    const router = useRouter()
-    const jobId = route.params.id
+// ---- IDs
+const companyTemplateId = ref(route.params.companyTemplateId || route.query.companyTemplateId || '')
 
-    const job = ref(null)
-    const applicants = ref([])
-    const totalApplicants = ref(0)
-    const page = ref(0)
-    const size = 20
+// ---- State
+const template = ref(null)
+const applicants = ref([])
+const totalApplicants = ref(0)
+const page = ref(0)
+const size = 20
+const loadingTemplate = ref(false)
+const loadingApplicants = ref(false)
+const hasMore = ref(false)
+const error = ref('')
+const loading = ref(true)
 
-    const loadingJob = ref(false)
-    const loadingApplicants = ref(false)
-    const hasMore = ref(false)
-    const error = ref('')
+const fallbackAvatar = 'https://placehold.co/96x96/png'
+const base = computed(() => {
+const slug = props.companySlug || route.params.companySlug || ''
+    return slug ? `companies/${slug}/` : ''
+})
 
-    const fallbackAvatar = 'https://placehold.co/96x96/png'
+// ---- API
+async function fetchTemplateDetail(id) {
+    const { data } = await api.get(`companyTemplates/${id}`)
+    return data
+}
+// async function fetchTemplate() {
+//   try {
+//     loadingTemplate.value = true
+//     // 필요 시 템플릿 전용 엔드포인트가 다르면 여기서 교체
+//     const { data } = await api.get(`${base.value}/templates/${companyTemplateId.value}`)
+//     template.value = data
+//   } catch (e) {
+//     error.value = String(e.message || e)
+//   } finally {
+//     loadingTemplate.value = false
+//   }
+// }
+async function fetchApplicants(reset = false) {
+    loadingApplicants.value = true
+    if (reset) { page.value = 0; applicants.value = [] }
+    hasMore.value = false
+    loadingApplicants.value = false
+}
 
-    const base = props.companySlug
-    ? `/api/v1/companies/${props.companySlug}`
-    : `/api/v1`
+// --- UI
+function loadMore() { if (!loadingApplicants.value && hasMore.value) fetchApplicants(false) }
+function openApplicant(applicantId) { router.push({ name: 'ApplicantDetail', params: { id: applicantId } }) }
+function reverify(applicantId) { api.post(`applicants/${applicantId}/reverify`).then(() => fetchApplicants(true)) }
+function ping() {}
+function openQuestion() {}
+function dday(endIso){ if(!endIso) return '-'; const e=new Date(endIso), t=new Date(); const ms=e.setHours(0,0,0,0)-t.setHours(0,0,0,0); const d=Math.ceil(ms/86400000); return d>0?d:0 }
+function fmtDateTime(iso){ return iso?new Date(iso).toLocaleString():'-' }
+function fmtScore(s){ return s==null?'-':Number(s).toFixed(2) }
+function statusChip(status){
+    const map={PASS_DOC:{label:'서류 합격',cls:'bg-emerald-100 text-emerald-700 border border-emerald-200'},
+        PASS_FINAL:{label:'최종 합격',cls:'bg-amber-100 text-amber-700 border border-amber-200'},
+        FAIL:{label:'불합격',cls:'bg-rose-100 text-rose-700 border border-rose-200'},
+        PENDING:{label:'검증중',cls:'bg-slate-100 text-slate-700 border border-slate-200'}}
+return map[status]||map.PENDING
+}
 
-    onMounted(async () => {
-    await Promise.all([fetchJob(), fetchApplicants(true)])
-    })
-
-    async function fetchJob() {
+// --- Mount
+onMounted(async () => {
     try {
-        loadingJob.value = true
-        const r = await fetch(`${base}/jobs/${jobId}`, { headers: { Accept: 'application/json' } })
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
-        job.value = await r.json()
+        if (!companyTemplateId.value) throw new Error('templateId가 없습니다.')
+        // 상세정보는 반드시 companyTemplates API 사용
+        template.value = await fetchTemplateDetail(companyTemplateId.value)
+        await fetchApplicants(true)
     } catch (e) {
-        error.value = String(e.message || e)
+        error.value = e?.response?.data?.message || e.message || '조회 실패'
     } finally {
-        loadingJob.value = false
+        loading.value = false
     }
-    }
+})
 
-    async function fetchApplicants(reset = false) {
-    try {
-        loadingApplicants.value = true
-        if (reset) { page.value = 0; applicants.value = [] }
-        const q = new URLSearchParams({ page: String(page.value), size: String(size) })
-        const r = await fetch(`${base}/jobs/${jobId}/applicants?${q}`, { headers: { Accept: 'application/json' } })
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
-        const data = await r.json()
-        applicants.value = applicants.value.concat(data.content || [])
-        totalApplicants.value = data.totalElements ?? applicants.value.length
-        hasMore.value = !(data.last ?? true)
-        page.value += 1
-    } catch (e) {
-        error.value = String(e.message || e)
-    } finally {
-        loadingApplicants.value = false
-    }
-    }
-
-    function loadMore() { if (!loadingApplicants.value && hasMore.value) fetchApplicants(false) }
-    function openApplicant(applicantId) { router.push({ name: 'ApplicantDetail', params: { id: applicantId } }) }
-    function reverify(applicantId) { fetch(`/api/v1/applicants/${applicantId}/reverify`, { method: 'POST' }).then(() => fetchApplicants(true)) }
-    function ping() {}
-    function openQuestion() {}
-
-    function dday(endIso) {
-    if (!endIso) return '-'
-    const end = new Date(endIso)
-    const today = new Date()
-    const ms = end.setHours(0,0,0,0) - today.setHours(0,0,0,0)
-    const days = Math.ceil(ms / 86400000)
-    return days > 0 ? days : 0
-    }
-    function fmtDateTime(iso) { return iso ? new Date(iso).toLocaleString() : '-' }
-    function fmtScore(s) { return s == null ? '-' : Number(s).toFixed(2) }
-    function statusChip(status) {
-    const map = {
-        PASS_DOC: { label: '서류 합격', cls: 'bg-emerald-100 text-emerald-700 border border-emerald-200' },
-        PASS_FINAL: { label: '최종 합격', cls: 'bg-amber-100 text-amber-700 border border-amber-200' },
-        FAIL: { label: '불합격', cls: 'bg-rose-100 text-rose-700 border border-rose-200' },
-        PENDING: { label: '검증중', cls: 'bg-slate-100 text-slate-700 border border-slate-200' },
-    }
-    return map[status] || map.PENDING
-    }
+// --- Route change
+watch(() => route.fullPath, async () => {
+    const next = route.params.companyTemplateId || route.query.companyTemplateId || ''
+    if (!next || next === companyTemplateId.value) return
+    companyTemplateId.value = next
+    template.value = await fetchTemplateDetail(companyTemplateId.value)
+    await fetchApplicants(true)
+})
 </script>
