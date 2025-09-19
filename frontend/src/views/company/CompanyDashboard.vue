@@ -142,19 +142,25 @@ async function fetchTemplates () {
   loading.value = true; error.value = ''
   try {
     const { data } = await api.get('/companyTemplates', {
-      params: { page: page.value, size: size.value, sort: sort.value, }
+      params: { page: page.value, size: size.value, sort: sort.value }
     })
-    const list = data.templates ?? data.content ?? []
+
+    const list = Array.isArray(data.templates) ? data.templates : (data.content ?? [])
     total.value = data.totalElements ?? list.length
-    templates.value = list.map(t => ({
-      id: t.id,
-      title: t.name || '(제목 없음)',
-      desc: t.description || '',
-      dept: t.department || '',
-      role: t.category || '',
-      startAt: t.startDate || null,
-      endAt: t.endDate || null,
-    }))
+
+    templates.value = list.map(item => {
+      const b = item.basic ?? {}
+      const d = item.detail ?? {}
+      return {
+        id: b.id,
+        title: b.name || '(제목 없음)',
+        desc: b.description || '',
+        dept: b.department || '',
+        role: b.category || '',
+        startAt: d.startDate || null,     // e.g. "2025-09-19T09:00:00"
+        endAt: d.endDate || null,         // e.g. "2025-10-09T23:59:59"
+      }
+    })
   } catch (e) {
     error.value = e.response?.data?.message || e.message || String(e)
   } finally {
@@ -218,12 +224,25 @@ const filteredTemplates = computed(() => {
 })
 
 // D-day
-function dday(endIso) {
-  if (!endIso) return 0
-  const end = new Date(endIso)
-  const today = new Date()
-  const ms = end.setHours(0,0,0,0) - today.setHours(0,0,0,0)
-  const days = Math.ceil(ms / 86400000)
+function parseLocalDate(dateLike) {
+  if (!dateLike) return null
+  if (typeof dateLike === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateLike)) {
+    // "YYYY-MM-DD" 또는 "YYYY-MM-DDTHH:mm:ss"
+    const [datePart, timePart] = dateLike.split('T')
+    const [y, m, d] = datePart.split('-').map(Number)
+    if (!timePart) return new Date(y, m - 1, d, 0, 0, 0, 0)
+    const [hh, mm, ss] = timePart.split(':').map(Number)
+    return new Date(y, m - 1, d, hh || 0, mm || 0, ss || 0, 0)
+  }
+  const dt = new Date(dateLike)
+  return isNaN(dt) ? null : dt
+}
+function dday(endLike) {
+  const end = parseLocalDate(endLike)
+  if (!end) return 0
+  const today0 = new Date(); today0.setHours(0,0,0,0)
+  const eod = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999)
+  const days = Math.ceil((eod.getTime() - today0.getTime()) / 86400000)
   return days > 0 ? days : 0
 }
 
