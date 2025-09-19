@@ -5,24 +5,27 @@
         <div class="grid grid-cols-12 gap-4 items-end">
             <div class="col-span-12 sm:col-span-3">
             <label class="block text-sm font-bold mb-1">부서</label>
-            <div class="flex items-center gap-2">
+            <input v-model="form.department" class="w-full rounded-md border border-slate-300 px-3 py-2" placeholder="부서 명을 입력하십시오."/>
+
+            <!-- <div class="flex items-center gap-2">
                 <select v-model="form.department" class="w-full rounded-md border border-slate-300 px-3 py-2">
                 <option value="" disabled>선택</option>
                 <option v-for="d in departments" :key="d" :value="d">{{ d }}</option>
                 </select>
                 <svg class="w-5 h-5 -ml-7 pointer-events-none opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/></svg>
-            </div>
+            </div> -->
             </div>
 
             <div class="col-span-12 sm:col-span-3">
             <label class="block text-sm font-bold mb-1">직무</label>
-            <div class="flex items-center gap-2">
+            <input v-model="form.role" class="w-full rounded-md border border-slate-300 px-3 py-2" placeholder="직무 명을 입력하십시오."/>
+            <!-- <div class="flex items-center gap-2">
                 <select v-model="form.role" class="w-full rounded-md border border-slate-300 px-3 py-2">
                 <option value="" disabled>선택</option>
                 <option v-for="r in roles" :key="r" :value="r">{{ r }}</option>
                 </select>
                 <svg class="w-5 h-5 -ml-7 pointer-events-none opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/></svg>
-            </div>
+            </div> -->
             </div>
 
             <div class="col-span-12 sm:col-span-2">
