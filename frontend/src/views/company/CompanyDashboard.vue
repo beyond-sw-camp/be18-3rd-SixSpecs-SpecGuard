@@ -169,7 +169,7 @@ function dday(endIso) {
 }
 
 async function goDetail(id) {
-  router.push({ path: `/c/${companySlug}/post/${id}/applicant` })
+  router.push({ path: `/c/${companySlug}/post/${id}/detail` })
 }
 
 function onCreate() {}

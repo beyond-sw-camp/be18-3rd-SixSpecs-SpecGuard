@@ -8,6 +8,7 @@
             <div class="flex items-start justify-between">
             <div>
                 <h1 class="text-3xl font-extrabold">{{ template?.title || '채용 공고' }}</h1>
+                <!-- <h1 class="text-3xl font-extrabold">{{ template.title }}</h1> -->
                 <p class="mt-2 text-slate-600">{{ template?.desc }}</p>
                 <p v-if="template" class="mt-1 text-slate-500">
                 지원자 수 : <span class="font-semibold">{{ totalApplicants }}</span>
