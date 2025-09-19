@@ -49,7 +49,7 @@
             <div class="space-y-3">
                 <div>
                 <div class="text-sm font-bold mb-1">제목</div>
-                <input v-model="form.title" class="w-full rounded-md border border-slate-300 px-3 py-2" placeholder="개발자 채용 1"/>
+                <input v-model="form.title" class="w-full rounded-md border border-slate-300 px-3 py-2" placeholder="채용 공고 명을 입력하십시오."/>
                 </div>
                 <div>
                 <div class="text-sm font-bold mb-1">설명</div>
@@ -133,8 +133,8 @@ const filteredRoleTags = computed(() => roleTags.filter(t => t.toLowerCase().inc
 const filteredCategories = computed(() => categories.filter(c => c.toLowerCase().includes(categoryQuery.value.toLowerCase())))
 
 const form = reactive({
-    title: '채용 공고 명을 입력하십시오.',
-    description: '채용 내용을 입력하십시오',
+    title: '',
+    description: '',
     department: '',
     role: '',
     careerType: '',
