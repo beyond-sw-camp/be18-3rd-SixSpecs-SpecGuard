@@ -8,7 +8,6 @@
             <div class="flex items-start justify-between">
             <div>
                 <h1 class="text-3xl font-extrabold">{{ template?.title || '채용 공고' }}</h1>
-                <!-- <h1 class="text-3xl font-extrabold">{{ template.title }}</h1> -->
                 <p class="mt-2 text-slate-600">{{ template?.desc }}</p>
                 <p v-if="template" class="mt-1 text-slate-500">
                 지원자 수 : <span class="font-semibold">{{ totalApplicants }}</span>
@@ -96,17 +95,27 @@
 
             <div class="rounded-2xl bg-white shadow-sm border p-6">
             <h4 class="text-xl font-extrabold mb-3">자소서 문항</h4>
-            <div class="space-y-2">
-                <button
-                v-for="(q, idx) in template?.essayQuestions || []"
-                :key="idx"
-                class="w-full rounded-md border px-4 py-2 text-left hover:bg-slate-50"
-                @click="openQuestion(idx)"
+            <div v-if="hasQuestions" class="space-y-2">
+                <div v-for="(q, idx) in (template.essayQuestions || [])"
+                :key="q.id || idx"
+                class="rounded-lg border"
                 >
-                {{ idx + 1 }}번 문항
+                <button
+                    class="w-full px-4 py-2 text-left font-semibold flex items-center justify-between"
+                    @click="toggleQuestion(idx)"
+                >
+                    <span>{{ idx + 1 }}번 문항</span>
+                    <span class="text-sm text-slate-500">{{ openIdx === idx ? '닫기' : '보기' }}</span>
                 </button>
+                <div v-if="openIdx === idx" class="px-4 pb-4">
+                    <div class="rounded-xl border px-4 py-3 text-slate-800 whitespace-pre-wrap">
+                    {{ q.fieldName || q.label || q.title || '' }}
+                    </div>
+                </div>
+                </div>
             </div>
-            </div>
+        <p v-else class="text-sm text-slate-500">등록된 문항이 없습니다.</p>
+        </div>
         </div>
         </aside>
     </div>
@@ -136,6 +145,12 @@ const hasMore = ref(false)
 const error = ref('')
 const loading = ref(true)
 
+const openIdx = ref(null)
+const hasQuestions = computed(() =>
+    Array.isArray(template.value?.essayQuestions) &&
+    template.value.essayQuestions.length > 0
+)
+
 const fallbackAvatar = 'https://placehold.co/96x96/png'
 const base = computed(() => {
 const slug = props.companySlug || route.params.companySlug || ''
@@ -144,21 +159,34 @@ const slug = props.companySlug || route.params.companySlug || ''
 
 // ---- API
 async function fetchTemplateDetail(id) {
-    const { data } = await api.get(`companyTemplates/${id}`)
-    return data
+    const res = await api.get(`companyTemplates/${id}`)
+    const raw = res.data?.data ?? res.data ?? {}
+    const basic = raw.basic ?? {}
+    const detail = raw.detail ?? {}
+    const fieldsRaw =
+    raw.fields ??
+    detail?.fields ??
+    raw.data?.fields ??
+    []
+    const fields = Array.isArray(fieldsRaw) ? fieldsRaw : Object.values(fieldsRaw)
+    return {
+    id: basic.id ?? raw.id,
+    title: basic.name ?? '(제목 없음)',
+    desc: basic.description ?? '',
+    dept: basic.department ?? '-',
+    role: basic.category ?? '-',
+    careerType: (basic.yearsOfExperience ?? 0) > 0 ? '경력' : '신입',
+    years: basic.yearsOfExperience ?? 0,
+    startAt: detail.startDate ?? null,
+    endAt: detail.endDate ?? null,
+    essayQuestions: fields,
+    }
 }
-// async function fetchTemplate() {
-//   try {
-//     loadingTemplate.value = true
-//     // 필요 시 템플릿 전용 엔드포인트가 다르면 여기서 교체
-//     const { data } = await api.get(`${base.value}/templates/${companyTemplateId.value}`)
-//     template.value = data
-//   } catch (e) {
-//     error.value = String(e.message || e)
-//   } finally {
-//     loadingTemplate.value = false
-//   }
-// }
+
+function toggleQuestion(i) {
+    openIdx.value = openIdx.value === i ? null : i
+}
+
 async function fetchApplicants(reset = false) {
     loadingApplicants.value = true
     if (reset) { page.value = 0; applicants.value = [] }
@@ -186,9 +214,12 @@ return map[status]||map.PENDING
 // --- Mount
 onMounted(async () => {
     try {
-        if (!companyTemplateId.value) throw new Error('templateId가 없습니다.')
+        if (!companyTemplateId.value) throw new Error('찾을 수 없는 채용공고 입니다.')
         // 상세정보는 반드시 companyTemplates API 사용
         template.value = await fetchTemplateDetail(companyTemplateId.value)
+        // if (Array.isArray(template.value.essayQuestions) && template.value.essayQuestions.length) {
+        // openIdx.value = 0
+        console.debug('questions length =', (template.value.essayQuestions||[]).length, template.value.essayQuestions)
         await fetchApplicants(true)
     } catch (e) {
         error.value = e?.response?.data?.message || e.message || '조회 실패'
