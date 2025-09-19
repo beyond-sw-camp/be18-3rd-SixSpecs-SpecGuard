@@ -142,7 +142,7 @@ async function fetchTemplates () {
   loading.value = true; error.value = ''
   try {
     const { data } = await api.get('/companyTemplates', {
-      params: { page: page.value, size: size.value, sort: sort.value, companySlug }
+      params: { page: page.value, size: size.value, sort: sort.value, }
     })
     const list = data.templates ?? data.content ?? []
     total.value = data.totalElements ?? list.length
