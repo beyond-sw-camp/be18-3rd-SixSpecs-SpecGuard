@@ -125,8 +125,6 @@ const router = useRouter()
 const route = useRoute()
 const companySlug = route.params.companySlug
 
-const departments = ['IT','제조','영업','HR']
-const roles = ['백엔드 개발','프론트엔드','데이터 분석','QA','ERP']
 const roleTags = ['프론트엔드 개발','백엔드 개발','데이터 분석','ERP','QA','네트워크 엔지니어','HR']
 const categories = ['IT','미디어, 광고','판매, 유통','제조, 생산, 화학','금융, 은행','서비스','공공기관 / 공기업']
 

@@ -142,6 +142,9 @@ const itemTitle = ref('');
 const types = ['텍스트','숫자','날짜','선택'];
 
 /* 입력값 */
+// const startDateIso = toLocalISO(startDate.value, startTime.value, false)
+// const endDateIso   = toLocalISO(endDate.value,   endTime.value,   true)
+
 const startDate = ref('')
 const startTime = ref('')
 const endDate = ref('')
@@ -171,9 +174,23 @@ function todayISO () {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
+
+function toLocalISO(dateStr, timeStr, { endOfDay = false } = {}) {
+  if (!dateStr) return null
+  const [y,m,d] = dateStr.split('-').map(Number)
+  let hh=0, mm=0, ss=0
+  if (timeStr) [hh,mm] = timeStr.split(':').map(Number)
+  else if (endOfDay) { hh=23; mm=59; ss=59 } else { hh=9; mm=0; ss=0 }
+  const dt = new Date(y, m-1, d, hh, mm, ss, 0)
+  const pad = n => String(n).padStart(2,'0')
+  return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`
+}
+
 function formatted (d, t) {
   if (!d && !t) return '—'
-  const dt = new Date(`${d || todayISO()}T${t || '00:00'}`)
+  const [y,m,day] = (d || todayISO()).split('-').map(Number)
+  const [hh,mm] = (t || '00:00').split(':').map(Number)
+  const dt = new Date(y, m-1, day, hh, mm, 0, 0) // 로컬
   return dt.toLocaleString('ko-KR', {
     year:'numeric', month:'long', day:'numeric',
     weekday:'short', hour:'2-digit', minute:'2-digit', hour12:false
@@ -238,9 +255,8 @@ async function createPosting () {
     if (!templateId) throw new Error('templateId 없음')
     if (!localStorage.getItem('accessToken')) throw new Error('로그인 필요')
 
-    // ISO(UTC)로 맞춤 – Z 붙이기
-    const startISO = startDate.value ? new Date(`${startDate.value}T${startTime.value||'00:00'}:00`).toISOString() : null
-    const endISO   = endDate.value   ? new Date(`${endDate.value}T${endTime.value||'23:59'}:00`).toISOString()   : null
+    const startDateIso = toLocalISO(startDate.value, startTime.value, { endOfDay:false, coerceFuture:true })
+    const endDateIso   = toLocalISO(endDate.value,   endTime.value,   { endOfDay:true,  coerceFuture:true })
 
     const ft = fieldTypeEnum(type.value)
     const fields = prompts.value.map((p,i)=>({
@@ -259,13 +275,14 @@ async function createPosting () {
       fields,
       detail: {
         templateId,
-        startDate: startISO,
-        endDate: endISO,
+        startDate: startDateIso,
+        endDate: endDateIso
       }
     }
 
-    console.log('routes:', router.getRoutes().map(r => r.name))
-    await api.post('/companyTemplates/detail', body)
+
+    console.log('REQ start/end', startDate.value, startTime.value, startDateIso, endDate.value, endTime.value, endDateIso)
+    await api.post('/companyTemplates/detail', body, { headers: { 'X-Company-Slug': companySlug } })
 
     const to = { name: 'CompanyDashboard', params: { companySlug } }
     const hasRoute = router.resolve(to).matched.length > 0
