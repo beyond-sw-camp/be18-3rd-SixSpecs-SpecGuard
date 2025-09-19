@@ -56,23 +56,35 @@
       <div class="sticky top-20 space-y-6">
         <div class="rounded-2xl border border-slate-200 p-6">
           <h4 class="text-xl font-extrabold mb-4">부서</h4>
-          <select v-model="dept" class="w-full rounded-lg border-slate-300 text-sm">
+          <input
+            v-model.trim="dept"
+            type="text"
+            class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            placeholder="부서 입력"
+          />
+          <!-- <select v-model="dept" class="w-full rounded-lg border-slate-300 text-sm">
             <option value="">전체</option>
             <option>백엔드</option>
             <option>프론트엔드</option>
             <option>데이터</option>
             <option>플랫폼</option>
-          </select>
+          </select> -->
         </div>
         <div class="rounded-2xl border border-slate-200 p-6">
           <h4 class="text-xl font-extrabold mb-4">직무</h4>
-          <select v-model="role" class="w-full rounded-lg border-slate-300 text-sm">
+          <input
+            v-model.trim="role"
+            type="text"
+            class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            placeholder="직무 입력"
+          />
+          <!-- <select v-model="role" class="w-full rounded-lg border-slate-300 text-sm">
             <option value="">전체</option>
             <option>백엔드</option>
             <option>프론트엔드</option>
             <option>DevOps</option>
             <option>QA</option>
-          </select>
+          </select> -->
         </div>
         <div class="rounded-2xl border border-slate-200 p-6">
           <h4 class="text-xl font-extrabold mb-2">시작일</h4>
@@ -100,6 +112,8 @@ const route = useRoute()
 const router = useRouter()
 const companySlug = route.params.companySlug || ''
 
+const norm = s => (s ?? '').toString().trim().toLowerCase()
+
 // UI 상태
 const query = ref('')
 const dept = ref('')
@@ -122,7 +136,7 @@ const error = ref('')
 
 // 로드 및 필터 변경 시 재조회
 onMounted(fetchTemplates)
-watch([dept, role, status, years, startDate, endDate, page, size, sort], fetchTemplates)
+watch([status, years, startDate, endDate, page, size, sort], fetchTemplates)
 
 async function fetchTemplates () {
   loading.value = true; error.value = ''
@@ -163,14 +177,44 @@ async function onDelete(t) {
   }
 }
 
+function toLocalTs(dateStr, timeStr, endOfDay = false) {
+  if (!dateStr) return null
+  const [y, m, d] = dateStr.split('-').map(Number)
+  let hh = 0, mm = 0
+  if (timeStr) {
+    ;[hh, mm] = timeStr.split(':').map(Number)
+  } else if (endOfDay) {
+    hh = 23; mm = 59
+  }
+  return new Date(y, m - 1, d, hh, mm, 0, 0).getTime()
+}
+
 // 검색 필터
 const filteredTemplates = computed(() => {
-  const q = query.value.toLowerCase().trim()
-  if (!q) return templates.value
-  return templates.value.filter(j =>
-    (j.title||'').toLowerCase().includes(q) ||
-    (j.desc||'').toLowerCase().includes(q)
-  )
+  const q = norm(query.value)
+  const d = norm(dept.value)
+  const r = norm(role.value)
+  const sTs = toLocalTs(startDate.value, startTime.value, false)
+  const eTs = toLocalTs(endDate.value, endTime.value, true)    
+
+  return templates.value.filter(j => {
+    const title = norm(j.title)
+    const desc  = norm(j.desc)
+    const jd    = norm(j.dept)
+    const jr    = norm(j.role)
+
+    const matchQuery = !q || title.includes(q) || desc.includes(q)
+    const matchDept  = !d || jd.includes(d)
+    const matchRole  = !r || jr.includes(r)
+
+    const jStartTs = j.startAt ? new Date(j.startAt).getTime() : null
+    const jEndTs   = j.endAt   ? new Date(j.endAt).getTime()   : null
+
+    const matchStart = !sTs || (jStartTs !== null && jStartTs >= sTs) // 설정한 시작일 이후(포함)
+    const matchEnd   = !eTs || (jEndTs   !== null && jEndTs   <= eTs) // 설정한 마감일
+    
+    return matchQuery && matchDept && matchRole && matchStart && matchEnd
+  })
 })
 
 // D-day
