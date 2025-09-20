@@ -27,6 +27,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
+        console.log("API Error Interceptor Triggered:", error);
+        
         const authStore = useAuthStore();
         const originalRequest = error.config;
 
@@ -76,6 +78,9 @@ api.interceptors.response.use(
                     break;
                 case "INVALID_TOKEN":
                     router.push({ path: "/error", query: { error: code, message } });
+                    break;
+                case "SESSION_EXPIRED":
+                    router.push({ path: "/login", query: { error: code, message } });
                     break;
                 default:
                     router.push({ path: "/error", query: { message } });

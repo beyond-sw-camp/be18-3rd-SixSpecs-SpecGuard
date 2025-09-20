@@ -5,7 +5,7 @@
         <header class="bg-white shadow-sm">
         <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-4 text-center">
             <h1 class="text-lg sm:text-xl font-bold">
-            [SIXSPEC] 2025 우수인재 경력 채용 (DATA Intelligence 사업개발 및 제안)
+               [SIXSPEC] 2025 우수인재 경력 채용 (DATA Intelligence 사업개발 및 제안)
             </h1>
         </div>
         <!-- Step Tabs -->
@@ -116,7 +116,7 @@
             <span class="font-semibold">학위구분</span>
             <div role="radiogroup" class="flex flex-wrap gap-2">
                 <button
-                v-for="opt in degreeOptions"
+                v-for="opt in univDegreeOptions"
                 :key="opt.value"
                 type="button"
                 role="radio"
@@ -174,10 +174,11 @@
             <div class="flex flex-wrap gap-2 items-center text-sm">
                 <span class="font-semibold">졸업구분</span>
                 <div class="flex flex-wrap gap-2">
-                <button :class="chipClass(u.gradStatus === '졸업')" @click="u.gradStatus = '졸업'">졸업</button>
-                <button :class="chipClass(u.gradStatus === '수료')" @click="u.gradStatus = '수료'">수료</button>
-                <button :class="chipClass(u.gradStatus === '중퇴')" @click="u.gradStatus = '중퇴'">중퇴</button>
-                <button :class="chipClass(u.gradStatus === '재학')" @click="u.gradStatus = '재학'">재학</button>
+                <button :class="chipClass(u.gradStatus === 'ENROLLED')" @click="u.gradStatus = 'ENROLLED'">재학</button>
+                <button :class="chipClass(u.gradStatus === 'GRADUATED')" @click="u.gradStatus = 'GRADUATED'">졸업</button>
+                <button :class="chipClass(u.gradStatus === 'EXPECTED')" @click="u.gradStatus = 'EXPECTED'">졸업예정</button>
+                <button :class="chipClass(u.gradStatus === 'WITHDRAWN')" @click="u.gradStatus = 'WITHDRAWN'">중퇴</button>
+                <button :class="chipClass(u.gradStatus === 'LEAVE_OF_ABSENCE')" @click="u.gradStatus = 'LEAVE_OF_ABSENCE'">휴학</button>
                 </div>
             </div>
             <!-- </div>
@@ -210,10 +211,10 @@
                     class="rounded-md border px-3 py-2 w-20" 
                     placeholder="평점"
                     min="0" 
-                    :max="univGpaMax(u.semesters)"
+                    :max="u.maxGpa"
                     @input="enforceMax(u, univGpaMax)"
                 />
-                <select v-model="u.semesters" class="rounded-md border px-3 py-2">
+                <select v-model.number="u.maxGpa" class="rounded-md border px-3 py-2">
                     <option disabled value="">--- 총점 ---</option>
                     <option value="univTotal4.5">4.5점</option>
                     <option value="univTotal5.0">5.0점</option>
@@ -244,8 +245,19 @@
             <div class="mt-6 space-y-6">
             <div class="flex flex-wrap gap-2 items-center text-sm">
                 <span class="font-semibold">학위구분</span>
-                <button :class="chipClass(g.degree === '석사')" @click="g.degree = '석사'">석사</button>
-                <button :class="chipClass(g.degree === '박사')" @click="g.degree = '박사'">박사</button>
+                <div role="radiogroup" class="flex flex-wrap gap-2">
+                <button
+                v-for="opt in gradDegreeOptions"
+                :key="opt.value"
+                type="button"
+                role="radio"
+                :aria-checked="g.degree === opt.value"
+                :class="chipClass(g.degree === opt.value)"
+                @click="g.degree = opt.value"
+                >
+                {{ opt.label }}
+                </button>
+            </div>
             </div>
 
             <div class="grid grid-cols-12 gap-3 items-center">
@@ -289,10 +301,9 @@
 
             <div class="flex flex-wrap gap-2 items-center text-sm">
                 <span class="font-semibold">졸업구분</span>
-                <button :class="chipClass(g.gradStatus === '졸업')" @click="g.gradStatus = '졸업'">졸업</button>
-                <button :class="chipClass(g.gradStatus === '수료')" @click="g.gradStatus = '수료'">수료</button>
-                <button :class="chipClass(g.gradStatus === '중퇴')" @click="g.gradStatus = '중퇴'">중퇴</button>
-                <button :class="chipClass(g.gradStatus === '재학')" @click="g.gradStatus = '재학'">재학</button>
+                <button :class="chipClass(g.gradStatus === 'GRADUATED')" @click="g.gradStatus = 'GRADUATED'">졸업</button>
+                <button :class="chipClass(g.gradStatus === 'WITHDRAWN')" @click="g.gradStatus = 'WITHDRAWN'">중퇴</button>
+                <button :class="chipClass(g.gradStatus === 'ENROLLED')" @click="g.gradStatus = 'ENROLLED'">재학</button>
             </div>
 
             <div class="grid grid-cols-12 gap-3 items-center">
@@ -322,13 +333,14 @@
                     class="rounded-md border px-3 py-2 w-20" 
                     placeholder="평점"
                     min="0" 
-                    :max="gradGpaMax(g.semesters)"
+                    :max="g.maxGpa"
                     @input="enforceMax(g, gradGpaMax)"
                 />
-                <select v-model="g.semesters" class="rounded-md border px-3 py-2">
+                <select v-model.number="g.maxGpa" class="rounded-md border px-3 py-2">
                     <option disabled value="">--- 총점 ---</option>
-                    <option value="gradTotal4.5">4.5점</option>
-                    <option value="gradTotal5.0">5.0점</option>
+                    <option value="4.0">4.0점</option>
+                    <option value="4.5">4.5점</option>
+                    <option value="5.0">5.0점</option>
                 </select>
                 </div>
             </div>
@@ -399,7 +411,7 @@
                 <input v-model.trim="c.role" class="col-span-12 sm:col-span-4 rounded-md border px-3 py-2" placeholder="담당업무를 입력하세요" />
             </div>
 
-            <div>
+            <!-- <div>
                 <label class="block font-semibold mb-2">경험 및 역량기술서</label>
                 <textarea v-model="c.summary" rows="5" 
                     class="w-full rounded-md border px-3 py-2" 
@@ -409,26 +421,24 @@
                 <div class="text-right text-xs text-slate-500">
                     {{ (c.summary || '').length }} / 500
                 </div>
+            </div> -->
             </div>
+        </section>
 
+
+        <section v-for="(l, i) in links" :key="i" class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
+        
             <div class="grid grid-cols-12 gap-3 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">포트폴리오 첨부</label>
-                <input v-model.trim="c.portfolioUrl" class="col-span-12 sm:col-span-10 rounded-md border px-3 py-2" placeholder="링크첨부" />
+                <label class="col-span-12 sm:col-span-2 font-semibold">{{ l.linkType.toLocaleLowerCase() }}</label>
+                <input v-model.trim="l.url" type="url" class="col-span-12 sm:col-span-10 rounded-md border px-3 py-2" :placeholder="l.linkType.toLocaleLowerCase() + ' 링크첨부' " />
             </div>
-
-            <div class="grid grid-cols-12 gap-3 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">경력기술서 첨부</label>
-                <input v-model.trim="c.cvUrl" class="col-span-12 sm:col-span-10 rounded-md border px-3 py-2" placeholder="링크첨부" />
-            </div>
-            </div>
-
+            
             <div class="mt-6 flex justify-end gap-3"></div>
         </section>
         </main>
 
         <footer class="sticky bottom-0 bg-white border-t">
         <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-end gap-3">
-            <button class="rounded-md border px-5 py-2" type="button" @click="saveDraft">임시저장</button>
             <button class="rounded-md bg-sky-600 px-6 py-2 text-white" type="button" @click="goNext">다음</button>
         </div>
         </footer>
@@ -438,7 +448,11 @@
     <script setup>
     import { ref, computed } from 'vue'
     import { useRoute, useRouter} from 'vue-router'
+    import { onMounted } from 'vue'
+    import { resumeStore } from '@/stores/resumeStore'
+    import axios from 'axios'
 
+    const API = import.meta.env.VITE_API_URL
     const router = useRouter()
     const route = useRoute()
 
@@ -486,11 +500,11 @@
 
     // 고등학교 상태
     const highStatusOptions = [
+        { value: 'ENROLLED', label: '재학' },
     { value: 'GRADUATED', label: '졸업' },
     { value: 'EXPECTED', label: '졸업예정' },
-    { value: 'DROPPED', label: '중퇴' },
-    { value: 'LEAVE', label: '휴학' },
-    { value: 'ENROLLED', label: '재학' },
+    { value: 'WITHDRAWN', label: '중퇴' },
+    { value: 'LEAVE_OF_ABSENCE', label: '휴학' },
     ]
     const highAdmissionStatus = ref('GRADUATED')
     const hs = ref({
@@ -499,6 +513,7 @@
     district: '',
     periodStart: '',
     periodEnd: '',
+    gradStatus: highAdmissionStatus,
     })
     const hsdistricts = computed(() => KR_REGIONS[hs.value.city] ?? [])
     const univDistricts = (city) => KR_REGIONS[city] ?? []
@@ -519,9 +534,10 @@
     const gradMajors    = (group) => MAJORS[group] ?? []
 
     // 대학교 상태
-    const degreeOptions = [
+    const univDegreeOptions = [
     { value: 'BACHELOR', label: '학사' },
     { value: 'ASSOCIATE', label: '전문학사' },
+    { value: 'OTHER', label: '기타' },
     ]
 
     const makeUniv = () => ({
@@ -535,10 +551,7 @@
     gradStatus: '',
     majorGroup: '',
     major: '',
-    majorType: '',
-    majorDetail: '',
-    gpaType: '',
-    semesters: '',
+    maxGpa: '',
     })
 
     const univ = ref([makeUniv()])
@@ -546,14 +559,16 @@
     function addUniv(){ univ.value.push(makeUniv()) }
     function removeUniv(i){ univ.value.splice(i,1) }
 
-    const univGpaMax    = (sem) => (sem === 'univTotal5.0' ? 5.0 : 4.5)
-
-
+    // 대학원 상태
+    const gradDegreeOptions = [
+    { value: 'MASTER', label: '학사' },
+    { value: 'DOCTORATE', label: '박사' },
+    { value: 'OTHER', label: '기타' },
+    ]
     // 대학원 상태
     const makeGrad = () => ({
     gpa: null,
-    semesters: '',
-    degree: '',
+    degree: 'MASTER',
     school: '',
     city: '',
     district: '',
@@ -563,7 +578,7 @@
     gradStatus: '',
     majorGroup: '',
     major: '',
-    gpaType: '',
+    maxGpa: '',
     })
     
     const grad = ref([makeGrad()])
@@ -571,11 +586,8 @@
     function addGrad(){ grad.value.push(makeGrad()) }
     function removeGrad(i){ grad.value.splice(i,1) }
     
-    // 대학원 성적 - 총점 선택에 따른 max 값
-    const gradGpaMax    = (sem) => (sem === 'gradTotal5.0' ? 5.0 : 4.5)
-
     function enforceMax(item, getMax) {
-        const max = getMax(item.semesters);          // 총점(semesters)에 따른 최대값
+        const max = getMax(item.maxGpa);          // 총점에 따른 최대값
         let v = Number(item.gpa);
 
         if (Number.isNaN(v)) { item.gpa = null; return; }
@@ -598,16 +610,19 @@
         periodEnd: '',
         department: '',
         rank: '',
-        role: '',
-        summary: '',
-        portfolioUrl: '',
-        cvUrl: '',
+        role: ''
     })
 
     const career = ref([makeCareer()])
 
     function addCareer(){ career.value.push(makeCareer()) }
     function removeCareer(i){ career.value.splice(i,1) }
+
+    const links = ref([
+      { linkType: "GITHUB", url: "" },
+      { linkType: "NOTION", url: "" },
+      { linkType: "VELOG", url: "" },
+    ])
 
     function validateForm() {
         if (!hs.value.school)      return alert('고등학교 학교명을 입력하세요.'), false
@@ -624,7 +639,7 @@
                 if (!u.periodStart) return alert(`대학교 ${i+1}: 재학 시작일`), false
                 if (!u.periodEnd)   return alert(`대학교 ${i+1}: 재학 종료일`), false
                 if (u.gpa == null || u.gpa === '') return alert(`대학교 ${i+1}: 평점`), false
-                if (!u.semesters)   return alert(`대학교 ${i+1}: 총점`), false
+                if (!u.maxGpa)   return alert(`대학교 ${i+1}: 총점`), false
             }
         }
 
@@ -637,7 +652,7 @@
                 if (!g.periodStart) return alert(`대학원 ${i+1}: 재학 시작일`), false
                 if (!g.periodEnd)   return alert(`대학원 ${i+1}: 재학 종료일`), false
                 if (g.gpa == null || g.gpa === '') return alert(`대학원 ${i+1}: 평점`), false
-                if (!g.semesters)   return alert(`대학원 ${i+1}: 총점`), false
+                if (!g.maxGpa)   return alert(`대학원 ${i+1}: 총점`), false
             }
         }
 
@@ -659,13 +674,94 @@
     }
 
 
-    function saveDraft() {
-    // TODO: 임시저장 API 연동
-    alert('임시저장 처리 가정')
-    }
-    function goNext() {
+    async function goNext() {
+     console.log("Academic info saved:", resumeStore.resume);
     if (!validateForm()) return
-    const applicantSlug = route.params.applicantSlug
+    
+    const payload = {
+        educations: [
+            // ✅ 고등학교
+            {
+                admissionType:  
+            schoolName: hs.value.school,
+            city: hs.value.city,
+            district: hs.value.district,
+            startDate: hs.value.periodStart,
+            endDate: hs.value.periodEnd,
+            graduationStatus: hs.value.gradStatus,
+            schoolType:"HIGH",
+            degree: "HIGH_SCHOOL"
+        },
+        // ✅ 대학교들
+        ...univ.value.map(u => ({
+            schoolName: u.school,
+            city: u.city,
+            district: u.district,
+            startDate: u.periodStart,
+            endDate: u.periodEnd,
+            admissionType: u.admission,
+            graduationStatus: u.gradStatus,
+            degree: u.degree, // BACHELOR, MASTER, DOCTOR 등
+            major: u.majorGroup + " " + u.major,
+            schoolType:"UNIV",
+            gpa: u.gpa,
+            maxGpa: u.maxGpa    })),
+            // ✅ 대학원들
+            ...grad.value.map(g => ({
+                schoolName: g.school,
+                maxGpa: g.maxGpa,
+                city: g.city,
+                district: g.district,
+                startDate: g.periodStart,
+                endDate: g.periodEnd,
+                admission: g.admission,
+                graduationStatus: g.gradStatus,
+                schoolType:"GRAD",
+            degree: g.degree,
+            major: g.majorGroup + " " + g.major,
+            gpa: g.gpa,
+            maxGpa: g.maxGpa    }))
+        ],
+        experiences: [
+        ...career.value.map(c => ({
+            companyName: c.companyName,
+            department: c.department,
+            position: c.rank,
+            responsibilities: c.role,
+            employmentStatus: c.employmentType,
+            startDate: c.periodStart,
+            endDate: c.periodEnd,
+        }))],
+        links: [
+            ...links.value.map(l => ({
+                url: l.url,
+                linkType: l.linkType
+            }))
+        ]
+        }
+
+    console.log(payload);
+
+    try {
+        const res = await axios.post(`${API}/api/v1/resumes/edu-exp-link`, payload, {
+            withCredentials: true,
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        console.log("Certificate info saved:", res.data);
+
+        // 저장된 기본정보를 store에 반영
+        resumeStore.resume.educations = res.data.educations;
+        resumeStore.resume.experiences = res.data.experiences;
+        resumeStore.resume.links = res.data.links;
+
+        console.log("Resume store updated:", resumeStore.resume);
+    }
+    catch (error) {
+        console.log(error);
+        alert(error);
+        return;
+    }
     router.push({ name: 'ResumeCertificateInfo', params: { applicantSlug } })
     }
 </script>

@@ -160,7 +160,11 @@
             }, {
                 withCredentials: true
             });
+            
+            const selectedTemplate = jobs.value.find(job => job.id === selectedTemplateId.value);
 
+            resumeStore.template = selectedTemplate;
+            console.log(resumeStore.template)
             resumeStore.resume = res.data // 또는 loginRes.data 바로 내려오는 경우
             console.log("Login successful:", res.data);
 
