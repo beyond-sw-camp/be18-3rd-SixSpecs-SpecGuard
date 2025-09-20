@@ -124,7 +124,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/api/axios'
 
@@ -138,23 +138,58 @@ const companyTemplateId = route.params.companyTemplateId
 const form = reactive({
   department: '',
   role: '',
-  careerType: '',   // '신입' | '경력'
+  careerType: '',
   years: 0,
   title: '',
   description: ''
 })
 
+// const loaded = ref({})
 const loading = ref(false)
 const saving  = ref(false)
 const err     = ref('')
 
 const canSubmit = computed(() => !!form.title && !saving.value)
 
-const mode = ref('edit')                 // 기존이 'create'였다면 여기서는 'edit'
-const step = ref(1)                      // 생성 템플릿이 step===1일 때 기본정보 섹션 노출
-const currentTab = ref('basic')          // 탭 기반이면 'basic'으로 고정 시작
-const isCreate = ref(false)
-const isEdit = ref(true)
+// const mode = ref('edit')
+// const step = ref(1)
+// const currentTab = ref('basic')
+// const isCreate = ref(false)
+// const isEdit = ref(true)
+
+
+const categories = ref(['백엔드','프론트엔드','데이터','플랫폼'])
+const roleTags   = ref(['Java','Spring','Vue','DevOps','QA']) 
+const categoryQuery = ref('')
+const roleQuery = ref('')
+const filteredCategories = computed(() =>
+  categories.value.filter(c => c.toLowerCase().includes(categoryQuery.value.toLowerCase())))
+const filteredRoleTags = computed(() =>
+  roleTags.value.filter(t => t.toLowerCase().includes(roleQuery.value.toLowerCase())))
+const selected = reactive({ category: new Set(), role: new Set() })
+
+watch(() => form.careerType, v => { if (v === '신입') form.years = 0 })
+watch(() => form.years, n => { form.careerType = n > 0 ? '경력' : '신입' })
+
+// helpers
+function clean(v){
+  if (v == null) return undefined
+  const s = typeof v === 'string' ? v.trim() : v
+  return s === '' ? undefined : s
+}
+function makePayload(){
+  const p = {
+    name: clean(form.title),
+    description: clean(form.description),
+    department: clean(form.department),
+    category: clean(form.role),
+    yearsOfExperience: Number.isFinite(+form.years) ? +form.years : undefined,
+  }
+  // 빈/undefined 필드 제거
+  Object.keys(p).forEach(k => p[k] == null && delete p[k])
+  return p
+}
+
 
 function toggleChip(kind,v){
   const set = selected[kind]; set.has(v)?set.delete(v):set.add(v)
@@ -172,7 +207,7 @@ async function saveAndNext(){
 }
 
 
-// ① 최초 진입 시 기존 값 로드
+// 최초 진입 시 기존 값 로드
 onMounted(load)
 async function load(){
   loading.value = true; err.value = ''
@@ -198,30 +233,43 @@ async function load(){
   }
 }
 
-// ② 제출 핸들러: 생성 페이지와 동일한 버튼에서 호출
+// 제출 핸들러: 생성 페이지와 동일한 버튼에서 호출
 async function onSubmit () {
-  if (!canSubmit.value) { err.value = '제목은 필수입니다.'; return }
+  if (!canSubmit.value || saving.value) return
   saving.value = true; err.value = ''
-  try {
-    await api.put(`/companyTemplates/${companyTemplateId}/basic`, {
-      name: form.title,
-      description: form.description,
-      department: form.department,
-      category: form.role,
-      yearsOfExperience: Number(form.years || 0)
-    }, {
-      headers: { 'X-Company-Slug': companySlug },
-      params: { companySlug }
-    })
-    router.push({ name: 'CompanyTemplateDetail', params: { companySlug, companyTemplateId } })
-  } catch (e) {
-    err.value = e.response?.data?.message || e.message || '저장 실패'
-  } finally {
-    saving.value = false
+
+  const headers = {
+    'X-Company-Slug': companySlug,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
   }
+
+  const payload = makePayload()
+
+  try {
+    // 1) PATCH + 평면 바디
+    await api.patch(`/companyTemplates/${companyTemplateId}/basic`, payload, { headers })
+  } catch (e1) {
+    try {
+      // 2) PATCH + { basic: ... }
+      await api.patch(`/companyTemplates/${companyTemplateId}/basic`, { basic: payload }, { headers })
+    } catch (e2) {
+      try {
+        // 3) 최종 폴백: POST
+        await api.post(`/companyTemplates/${companyTemplateId}/basic`, payload, { headers })
+      } catch (e3) {
+        err.value = e3.response?.data?.message || e3.message || '저장 실패'
+        saving.value = false
+        return
+      }
+    }
+  }
+
+  router.push({ path: `/c/${companySlug}/modify/post/${companyTemplateId}/edit/detail`})
+  saving.value = false
 }
 
-// ③ 취소 버튼은 생성 페이지와 동일한 위치에서 이 함수만 연결
+// 취소 버튼은 생성 페이지와 동일한 위치에서 이 함수만 연결
 function onCancel () {
   router.push({ name: 'CompanyDashboard', params: { companySlug } })
 }
