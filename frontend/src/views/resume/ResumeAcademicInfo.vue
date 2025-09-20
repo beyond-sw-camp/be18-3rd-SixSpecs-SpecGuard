@@ -366,7 +366,7 @@
             </div>
         </header>
 
-            <div class="mt-6 space-y-6">
+        <div class="mt-6 space-y-6">
             <div class="grid grid-cols-12 gap-3 items-center">
                 <label class="col-span-12 sm:col-span-2 font-semibold">고용형태</label>
                 <select v-model="c.employmentType" class="col-span-12 sm:col-span-4 rounded-md border px-3 py-2">
@@ -414,18 +414,7 @@
                 <input v-model.trim="c.role" class="col-span-12 sm:col-span-4 rounded-md border px-3 py-2" placeholder="담당업무를 입력하세요" />
             </div>
 
-            <!-- <div>
-                <label class="block font-semibold mb-2">경험 및 역량기술서</label>
-                <textarea v-model="c.summary" rows="5" 
-                    class="w-full rounded-md border px-3 py-2" 
-                    placeholder="성과 중심으로 작성"
-                    maxlength="500">
-                </textarea>
-                <div class="text-right text-xs text-slate-500">
-                    {{ (c.summary || '').length }} / 500
-                </div>
-            </div> -->
-            </div>
+        </div>
         </section>
 
 
@@ -518,11 +507,6 @@
         { value: 'EXPECTED', label: '졸업예정' },
         { value: 'WITHDRAWN', label: '중퇴' },
         { value: 'LEAVE_OF_ABSENCE', label: '휴학' },
-    ]
-    
-    const admissionTypeOptions = [
-        { value: 'REGULAR', label: '일반' },
-        { value: 'TRANSFER', label: '편입' },
     ]
 
     // 대학교 상태
@@ -693,7 +677,7 @@
     onMounted(async () => {
 
         console.log("onMounted edu-exp-link info saved:", resumeStore.resume);
-            if (!resumeStore.resume?.educations && !resumeStore.resume?.experiences && !resumeStore.resume?.links) {
+            if (!resumeStore.resume) {
                 try {
                 const res = await axios.get(`${API}/api/v1/resumes`, {
                     withCredentials: true
@@ -704,10 +688,9 @@
                 }
             }
             console.log("Resume store in eduexplinks info:", resumeStore.resume);
-            const data = resumeStore.resume
+            const data = resumeStore.resume;
                 
             if (data?.educations?.length) {
-                console.log(data.educations)
                 // 고등학교/대학교/대학원 구분하여 초기값 설정
                 const highSchool = data.educations.find(e => e.schoolType === "HIGH");
                 if (highSchool) {
@@ -873,19 +856,80 @@
     console.log(payload);
 
     try {
-        const res = await axios.post(`${API}/api/v1/resumes/edu-exp-link`, payload, {
+        await axios.post(`${API}/api/v1/resumes/edu-exp-link`, payload, {
             withCredentials: true,
             headers: { 'Content-Type': 'application/json' }
         });
 
-        console.log("Certificate info saved:", res.data);
+        resumeStore.resume.educations =  [
+            // ✅ 고등학교
+            {
+                id: hs.value.id,
+                admissionType:  "REGULAR",
+                schoolName: hs.value.school,
+                city: hs.value.city,
+                district: hs.value.district,
+                startDate: hs.value.periodStart,
+                endDate: hs.value.periodEnd,
+                graduationStatus: hs.value.gradStatus,
+                schoolType:"HIGH",
+                degree: "HIGH_SCHOOL"
+            },
+        // ✅ 대학교들
+        ...univ.value.map(u => ({
+            id: u.id,
+            schoolName: u.school,
+            city: u.city,
+            district: u.district,
+            startDate: u.periodStart,
+            endDate: u.periodEnd,
+            admissionType: u.admission,
+            graduationStatus: u.gradStatus,
+            degree: u.degree, // BACHELOR, MASTER, DOCTOR 등
+            major: u.majorGroup + " " + u.major,
+            schoolType:"UNIV",
+            gpa: u.gpa,
+            maxGpa: u.maxGpa    })),
+            // ✅ 대학원들
+        ...grad.value.map(g => ({
+            id: g.id,
+            schoolName: g.school,
+            maxGpa: g.maxGpa,
+            city: g.city,
+            district: g.district,
+            startDate: g.periodStart,
+            endDate: g.periodEnd,
+            admissionType: g.admission,
+            graduationStatus: g.gradStatus,
+            schoolType:"GRAD",
+            degree: g.degree,
+            major: g.majorGroup + " " + g.major,
+            gpa: g.gpa,
+            maxGpa: g.maxGpa    }))
+        ]
 
-        // 저장된 기본정보를 store에 반영
-        resumeStore.resume.educations = res.data.educations;
-        resumeStore.resume.experiences = res.data.experiences;
-        resumeStore.resume.links = res.data.links;
+        resumeStore.resume.experiences = 
+        [
+        ...career.value.map(c => ({
+            id: c.id,
+            companyName: c.company,
+            department: c.department,
+            position: c.rank,
+            responsibilities: c.role,
+            employmentStatus: c.employmentType,
+            startDate: c.periodStart,
+            endDate: c.periodEnd,
+        }))]
 
-        console.log("Resume store updated:", resumeStore.resume);
+        resumeStore.resume.links = 
+        [
+            ...links.value.map(l => ({
+                id: l.id,
+                url: l.url,
+                linkType: l.linkType
+            }))
+        ]
+
     }
     catch (error) {
         console.log(error);

@@ -66,10 +66,10 @@
                 >
                 자격증 검색
                 </button>
-                <label class="inline-flex items-center gap-2 text-sm text-slate-600">
+                <!-- <label class="inline-flex items-center gap-2 text-sm text-slate-600">
                 <input type="checkbox" v-model="c.presets.engineerInfo" class="rounded" />
                 정보처리 기사
-                </label>
+                </label> -->
             </div>
             </div>
 
@@ -113,7 +113,6 @@
         <!-- Footer -->
         <footer class="fixed bottom-0 left-0 right-0 bg-white border-t">
         <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-end gap-3">
-            <button class="rounded-md border px-5 py-2" type="button" @click="saveDraft">임시저장</button>
             <button class="rounded-md bg-sky-600 px-6 py-2 text-white" type="button" @click="goNext">
             다음
             </button>
@@ -123,9 +122,13 @@
     </template>
 
     <script setup>
-    import { ref } from "vue"
-    import { useRoute, useRouter } from "vue-router"
+    import { ref, computed } from 'vue'
+    import { useRoute, useRouter} from 'vue-router'
+    import { onMounted } from 'vue'
+    import { resumeStore } from '@/stores/resumeStore'
+    import axios from 'axios'
 
+    const API = import.meta.env.VITE_API_URL
     const router = useRouter()
     const route = useRoute()
 
@@ -138,6 +141,8 @@
     { label: "5 최종제출", to: { name: 'ResumeSubmit', params: { applicantSlug }}},
     ]
 
+    
+
     function isActive(to) {
         const a = router.resolve(to).path.replace(/\/+$/, '')
         const b = route.path.replace(/\/+$/, '')
@@ -147,11 +152,11 @@
 
     // 자격증: 0개 허용
     const makeCert = () => ({
-    name: "",
-    issuer: "",
-    regNo: "",
-    acquired: "",
-    presets: { engineerInfo: false },
+        id: null,
+        name: "",
+        regNo: "",
+        issuer: "",
+        acquired: "",
     })
     const certs = ref([makeCert()])
 
@@ -182,13 +187,77 @@
     alert("자격증 검색 모달을 연결하세요.")
     }
 
-    function saveDraft() {
-    alert("임시저장 되었습니다.")
-    }
-    function goNext() {
+    onMounted(async () => {
+
+        console.log("onMounted Certificate info saved:", resumeStore.resume);
+        if (!resumeStore.resume?.certificates) {
+            try {
+            const res = await axios.get(`${API}/api/v1/resumes`, {
+                withCredentials: true
+            });
+            resumeStore.resume = res.data;
+            } catch (e) {
+            console.error("Failed to fetch resume:", e);
+            }
+        }
+        console.log("Resume store in Basic info:", resumeStore.resume);
+        const data = resumeStore.resume
+        if (data?.certificates) {
+            certs.value = data.certificates?.map(l => ({
+                id: l.id,
+                name: l.certificateName,
+                regNo: l.certificateNumber,
+                issuer: l.issuer,
+                acquired: l.issuedDate,
+            })) || [
+                { 
+                    id: null, 
+                    name: "", 
+                    regNo: "",
+                    issuer: "",
+                    acquired: "",
+                },
+            ];
+        }
+        }
+    )
+
+    async function goNext() {
     if (!validateForm()) return
-    const applicantSlug = route.params.applicantSlug
-    router.push({ name: 'ResumeEssay', params: { applicantSlug } })
+        const payload = {
+            "certificates": [
+                ...certs.value.map(l => ({
+                        id: l.id,
+                        certificateName: l.name,
+                        certificateNumber: l.regNo,
+                        issuer: l.issuer,
+                        issuedDate: l.acquired,
+                }))
+            ]
+        }
+
+        console.log(payload);
+
+        try {
+            await axios.post(`${API}/api/v1/resumes/certificates`, payload, {
+                withCredentials: true,
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            resumeStore.resume.certificates = [
+                ...certs.value.map(l => ({
+                        id: l.id,
+                        certificateName: l.name,
+                        certificateNumber: l.regNo,
+                        issuer: l.issuer,
+                        issuedDate: l.acquired,
+                }))]
+        }
+        catch (error) {
+            console.log(error);
+            return;
+        }
+        router.push({ name: 'ResumeEssay', params: { applicantSlug } })
     }
 </script>
 
