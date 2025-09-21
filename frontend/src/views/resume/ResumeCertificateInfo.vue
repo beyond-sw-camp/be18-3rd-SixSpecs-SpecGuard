@@ -125,8 +125,10 @@
     import { ref, computed } from 'vue'
     import { useRoute, useRouter} from 'vue-router'
     import { onMounted } from 'vue'
-    import { resumeStore } from '@/stores/resumeStore'
+    import { useResumeStore } from '@/stores/resumeStore'
     import axios from 'axios'
+
+    const resumeStore = useResumeStore();
 
     const API = import.meta.env.VITE_API_URL
     const router = useRouter()

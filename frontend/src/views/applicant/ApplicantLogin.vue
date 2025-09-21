@@ -53,7 +53,15 @@
                     <RouterLink to="/find-id" class="underline underline-offset-2">아이디 찾기</RouterLink>
                     <RouterLink to="/reset-password" class="underline underline-offset-2">비밀번호 찾기</RouterLink>
                 </div>
-                <RouterLink to="/applicant/signup" class="underline underline-offset-2">회원 가입</RouterLink>
+                    <RouterLink
+                        v-if="selectedTemplateId"
+                        :to="{ 
+                            name: 'ApplicantSignup', 
+                            params: { companySlug, applicantSlug: selectedTemplateId } 
+                        }"  
+                        class="underline underline-offset-2">회원 가입
+                    </RouterLink>
+                    <span v-else class="text-gray-400">템플릿을 선택해주세요</span>
                 </div>
             </form>
             </section>
@@ -83,7 +91,7 @@
 
             <!-- 채용 공고 리스트 (더미) -->
             <ul class="mt-6 space-y-6">
-                <li v-for="job in filteredJobs" :key="job.id" @click="selectedTemplateId = job.id" class="cursor-pointer">
+                <li v-for="job in filteredTemplates" :key="job.id" @click="selectedTemplateId = job.id" class="cursor-pointer">
                 <div 
                     class="block p-4 rounded-lg border"
                     :class="selectedTemplateId === job.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200'"
@@ -105,11 +113,13 @@
     <script setup>
     import { ref, computed, onMounted } from 'vue'
     import { useRouter, RouterLink, useRoute } from 'vue-router'
-    import { resumeStore } from '@/stores/resumeStore'
+    import { useResumeStore } from '@/stores/resumeStore'
     import axios from 'axios'
 
+    const resumeStore = useResumeStore();
     const router = useRouter()
     const route = useRoute()
+    const API = import.meta.env.VITE_API_URL;
 
     // 로그인 폼
     const userId = ref('')
@@ -118,29 +128,28 @@
     // 검색어
     const q = ref('')
 
-    const jobs = ref([])
-
+    const templates = ref([])
     const selectedTemplateId =ref(null);
 
-    const filteredJobs = computed(() => {
-    if (!q.value) return jobs.value
-    const term = q.value.toLowerCase()
-    return jobs.value.filter(j => j.title.toLowerCase().includes(term))
+    const filteredTemplates = computed(() => {
+        if (!q.value) return templates.value
+        const term = q.value.toLowerCase()
+        return templates.value.filter(j => j.title.toLowerCase().includes(term))
     })
 
     const companySlug = route.params.companySlug;
-    const API = import.meta.env.VITE_API_URL;
 
     console.log("companySlug:", companySlug);
 
     onMounted(async () => {
-    try {
-        const response = await axios.get(`${API}/api/v1/resumes/companies/${companySlug}/templates`);
-        jobs.value = response.data.templates || [];
-        console.log(response.data.templates);
-    } catch (error) {
-        console.error("Error fetching jobs:", error);
-    }
+        try {
+            const response = await axios.get(`${API}/api/v1/resumes/companies/${companySlug}/templates`);
+            templates.value = response.data.templates || [];
+            console.log("Fetched templates:", templates.value)
+        } catch (error) {
+            console.error("Error fetching templates:", error)
+            alert("템플릿 목록을 불러오지 못했습니다.")
+        }
     });
 
 
@@ -149,8 +158,6 @@
             alert("템플릿을 선택해주세요.");
             return;
         }
-        
-        console.log("Submitting login with:", { userId: userId.value, password: password.value, templateId: selectedTemplateId.value });
         
         try {
             const res = await axios.post(`${API}/api/v1/resumes/login`, {
@@ -161,18 +168,23 @@
                 withCredentials: true
             });
             
-            const selectedTemplate = jobs.value.find(job => job.id === selectedTemplateId.value);
+            const selectedTemplate = templates.value.find(job => job.id === selectedTemplateId.value);
+            if (!selectedTemplate) throw new Error("템플릿 선택이 잘못되었습니다.")
 
-            resumeStore.template = selectedTemplate;
-            console.log(resumeStore.template)
-            resumeStore.resume = res.data // 또는 loginRes.data 바로 내려오는 경우
-            console.log("Login successful:", res.data);
+            // Store 업데이트
+            resumeStore.template = selectedTemplate
+            resumeStore.resume = res.data.resume
 
-            router.push(`/${companySlug}/registerResume/${selectedTemplateId.value}/basic-info`);
+            console.log("Login successful, store updated:", resumeStore.template, resumeStore.resume)
+
+            router.push({
+                name: 'ResumeBasicInfo',
+                params: { companySlug, applicantSlug: selectedTemplateId.value }
+            })
 
         } catch (error) {
             console.error("Login error:", error);
-            alert("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
+            alert(error.response?.data?.message || "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.")
         }
 }
 

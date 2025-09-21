@@ -1,0 +1,64 @@
+<!-- ResumeHeader.vue -->
+<script setup>
+import { computed, onMounted } from "vue"
+import { useRouter, useRoute } from "vue-router"
+import { useResumeStore } from "@/stores/resumeStore"
+
+const router = useRouter()
+const route = useRoute()
+const resumeStore = useResumeStore()
+
+onMounted(async () => {
+  await resumeStore.fetchResumeAndTemplate()
+})
+
+const template = computed(() => resumeStore.template)
+const applicantSlug = computed(() => route.params.applicantSlug)
+const companySlug = computed(() => route.params.companySlug)
+
+// 탭 라우트 정의
+const tabs = computed(() => [
+  { label: "1 기본정보", to: { name: "ResumeBasicInfo", params: { applicantSlug: applicantSlug.value }}},
+  { label: "2 학력/연구/NCS", to: { name: "ResumeAcademicInfo", params: { applicantSlug: applicantSlug.value }}},
+  { label: "3 어학/자격", to: { name: "ResumeCertificateInfo", params: { applicantSlug: applicantSlug.value }}},
+  { label: "4 자기소개서/역량기술서", to: { name: "ResumeEssay", params: { applicantSlug: applicantSlug.value }}},
+  { label: "5 최종제출", to: { name: "ResumeSubmit", params: { applicantSlug: applicantSlug.value }}},
+])
+
+function isActive(to) {
+  const a = router.resolve(to).path.replace(/\/+$/, "")
+  const b = route.path.replace(/\/+$/, "")
+  return a === b
+}
+
+function handleTabClick(to) {
+  router.push(to)
+}
+</script>
+
+
+<template>
+  <header class="bg-white shadow-sm">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-4 text-center">
+      <!-- template 데이터가 로드된 후만 렌더링 -->
+      <h1 v-if="template" class="text-lg sm:text-xl font-bold">
+        [{{ companySlug }}] {{ template.name }}
+        ({{ template.department }} / {{ template.yearsOfExperience }}년 이상)
+      </h1>
+      <h1 v-else class="text-gray-400">불러오는 중...</h1>
+    </div>
+
+    <!-- 탭 네비게이션 -->
+    <nav class="grid grid-cols-5 border-b text-sm font-semibold">
+      <button
+        v-for="tab in tabs"
+        :key="tab.label"
+        class="col-span-1 p-3 text-center border-b-4 hover:bg-slate-100"
+        :class="isActive(tab.to) ? 'border-sky-600 text-sky-600 font-bold' : 'border-transparent'"
+        @click="handleTabClick(tab.to)"
+      >
+        {{ tab.label }}
+      </button>
+    </nav>
+  </header>
+</template>

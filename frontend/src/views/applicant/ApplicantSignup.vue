@@ -119,103 +119,109 @@
     import { ref, onMounted, onBeforeUnmount } from 'vue'
     import { useRouter } from 'vue-router'
     import { useRoute } from 'vue-router'
+    import { useResumeStore } from '@/stores/resumeStore'
     import axios from 'axios'
+    
     const API = import.meta.env.VITE_API_URL
+    const resumeStore =  useResumeStore();
 
     const route = useRoute()
     const router = useRouter()
     const STORAGE_KEY = 'specguard.applicant.email.verified'
-    const applicantEmailVerified = ref(false)
 
+    
     const form = ref({
-    name: '',
-    phone1: '010',
-    phone2: '',
-    phone3: '',
-    email: '',
-    email2: '',
-    password: '',
-    password2: '',
+        name: '',
+        phone1: '010',
+        phone2: '',
+        phone3: '',
+        email: '',
+        email2: '',
+        password: '',
+        password2: '',
     })
-
+    
+    const applicantEmailVerified = ref(false)
     const showPhoneModal = ref(false)
     const phoneFrameSrc = ref('')
+
     const companySlug = route.params.companySlug
     const applicantSlug = route.params.applicantSlug
 
+    // --- 모달 열기/닫기 ---
     function openPhoneModal() {
-    phoneFrameSrc.value = "verify"
-    showPhoneModal.value = true
-    document.body.classList.add('overflow-hidden')
+        phoneFrameSrc.value = "verify"
+        showPhoneModal.value = true
+        document.body.classList.add('overflow-hidden')
     }
 
     function closePhoneModal() {
-    showPhoneModal.value = false
-    phoneFrameSrc.value = ''
-    document.body.classList.remove('overflow-hidden')
-    // 닫힐 때 세션에서 복구
-    try {
-        const saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || 'null')
-        applicantEmailVerified.value = !!saved?.verified
-        if (saved?.email) form.value.email = saved.email
-    } catch {sessionStorage.removeItem(STORAGE_KEY)}
+        showPhoneModal.value = false
+        phoneFrameSrc.value = ''
+        document.body.classList.remove('overflow-hidden')
+        restoreEmailFromSession()
     }
 
+    // --- 세션 복구 ---
+    function restoreEmailFromSession() {
+        try {
+            const saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || 'null')
+            applicantEmailVerified.value = !!saved?.verified
+            if (saved?.email) form.value.email = saved.email
+        } catch {
+            sessionStorage.removeItem(STORAGE_KEY)
+        }
+    }
+
+    // --- 취소 ---
     function onCancel() {
-    if (window.history.length > 1) window.history.back()
-    else router.push('/')
+        if (window.history.length > 1) window.history.back()
+        else router.push('/')
+    }
+
+    // --- ESC 키 처리 ---
+    function handleEsc(e) {
+        if (e.key === 'Escape' && showPhoneModal.value) closePhoneModal()
+    }
+
+    // --- iframe 메시지 처리 ---
+    function onMessage(e) {
+        if (e?.data?.type === 'applicant-email-verified') {
+            applicantEmailVerified.value = true
+            closePhoneModal()
+        }
+    }
+
+    function validateForm() {
+        if (!applicantEmailVerified.value) return alert('이메일 인증이 필요합니다.'), false
+        if (!form.value.name) return alert('성명을 입력하세요.'), false
+        if (!/^\d{3}$/.test(form.value.phone1) || !/^\d{3,4}$/.test(form.value.phone2) || !/^\d{4}$/.test(form.value.phone3))
+            return alert('휴대전화 번호를 올바르게 입력하세요.'), false
+        if (!form.value.email || !form.value.email2) return alert('이메일과 이메일 확인을 입력하세요.'), false
+        if (form.value.email !== form.value.email2) return alert('이메일과 이메일 확인이 일치하지 않습니다.'), false
+        if (!form.value.password || !form.value.password2) return alert('비밀번호와 비밀번호 확인을 입력하세요.'), false
+        if (form.value.password !== form.value.password2) return alert('비밀번호와 비밀번호 확인이 일치하지 않습니다.'), false
+        return true
     }
 
     async function onSubmit() {
-        if (!applicantEmailVerified.value) {
-            alert('이메일 인증이 필요합니다.')
-            return
-        }
+        if (!validateForm()) return
 
-        if (!form.value.name) {
-            alert('성명을 입력하세요.')
-            return
-        }
-
-        if (!/^\d{3}$/.test(form.value.phone1) || !/^\d{3,4}$/.test(form.value.phone2) || !/^\d{4}$/.test(form.value.phone3)) {
-            alert('휴대전화 번호를 올바르게 입력하세요.')
-            return
-        }
-
-        if (!form.value.email || !form.value.email2) {
-            alert('이메일과 이메일 확인을 입력하세요.')
-            return
-        }
-
-        if (form.value.email !== form.value.email2) {
-            alert('이메일과 이메일 확인이 일치하지 않습니다.')
-            return
-        }
-
-        if (!form.value.password || !form.value.password2) {
-            alert('비밀번호와 비밀번호 확인을 입력하세요.')
-            return
-        }
-
-        if (form.value.password !== form.value.password2) {
-            alert('비밀번호와 비밀번호 확인이 일치하지 않습니다.')
-            return
-        }
-
-        console.log('Submitting signup with:', form.value)
+        const phone = form.value.phone1 + form.value.phone2 + form.value.phone3
 
         try {
             const res = await axios.post(`${API}/api/v1/resumes`, {
-                templateId: route.params.applicantSlug,
+                templateId: applicantSlug,
                 name: form.value.name,
-                phone: form.value.phone1 + form.value.phone2 + form.value.phone3,
+                phone,
                 email: form.value.email,
                 password: form.value.password
             });
             
             console.log("Signup response:", res.data);
-
-            const loginRes = await axios.post(`${API}/api/v1/auth/login`, {
+            
+            const loginRes = await axios.post(`${API}/api/v1/resumes/login`, {
+                templateId: applicantSlug,
                 email: form.value.email,
                 password: form.value.password
             });
@@ -224,7 +230,7 @@
 
             resumeStore.resume = loginRes.data.resume // 또는 loginRes.data 바로 내려오는 경우
 
-            router.push('basic-info');
+            router.push({ name: 'ResumeBasicInfo', params: { companySlug, applicantSlug } })
 
         } catch (error) {
             console.error("Login error:", error);
@@ -232,32 +238,19 @@
         }
     }
 
-    function handleEsc(e) {
-    if (e.key === 'Escape' && showPhoneModal.value) closePhoneModal()
-    }
+    
 
-function onMessage(e) {
-    if (e?.data?.type === 'applicant-email-verified') {
-        applicantEmailVerified.value = true
-        closePhoneModal()
-    }
-}
+    onMounted(() => {
+        window.addEventListener('keydown', handleEsc)
+        window.addEventListener('message', onMessage)
+        // 새로고침 복구
+        restoreEmailFromSession()
+    })
 
-onMounted(() => {
-    window.addEventListener('keydown', handleEsc)
-    window.addEventListener('message', onMessage)
-  // 새로고침 복구
-    try {
-    const saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || 'null')
-    applicantEmailVerified.value = !!saved?.verified
-    if (saved?.email) form.value.email = saved.email
-    } catch {sessionStorage.removeItem(STORAGE_KEY)}
-})
-
-onBeforeUnmount(() => {
-    window.removeEventListener('keydown', handleEsc)
-    window.removeEventListener('message', onMessage)
-})
+    onBeforeUnmount(() => {
+        window.removeEventListener('keydown', handleEsc)
+        window.removeEventListener('message', onMessage)
+    })
 </script>
 
 <style scoped></style>

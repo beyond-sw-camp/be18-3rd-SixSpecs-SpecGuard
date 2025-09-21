@@ -441,9 +441,10 @@
     import { ref, computed } from 'vue'
     import { useRoute, useRouter} from 'vue-router'
     import { onMounted } from 'vue'
-    import { resumeStore } from '@/stores/resumeStore'
+    import { useResumeStore } from '@/stores/resumeStore'
     import axios from 'axios'
 
+    const resumeStore = useResumeStore();
     const API = import.meta.env.VITE_API_URL
     const router = useRouter()
     const route = useRoute()
@@ -676,7 +677,7 @@
     
     onMounted(async () => {
 
-        console.log("onMounted edu-exp-link info saved:", resumeStore.resume);
+            console.log("onMounted edu-exp-link info saved:", resumeStore.resume);
             if (!resumeStore.resume) {
                 try {
                 const res = await axios.get(`${API}/api/v1/resumes`, {

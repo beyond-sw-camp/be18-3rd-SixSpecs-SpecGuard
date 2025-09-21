@@ -125,9 +125,10 @@
     <script setup>
     import { ref, computed, onMounted } from 'vue'
     import { useRoute, useRouter } from 'vue-router'
-    import { resumeStore } from '@/stores/resumeStore'
+    import { useResumeStore } from '@/stores/resumeStore'
     import axios from 'axios'
-
+    
+    const resumeStore = useResumeStore();
     const router = useRouter()
     const route = useRoute()
     const applicantSlug = route.params.applicantSlug
