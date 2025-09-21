@@ -137,10 +137,10 @@
             <div class="rounded-md border border-slate-300 p-8">
                 <h3 class="text-xl font-extrabold text-center">지원자 동의 서약서</h3>
                 <ol class="mt-6 list-decimal pl-6 leading-7 text-slate-700 text-sm">
-                <li>본인은 "[SIXSPEC] 2025년 우수인재 경력채용 (DATA Intelligence 사업개발 및 제안)" 에 지원함에 있어 입사지원서 등 제출한 이력정보를 허위로 기재하지 않으며, 이를 어길 시 어떠한 이익도 주장할 수 없음을 서약한다.</li>
+                <li>본인은 "{{ templateName || '데이터 없음' }}" 에 지원함에 있어 입사지원서 등 제출한 이력정보를 허위로 기재하지 않으며, 이를 어길 시 어떠한 이익도 주장할 수 없음을 서약한다.</li>
                 <li>지원서에 포함된 기재 사항은 사실과 다름이 없음을 확인하였으며, 채용 전형에서의 내용이 허위 또는 결과가 허용되더라도 어떠한 이의를 제기하지 않을 것을 서약한다.</li>
                 </ol>
-                <p class="mt-8 text-right text-sm text-slate-600">제출일 2025년 08월 25일 · 지원자 김지원</p>
+                <p class="mt-8 text-right text-sm text-slate-600">제출일 {{ submitDate }} · 지원자 {{ applicantName }}</p>
             </div>
             </div>
 
@@ -153,17 +153,18 @@
 
         <!-- Footer status -->
         <footer class="sticky bottom-0 bg-white border-t">
-        <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between text-sm">
-            <div class="flex items-center gap-3 text-slate-600">
+            <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-end gap-3">
+        <!-- <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between text-sm"> -->
+            <!-- <div class="flex items-center gap-3 text-slate-600">
             <div class="flex items-center gap-2">
                 <span class="inline-block h-6 w-6 rounded-full border border-slate-400"></span>
                 로그인 세션 남은시간 <span class="text-amber-600 font-semibold">{{ remainText }}</span> / 120분
                 <button class="text-[11px]" @click="extendSession">연장</button>
             </div>
             <div class="hidden sm:block text-xs text-slate-500">접수기간 2000.00.00 (수) 15:00 ~ 2001.01.01 (일) 23:59</div>
-            </div>
+            </div> -->
             <div class="flex items-center gap-3">
-            <button class="rounded-md border px-5 py-2" @click="saveDraft">임시저장</button>
+            <!-- <button class="rounded-md border px-5 py-2" @click="saveDraft">임시저장</button>  -->
             <button
                 class="rounded-md bg-sky-600 px-6 py-2 text-white disabled:opacity-50"
                 :disabled="!agree"
@@ -178,9 +179,12 @@
     </template>
 
     <script setup>
-    import { ref } from "vue";
+    import { ref, onMounted } from "vue";
     import { useRoute, useRouter } from "vue-router";
+    import axios from 'axios'
+    import { resumeStore } from '@/stores/resumeStore'
 
+    const API = import.meta.env.VITE_API_URL
     const router = useRouter();
     const route = useRoute();
 
@@ -203,22 +207,65 @@
     const checks = ["기본정보", "학력/연구/NCS", "어학/자격", "자기소개서/역량기술서"];
 
     const agree = ref(false);
-    const remainText = ref("115분 15초");
+    // const remainText = ref("115분 15초");
+    const applicantName = ref('')
+    const submitDate = ref('')
+    const templateName = ref('')
 
-    const saveDraft = () => {
-    // TODO: API 연동
-    alert("임시저장 되었습니다.");
-    };
-    const submitForm = () => {
+    async function fetchResumeInfo() {
+        // 오늘 날짜 세팅
+        submitDate.value = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+
+        // 먼저 store에 있는지 확인
+        if (resumeStore.resume?.name) {
+            applicantName.value = resumeStore.resume.name
+        } else {
+            try {
+            const res = await axios.get(`${API}/api/v1/resumes`, { withCredentials: true })
+            resumeStore.resume = res.data
+            applicantName.value = res.data.name
+            } catch (e) {
+            console.error('지원자 정보 로딩 실패:', e)
+            applicantName.value = '알 수 없음'
+            }
+        }
+
+        console.log(resumeStore.template);
+
+        if (resumeStore.template) {
+            templateName.value = resumeStore.template.name + "(" + resumeStore.template.description + ")";
+        } else {
+            try {
+                const res = await axios.get(`${API}/api/v1/resumes/templates`, {withCredentials: true});
+                resumeStore.template = res.data
+                templateName.value = resumeStore.template.name + "(" + resumeStore.template.description + ")";
+            } catch (e) {
+                console.error('템플릿 정보 로딩 실패:', e)
+                templateName.value = '알 수 없음'
+            }
+        }
+    }
+
+    onMounted(fetchResumeInfo)
+
+    const submitForm = async () => {
     if (!agree.value) return;
-    // TODO: 제출 API 연동
-    alert("제출이 완료되었습니다.");
-    // router.push('/resume/complete'); // 필요 시 완료 페이지로 이동
+    try {
+        const res = await axios.post(`${API}/api/v1/resumes/submit`, {}, {withCredentials: true});
+        resumeStore.template = res.data
+        templateName.value = res.data.templateName
+    } catch (e) {
+        console.error('제출 실패:', e)
+        templateName.value = '알 수 없음'
+    }
+        alert("제출이 완료되었습니다.");
+        resumeStore.resume.status = "PENDING"
+        router.push('/'); // 필요 시 완료 페이지로 이동
     };
-    const extendSession = () => {
-    // TODO: 연장 API
-    alert("세션이 연장되었습니다.");
-};
+    // const extendSession = () => {
+    // // TODO: 연장 API
+    // alert("세션이 연장되었습니다.");
+    // };
 </script>
 
 <style scoped>
