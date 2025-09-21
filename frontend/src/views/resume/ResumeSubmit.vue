@@ -2,26 +2,7 @@
 <template>
     <div class="min-h-screen bg-slate-100 text-slate-900">
         <!-- Title + Steps -->
-        <header class="bg-white shadow-sm">
-        <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-4 text-center">
-            <h1 class="text-lg sm:text-xl font-bold">
-            [SIXSPEC] 2025 우수인재 경력 채용 (DATA Intelligence 사업개발 및 제안)
-            </h1>
-        </div>
-        <div class="border-t border-slate-200 bg-white sticky top-0 z-30">
-            <nav class="grid grid-cols-5 border-b text-sm font-semibold">
-            <RouterLink
-            v-for="tab in tabs"
-            :key="tab.to"
-            :to="tab.to"
-            class="col-span-1 p-3 text-center border-b-4 hover:bg-slate-100"
-            :class="isActive(tab.to) ? 'border-sky-600 text-sky-600 font-bold' : 'border-transparent'"
-            >
-            {{ tab.label }}
-            </RouterLink>
-        </nav>
-        </div>
-        </header>
+        <ResumeHeader />
 
         <main class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         <!-- Top step infographic -->
@@ -178,91 +159,62 @@
     </div>
     </template>
 
-    <script setup>
-    import { ref, onMounted } from "vue";
-    import { useRoute, useRouter } from "vue-router";
-    import axios from 'axios'
-    import { useResumeStore } from '@/stores/resumeStore'
+<script setup>
+import { ref, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useResumeStore } from '@/stores/resumeStore'
+import ResumeHeader from "./ResumeHeader.vue";
+import { saveSubmit } from "@/service/resumeService"
 
-    const resumeStore = useResumeStore();
-    const API = import.meta.env.VITE_API_URL
-    const router = useRouter();
-    const route = useRoute();
+const resumeStore = useResumeStore();
+const router = useRouter();
+const route = useRoute();
 
-    const applicantSlug = route.params.applicantSlug
-    const tabs = [
-    { label: "1 기본정보", to: { name: 'ResumeBasicInfo', params: { applicantSlug }}},
-    { label: "2 학력/연구/NCS", to: { name: 'ResumeAcademicInfo', params: { applicantSlug }}},
-    { label: "3 어학/자격", to: { name: 'ResumeCertificateInfo', params: { applicantSlug }}},
-    { label: "4 자기소개서/역량기술서", to: { name: 'ResumeEssay', params: { applicantSlug }}},
-    { label: "5 최종제출", to: { name: 'ResumeSubmit', params: { applicantSlug }}},
-    ];
+const applicantSlug = route.params.applicantSlug
 
-    // const go = (to) => router.push(to);s
-    const isActive = (to) => {
-    const a = router.resolve(to).path.replace(/\/+$/, "");
-    const b = route.path.replace(/\/+$/, "");
-    return a === b;
-    };
 
-    const checks = ["기본정보", "학력/연구/NCS", "어학/자격", "자기소개서/역량기술서"];
+const checks = ["기본정보", "학력/연구/NCS", "어학/자격", "자기소개서/역량기술서"];
 
-    const agree = ref(false);
-    // const remainText = ref("115분 15초");
-    const applicantName = ref('')
-    const submitDate = ref('')
-    const templateName = ref('')
+const agree = ref(false);
+// const remainText = ref("115분 15초");
+const applicantName = ref('')
+const submitDate = ref('')
+const templateName = ref('')
 
-    async function fetchResumeInfo() {
-        // 오늘 날짜 세팅
-        submitDate.value = new Date().toISOString().split('T')[0] // YYYY-MM-DD
-
-        // 먼저 store에 있는지 확인
-        if (resumeStore.resume?.name) {
-            applicantName.value = resumeStore.resume.name
-        } else {
-            try {
-            const res = await axios.get(`${API}/api/v1/resumes`, { withCredentials: true })
-            resumeStore.resume = res.data
-            applicantName.value = res.data.name
-            } catch (e) {
-            console.error('지원자 정보 로딩 실패:', e)
-            applicantName.value = '알 수 없음'
-            }
-        }
-
-        console.log(resumeStore.template);
-
-        if (resumeStore.template) {
-            templateName.value = resumeStore.template.name + "(" + resumeStore.template.description + ")";
-        } else {
-            try {
-                const res = await axios.get(`${API}/api/v1/resumes/templates`, {withCredentials: true});
-                resumeStore.template = res.data
-                templateName.value = resumeStore.template.name + "(" + resumeStore.template.description + ")";
-            } catch (e) {
-                console.error('템플릿 정보 로딩 실패:', e)
-                templateName.value = '알 수 없음'
-            }
-        }
+async function fetchResumeInfo() {
+    if (!resumeStore.canAccess()) {
+        alert('접근할 수 없는 페이지입니다.')
+        router.push({ name: 'ApplicantLogin', params: { companySlug: route.params.companySlug }})
+        return
     }
 
-    onMounted(fetchResumeInfo)
+    // 오늘 날짜 세팅
+    submitDate.value = new Date().toISOString().split('T')[0] // YYYY-MM-DD
 
-    const submitForm = async () => {
+    await resumeStore.fetchResumeAndTemplate();
+
+    console.log(resumeStore.template);
+
+    templateName.value = resumeStore.template.name + "(" + resumeStore.template.description + ")";
+}
+
+onMounted(fetchResumeInfo)
+
+const submitForm = async () => {
     if (!agree.value) return;
+
     try {
-        const res = await axios.post(`${API}/api/v1/resumes/submit`, {}, {withCredentials: true});
+        const res = await saveSubmit();
         resumeStore.template = res.data
         templateName.value = res.data.templateName
-    } catch (e) {
-        console.error('제출 실패:', e)
-        templateName.value = '알 수 없음'
-    }
         alert("제출이 완료되었습니다.");
         resumeStore.resume.status = "PENDING"
-        router.push('/'); // 필요 시 완료 페이지로 이동
-    };
+        router.push({ name: 'ApplicantLogin', params: { companySlug: route.params.companySlug }})
+    } catch (e) {
+        console.log(e);
+    }
+    
+};
     // const extendSession = () => {
     // // TODO: 연장 API
     // alert("세션이 연장되었습니다.");

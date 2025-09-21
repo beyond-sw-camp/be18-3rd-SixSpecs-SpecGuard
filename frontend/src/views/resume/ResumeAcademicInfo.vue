@@ -530,6 +530,12 @@ function validateForm() {
 onMounted(async () => {
     await resumeStore.fetchResumeAndTemplate();
 
+    if (!resumeStore.canAccess()) {
+        alert('접근할 수 없는 페이지입니다.')
+        router.push({ name: 'ApplicantLogin', params: { companySlug: route.params.companySlug }})
+        return
+    }
+    
     const data = resumeStore.resume;
     console.log(data);
 

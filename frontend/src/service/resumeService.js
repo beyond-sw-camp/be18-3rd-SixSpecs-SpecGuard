@@ -12,3 +12,14 @@ export async function saveEduExpLink(payload) {
     headers: { "Content-Type": "application/json" },
   });
 }
+
+export async function saveTemplateResponse(payload) {
+    return axios.post(`${API}/api/v1/resumes/template-responses`, payload, {
+    withCredentials: true,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+export async function saveSubmit() {
+    return axios.post(`${API}/api/v1/resumes/submit`, {}, {withCredentials: true});
+}
