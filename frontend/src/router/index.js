@@ -31,6 +31,8 @@ import ResumeCertificateInfo from '../views/resume/ResumeCertificateInfo.vue'
 import ResumeEssay from '../views/resume/ResumeEssay.vue'
 import ResumeSubmit from '../views/resume/ResumeSubmit.vue'
 import { name } from '@vue/eslint-config-prettier/skip-formatting'
+import { resumeStore } from '@/stores/resumeStore'
+import axios from 'axios'
 
 
 
@@ -85,5 +87,29 @@ const routes = [
 ]
 
 const router = createRouter({ history: createWebHistory(), routes })
+
+router.beforeEach(async (to, from, next) => {
+  // 특정 resume 관련 페이지들만 체크
+  const protectedPages = ['ResumeBasicInfo', 'ResumeEssay', 'ResumeSubmit', 'ResumeCertificateInfo', 'ResumeAcademicInfo']
+
+  if (protectedPages.includes(to.name)) {
+    if (!resumeStore.resume) {
+      try {
+        const res = await axios.get('/api/v1/resumes', { withCredentials: true })
+        resumeStore.resume = res.data
+      } catch (e) {
+        console.error('이력서 로딩 실패:', e)
+        return next(false)
+      }
+    }
+
+    if (resumeStore.resume.status !== 'DRAFT') {
+      alert('접근할 수 없는 페이지입니다.')
+      return next({ name: 'ApplicantLogin', params: to.params })
+    }
+  }
+
+  next()
+})
 
 export default router
