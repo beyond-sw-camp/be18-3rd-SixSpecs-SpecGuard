@@ -40,25 +40,66 @@
             <div v-else>
             <div v-for="q in questions" :key="q.id" class="mt-8">
                 <label class="block text-sm font-semibold">
-                * {{ q.title }}
-                <span class="ml-1 text-xs text-slate-500">(최소 {{ q.min }}자 / 최대 {{ q.max }}자)</span>
+                * {{ q.fieldName }}
+                <span v-if="q.fieldType === 'TEXT'" class="ml-1 text-xs text-slate-500"></span>
                 </label>
+
                 <div class="mt-2 relative">
+                <!-- TEXT -->
                 <textarea
-                    v-model="answers[q.id]"
+                    v-if="q.fieldType === 'TEXT'"
+                    v-model="answers[q.id].answer"
                     :rows="7"
-                    :maxlength="q.max"
+                    :maxlength="q.maxLength"
                     class="w-full rounded-md border border-slate-300 px-3 py-2"
                     :placeholder="q.placeholder || '내용을 입력하세요'"
                     @input="onDirty()"
                 />
-                <div class="absolute bottom-2 right-3 text-xs"
+                <div
+                    v-if="q.fieldType === 'TEXT'"
+                    class="absolute bottom-2 right-3 text-xs"
                     :class="validLen(q) ? 'text-slate-500' : 'text-rose-600'">
-                    {{ (answers[q.id] || '').length }}/{{ q.max }}
+                    {{ (answers[q.id] || '').answer.length }}/{{ q.maxLength }}
                 </div>
-                <p v-if="!validLen(q)" class="mt-1 text-xs text-rose-600">
-                    최소 {{ q.min }}자 이상 입력하세요.
+                <p v-if="q.fieldType === 'TEXT' && !validLen(q)" class="mt-1 text-xs text-rose-600">
+                    최소 {{ q.minLength }}자 이상 입력하세요.
                 </p>
+
+                <!-- NUMBER -->
+                <input
+                v-else-if="q.fieldType === 'NUMBER'"
+                type="number"
+                v-model="answers[q.id].answer"
+                class="w-full rounded-md border border-slate-300 px-3 py-2"
+                @input="onDirty()"
+                />
+
+                <!-- DATE -->
+                <input
+                v-else-if="q.fieldType === 'DATE'"
+                type="date"
+                v-model="answers[q.id].answer"
+                class="w-full rounded-md border border-slate-300 px-3 py-2"
+                @input="onDirty()"
+                />
+
+                <!-- SELECT -->
+                <select
+                v-else-if="q.fieldType === 'SELECT'"
+                v-model="answers[q.id].answer"
+                class="w-full rounded-md border border-slate-300 px-3 py-2"
+                @change="onDirty()"
+                >
+                <option disabled value="">선택하세요</option>
+                <option
+                    v-for="opt in JSON.parse(q.options || '[]')"
+                    :key="opt"
+                    :value="opt"
+                >
+                    {{ opt }}
+                </option>
+                </select>
+
                 </div>
             </div>
             </div>
@@ -84,10 +125,13 @@
     <script setup>
     import { ref, computed, onMounted } from 'vue'
     import { useRoute, useRouter } from 'vue-router'
+    import { resumeStore } from '@/stores/resumeStore'
+    import axios from 'axios'
 
     const router = useRouter()
     const route = useRoute()
     const applicantSlug = route.params.applicantSlug
+    const API = import.meta.env.VITE_API_URL
 
     // 탭
     const tabs = [
@@ -97,6 +141,7 @@
     { label: '4 자기소개서/역량기술서', to: { name: 'ResumeEssay', params: { applicantSlug }}},
     { label: '5 최종제출', to: { name: 'ResumeSubmit', params: { applicantSlug }}},
     ]
+
     function isActive(to) {
     const a = router.resolve(to).path.replace(/\/+$/, '')
     const b = route.path.replace(/\/+$/, '')
@@ -114,23 +159,36 @@
     async function fetchQuestions() {
     loading.value = true
     try {
-        // 실제 구현 시 fetch/axios 교체
-        // const r = await fetch(`/api/v1/resumes/${applicantSlug}/essay/questions`)
-        // const data = await r.json()
-        // 데모 데이터
-        const data = [
-        { id: 'q1', title: '지원 동기와 기여 가능 부분', min: 200, max: 1000 },
-        { id: 'q2', title: '최근 3년 내 최선의 결과를 만든 도전과 과정', min: 200, max: 1000 },
-        { id: 'q3', title: '장단점과 업무에의 영향', min: 200, max: 1000 },
-        ]
-        questions.value = data
-        // 기존 저장본 불러오기 가정: GET /answers
-        // const saved = await (await fetch(`/api/v1/resumes/${applicantSlug}/essay/answers`)).json()
-        const saved = {} // 데모
-        // 초기화
-        const init = {}
-        for (const q of data) init[q.id] = saved[q.id] || ''
-        answers.value = init
+        if (!resumeStore.resume) {
+            try {
+                const res = await axios.get(`${API}/api/v1/resumes`, {
+                    withCredentials: true
+                });
+                resumeStore.resume = res.data;
+            } catch (e) {
+                console.error("Failed to fetch resume:", e);
+            }
+        }
+        
+        console.log("Resume store in essay info:", resumeStore.resume);
+        const data = resumeStore.resume;
+
+        // fieldOrder 기준 정렬
+        const sortedFields = [...data.fields].sort((a, b) => a.fieldOrder - b.fieldOrder);
+        questions.value = sortedFields;
+
+        // 초기값 세팅
+        const initialAnswers = {};
+        sortedFields.forEach(field => {
+            const response = data.templateResponses.find(r => r.fieldId === field.id);
+            initialAnswers[field.id] = {
+                id: response?.id || null,
+                answer: response?.answer || '',
+            }
+        });
+
+        answers.value = initialAnswers;
+
         dirty.value = false
     } finally {
         loading.value = false
@@ -138,12 +196,38 @@
     }
     onMounted(fetchQuestions)
 
-    function validLen(q) {
-    const n = (answers.value[q.id] || '').trim().length
-    return n >= q.min && n <= q.max
+    function validLen(field) {
+        const value = answers.value[field.id]?.answer || ''
+
+        switch (field.fieldType) {
+        case 'TEXT':
+            const len = value.trim().length
+            return len >= (field.minLength || 0) && len <= (field.maxLength || Infinity)
+
+        case 'NUMBER':
+            const num = Number(value)
+            if (isNaN(num)) return false
+            if (field.minLength != null && num < field.minLength) return false
+            if (field.maxLength != null && num > field.maxLength) return false
+            return true
+
+        case 'DATE':
+            return !isNaN(Date.parse(value))
+
+        case 'SELECT':
+            try {
+                const options = JSON.parse(field.options || '[]')
+                return options.includes(value)
+            } catch {
+                return false
+            }
+
+        default:
+            return true
+    }
     }
     const allValid = computed(() =>
-    questions.value.length > 0 && questions.value.every(validLen)
+        questions.value.length > 0 && questions.value.every(validLen)
     )
 
     function onDirty() { dirty.value = true }
@@ -151,8 +235,29 @@
     async function saveDraft() {
     saving.value = true
     try {
-        // POST /api/v1/resumes/{applicantSlug}/essay/answers (draft=true)
-        // await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({answers:answers.value,draft:true})})
+        const payload = {
+            responses: Object.entries(answers.value).map(([fieldId, { answer, id }]) => ({
+                id: id || null,         // 기존 답변이 있으면 id 포함, 없으면 null
+                fieldId: fieldId,       // 필드 ID
+                answer: answer || ""    // null일 경우 빈 문자열로
+            }))
+        }
+        try {
+        const res = await axios.post(`${API}/api/v1/resumes/template-responses`, payload, {
+            withCredentials: true,
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        console.log("templateResponse info saved:", res.data);
+        // 저장된 기본정보를 store에 반영
+        resumeStore.resume.templateResponses = res.data.responses;
+
+        console.log("Resume store updated:", resumeStore.resume);
+        }
+        catch (error) {
+            console.error("Error :", error);
+            return;
+        }
         dirty.value = false
         alert('임시저장 되었습니다.')
     } finally {
@@ -161,9 +266,9 @@
     }
 
     async function goNext() {
-    if (!allValid.value) { alert('모든 질문에 최소 글자수를 충족하세요.'); return }
-    if (dirty.value) await saveDraft()
-    router.push({ name: 'ResumeSubmit', params: { applicantSlug } })
+        if (!allValid.value) { alert('모든 질문에 조건을 충족하세요.'); return }
+        if (dirty.value) await saveDraft()
+        router.push({ name: 'ResumeSubmit', params: { applicantSlug } })
     }
 
     async function onTabClick(to) {
