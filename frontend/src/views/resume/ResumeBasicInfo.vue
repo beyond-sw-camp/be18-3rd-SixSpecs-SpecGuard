@@ -169,7 +169,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { useResumeStore } from '@/stores/resumeStore'
 import axios from 'axios'
 import ResumeHeader from './ResumeHeader.vue'
-ResumeHeader
 
 const router = useRouter()
 const route = useRoute()
@@ -177,26 +176,6 @@ const API = import.meta.env.VITE_API_URL
 const applicantSlug = route.params.applicantSlug
 
 const resumeStore = useResumeStore();
-
-// 탭 라우트
-const tabs = [
-{ label: "1 기본정보", to: { name: 'ResumeBasicInfo', params: { applicantSlug }}},
-{ label: "2 학력/연구/NCS", to: { name: 'ResumeAcademicInfo', params: { applicantSlug }}},
-{ label: "3 어학/자격", to: { name: 'ResumeCertificateInfo', params: { applicantSlug }}},
-{ label: "4 자기소개서/역량기술서", to: { name: 'ResumeEssay', params: { applicantSlug }}},
-{ label: "5 최종제출", to: { name: 'ResumeSubmit', params: { applicantSlug }}},
-]
-
-function isActive(to) { 
-    const a = router.resolve(to).path.replace(/\/+$/, '') 
-    const b = route.path.replace(/\/+$/, '') 
-    return a === b 
-}
-
-function handleTabClick(to) {
-    if (!validateForm()) return
-    router.push(to)
-}
 
 // 폼 상태
 const form = ref({
