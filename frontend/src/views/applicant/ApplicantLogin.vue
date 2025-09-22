@@ -144,7 +144,10 @@
     onMounted(async () => {
         try {
             const response = await axios.get(`${API}/api/v1/resumes/companies/${companySlug}/templates`);
-            templates.value = response.data.templates || [];
+            console.log(response.data.templates)
+            templates.value = (response.data.templates || [])
+                        .map(t => t.basic)
+                        .filter(v => v !== undefined);  // undefined 제거
             console.log("Fetched templates:", templates.value)
         } catch (error) {
             console.error("Error fetching templates:", error)
