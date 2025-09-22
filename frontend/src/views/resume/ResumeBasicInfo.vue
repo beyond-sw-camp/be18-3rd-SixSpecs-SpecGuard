@@ -169,6 +169,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useResumeStore } from '@/stores/resumeStore'
 import axios from 'axios'
 import ResumeHeader from './ResumeHeader.vue'
+import applicantApi from '@/api/applicantApi'
 
 const router = useRouter()
 const route = useRoute()
@@ -294,7 +295,6 @@ function validateForm() {
   return true
 }
 
-
 // ======================
 // 저장 & 다음 단계 이동
 // ======================
@@ -312,10 +312,7 @@ async function goNext() {
     }
 
     try {
-        const res = await axios.post(`${API}/api/v1/resumes/basic`, formData, {
-            withCredentials: true,
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        const res = await applicantApi.post(`/resumes/basic`, formData);
 
         console.log("Basic info saved:", res.data);
         // 저장된 기본정보를 store에 반영
@@ -324,9 +321,10 @@ async function goNext() {
         console.log("Resume store updated:", resumeStore.resume);
     }
     catch (error) {
-        console.error("Error saving resume basic info:", error);
-        alert("기본 정보를 저장하는 데 실패했습니다. 다시 시도해주세요.");
-        return;
+        if (error.response) {
+            console.error("에러 응답:", error.response.data);
+            alert(error.response.data?.message || "기본 정보 저장 실패");
+        }
     }
     router.push({ name: 'ResumeAcademicInfo', params: { applicantSlug } })
     }

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import axios from 'axios'
+import applicantApi from '@/api/applicantApi'
 
 const API = import.meta.env.VITE_API_URL
 
@@ -12,11 +12,11 @@ export const useResumeStore = defineStore('resume', {
     async fetchResumeAndTemplate() {
       try {
         if (!this.resume) {
-          const res = await axios.get(`${API}/api/v1/resumes`, { withCredentials: true })
+          const res = await applicantApi.get(`/resumes`)
           this.resume = res.data
         }
         if (!this.template) {
-          const tplRes = await axios.get(`${API}/api/v1/resumes/templates`, { withCredentials: true })
+          const tplRes = await applicantApi.get(`/resumes/templates`)
           this.template = tplRes.data
         }
       } catch (e) {

@@ -433,11 +433,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter} from 'vue-router'
 import { useResumeStore } from '@/stores/resumeStore'
-import { saveEduExpLink } from "@/service/resumeService";
 
 import { KR_REGIONS, MAJORS, highStatusOptions, univDegreeOptions, gradDegreeOptions } from "@/constants/education";
 import { makeUniv, makeGrad, makeCareer, enforceMax } from "@/utils/education";
 import ResumeHeader from './ResumeHeader.vue'
+import applicantApi from '../../api/applicantApi';
 
 const resumeStore = useResumeStore();
 const router = useRouter()
@@ -698,7 +698,7 @@ async function goNext() {
     console.log(payload);
 
     try {
-        await saveEduExpLink(payload)
+        await applicantApi.post(`/resumes/edu-exp-link`, payload);
 
         resumeStore.resume.educations =  [
             // ✅ 고등학교
