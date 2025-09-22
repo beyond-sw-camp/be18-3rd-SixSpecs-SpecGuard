@@ -31,7 +31,11 @@ import ResumeAcademicInfo from '../views/resume/ResumeAcademicInfo.vue'
 import ResumeCertificateInfo from '../views/resume/ResumeCertificateInfo.vue'
 import ResumeEssay from '../views/resume/ResumeEssay.vue'
 import ResumeSubmit from '../views/resume/ResumeSubmit.vue'
+import ResumeHeader from '@/views/resume/ResumeHeader.vue'
 
+import { name } from '@vue/eslint-config-prettier/skip-formatting'
+import { useResumeStore } from '@/stores/resumeStore'
+import axios from 'axios'
 
 
 
@@ -44,12 +48,7 @@ const routes = [
   { path: '/company/signup/choice', name: 'CompanySignupChoice', component: CompanySignupChoice },
   { path: '/company/signup/info', name: 'CompanySignupInfo', component: CompanySignupInfo },
   { path: '/company/signup/condition', name: 'CompanySignupCondition', component: CompanySignupCondition},
-
-  // 지원자 회원가입
-  { path: '/applicant/login', name: 'ApplicantLogin', component: ApplicantLogin },
-  { path: '/applicant/signup', name: 'ApplicantSignup', component: ApplicantSignup },
-  { path: '/applicant/verify', name: 'ApplicantVerify', component: ApplicantVerify},
-
+  
   // 기업 쉘
   { path: '/c/:companySlug',
     component: CompanyShell,
@@ -67,13 +66,22 @@ const routes = [
       { path: 'modify/post/:companyTemplateId/edit/detail', name: 'CompanyModifyPostDetail', component: CompanyModifyPostDetail, props: true}
     ],
   },
+  
+  // 지원자 회원가입
+{ path: '/:companySlug/applicant/login', name: 'ApplicantLogin', component: ApplicantLogin },
 
-  // 지원자 쉘
-  { path: '/r/:applicantSlug',
-    component: ApplicantShell,
-    props: true,
-    children: [
-      { path: '', redirect: {name: 'ResumeBasicInfo'}},
+// 지원자 쉘
+{ path:'/:companySlug/registerResume/:applicantSlug',
+  component: ApplicantShell,
+  props: true,
+  children: [
+    { path: '', redirect: to => ({ name: 'ApplicantSignup', params: { 
+        companySlug: to.params.companySlug, 
+        applicantSlug: to.params.applicantSlug 
+    }}) },
+    { path: 'signup', name: 'ApplicantSignup', component: ApplicantSignup, props: true },
+    { path: 'verify', name: 'ApplicantVerify', component: ApplicantVerify},
+      // 이력서 작성
       { path: 'basic-info', name: 'ResumeBasicInfo', component: ResumeBasicInfo, props: true },
       { path: 'academic-info', name: 'ResumeAcademicInfo', component: ResumeAcademicInfo, props: true },
       { path: 'certificate-info', name: 'ResumeCertificateInfo', component: ResumeCertificateInfo, props: true },
@@ -86,5 +94,7 @@ const routes = [
 ]
 
 const router = createRouter({ history: createWebHistory(), routes })
+
+
 
 export default router

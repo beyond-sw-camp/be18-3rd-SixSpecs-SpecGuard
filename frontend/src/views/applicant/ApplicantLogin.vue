@@ -23,12 +23,12 @@
             >
                 <h2 class="text-2xl font-extrabold mb-6">로그인</h2>
 
-                <label for="userid" class="block text-sm font-semibold mb-2">아이디</label>
+                <label for="userid" class="block text-sm font-semibold mb-2">이메일</label>
                 <input
                 id="userid"
                 v-model.trim="userId"
                 type="text"
-                placeholder="아이디를 입력해주세요."
+                placeholder="이메일을 입력해주세요."
                 class="w-full h-12 rounded-md border border-slate-300 px-4 bg-white/70 placeholder-slate-500"
                 />
 
@@ -53,7 +53,15 @@
                     <RouterLink to="/find-id" class="underline underline-offset-2">아이디 찾기</RouterLink>
                     <RouterLink to="/reset-password" class="underline underline-offset-2">비밀번호 찾기</RouterLink>
                 </div>
-                <RouterLink to="/applicant/signup" class="underline underline-offset-2">회원 가입</RouterLink>
+                    <RouterLink
+                        v-if="selectedTemplateId"
+                        :to="{ 
+                            name: 'ApplicantSignup', 
+                            params: { companySlug, applicantSlug: selectedTemplateId } 
+                        }"  
+                        class="underline underline-offset-2">회원 가입
+                    </RouterLink>
+                    <span v-else class="text-gray-400">템플릿을 선택해주세요</span>
                 </div>
             </form>
             </section>
@@ -83,11 +91,14 @@
 
             <!-- 채용 공고 리스트 (더미) -->
             <ul class="mt-6 space-y-6">
-                <li v-for="job in filteredJobs" :key="job.title">
-                <a href="#" class="block">
-                    <h3 class="text-lg font-extrabold text-slate-700">{{ job.title }}</h3>
-                    <p class="text-slate-500 text-sm mt-1">{{ job.period }}</p>
-                </a>
+                <li v-for="job in filteredTemplates" :key="job.id" @click="selectedTemplateId = job.id" class="cursor-pointer">
+                <div 
+                    class="block p-4 rounded-lg border"
+                    :class="selectedTemplateId === job.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200'"
+                    >
+                    <h3 class="text-lg font-extrabold text-slate-700">{{ job.name }}</h3>
+                    <p class="text-slate-500 text-sm mt-1">{{ job.description }}</p>
+                </div>
                 </li>
             </ul>
             </section>
@@ -100,32 +111,86 @@
     </template>
 
     <script setup>
-    import { ref, computed } from 'vue'
-    import { useRouter, RouterLink } from 'vue-router'
+    import { ref, computed, onMounted } from 'vue'
+    import { useRouter, RouterLink, useRoute } from 'vue-router'
+    import { useResumeStore } from '@/stores/resumeStore'
+    import axios from 'axios'
 
+    const resumeStore = useResumeStore();
     const router = useRouter()
+    const route = useRoute()
+    const API = import.meta.env.VITE_API_URL;
+
+    // 로그인 폼
     const userId = ref('')
     const password = ref('')
+
+    // 검색어
     const q = ref('')
 
-    const jobs = ref([
-    { title: 'BackEnd 경력', period: '2025/07/05 ~ 2025/09/10' },
-    { title: '데이터 분석 전문가 (계약직)', period: '2025/09/06 ~ 2025/10/01' },
-    { title: '급여/복리후생 담당 계약직 채용', period: '2025/09/01 ~ 2025/09/30' },
-    { title: '설비담당 엔지니어 모집 (울산)', period: '2025/08/17 ~ 2025/09/30' },
-    ])
+    const templates = ref([])
+    const selectedTemplateId =ref(null);
 
-    const filteredJobs = computed(() => {
-    if (!q.value) return jobs.value
-    const term = q.value.toLowerCase()
-    return jobs.value.filter(j => j.title.toLowerCase().includes(term))
+    const filteredTemplates = computed(() => {
+        if (!q.value) return templates.value
+        const term = q.value.toLowerCase()
+        return templates.value.filter(j => j.title.toLowerCase().includes(term))
     })
 
-    function onSubmit() {
-    // TODO: 실제 로그인 API 연동
-    // 예: await api.post('/api/v1/auth/login', { userId: userId.value, password: password.value })
-    // 성공 시 라우팅
-    router.push('/dashboard')
+    const companySlug = route.params.companySlug;
+
+    console.log("companySlug:", companySlug);
+
+    onMounted(async () => {
+        try {
+            const response = await axios.get(`${API}/api/v1/resumes/companies/${companySlug}/templates`);
+            templates.value = response.data.templates || [];
+            console.log("Fetched templates:", templates.value)
+        } catch (error) {
+            console.error("Error fetching templates:", error)
+            alert("템플릿 목록을 불러오지 못했습니다.")
+        }
+    });
+
+
+    async function onSubmit() {
+        if (!selectedTemplateId.value) {
+            alert("템플릿을 선택해주세요.");
+            return;
+        }
+        
+        try {
+            const res = await axios.post(`${API}/api/v1/resumes/login`, {
+                email: userId.value,
+                password: password.value,
+                templateId: selectedTemplateId.value
+            }, {
+                withCredentials: true
+            });
+            
+            const selectedTemplate = templates.value.find(job => job.id === selectedTemplateId.value);
+            if (!selectedTemplate) throw new Error("템플릿 선택이 잘못되었습니다.")
+
+            // Store 업데이트
+            resumeStore.template = selectedTemplate
+            resumeStore.resume = res.data.resume
+
+            console.log("Login successful, store updated:", resumeStore.template, resumeStore.resume)
+
+            if (!resumeStore.canAccess()) {
+                alert('제출 완료 했습니다.')
+                router.push({ name: 'ApplicantLogin', params: { companySlug: route.params.companySlug }})
+            return
+        }
+            router.push({
+                name: 'ResumeBasicInfo',
+                params: { companySlug, applicantSlug: selectedTemplateId.value }
+            })
+
+        } catch (error) {
+            console.error("Login error:", error);
+            alert(error.response?.data?.message || "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.")
+        }
 }
 
 function onSearch() {

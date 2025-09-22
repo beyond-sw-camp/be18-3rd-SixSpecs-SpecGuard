@@ -121,6 +121,9 @@ return `${mm}:${ss} / ${Tm}:${Ts}`
 async function requestCode() {
     if (!isEmail(email.value)) { alert('이메일 형식이 올바르지 않습니다.'); return }
     ui.sending = true
+    console.log("requestCode email:", email.value)
+    console.log("API:", API)
+    
     try {
         const r = await fetch(`${API}/verify/applicant/request`, {
         method: 'POST',
