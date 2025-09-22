@@ -89,10 +89,20 @@
                 </div>
             </li>
             <li class="flex items-start gap-4">
-                <svg class="w-9 h-9 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m-2 8H5a2 2 0 01-2-2V8" />
-                </svg>
+
+    <!--기업 로그인 화면에서 메일 아이콘 깨진 거, 수정-->
+    <svg xmlns="http://www.w3.org/2000/svg" 
+     fill="none" 
+     viewBox="0 0 24 24" 
+     stroke-width="1.5" 
+     stroke="currentColor" 
+     class="w-9 h-9 text-slate-600">
+  <path stroke-linecap="round" 
+        stroke-linejoin="round" 
+        d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25H4.5a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91A2.25 2.25 0 012.25 7V6.75" />
+    </svg>
+
+
                 <div>
                 <h3 class="font-extrabold text-lg">지원자 연락</h3>
                 <p class="text-slate-600 text-sm mt-1">지원자의 합/불 여부를 메일로 발송해드립니다</p>
