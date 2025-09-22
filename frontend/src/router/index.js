@@ -5,7 +5,7 @@ import MainPage from '../views/MainPage.vue'
 import CompanyLogin from '../views/company/CompanyLogin.vue'
 import CompanySignupChoice from'../views/company/CompanySignupChoice.vue'
 import CompanySignupInfo from '../views/company/CompanySignupInfo.vue'
-import CompanySignupCondition from '@/views/company/CompanySignupCondition.vue'
+import CompanySignupCondition from '../views/company/CompanySignupCondition.vue'
 
 // 기업 쉘
 import CompanyShell from '../views/company/CompanyShell.vue'
@@ -14,9 +14,10 @@ import CompanyCreatePostBasic from '../views/company/CompanyCreatePostBasic.vue'
 import CompanyCreatePostDetail from '../views/company/CompanyCreatePostDetail.vue'
 import CompanySetEvaluationWeight from '../views/company/CompanySetEvaluationWeight.vue'
 import CompanyEvaluationWeightList from '../views/company/CompanyEvaluationWeightList.vue'
-import CompanyTemplateApplicant from '../views/company/CompanyTemplateApplicant.vue'
-import CompanyApplicantDetail from '@/views/company/CompanyApplicantDetail.vue'
-import CompanyDeptSet from '@/views/company/CompanyDeptSet.vue'
+import CompanyTemplateDetail from '../views/company/CompanyTemplateDetail.vue'
+import CompanyApplicantDetail from '../views/company/CompanyApplicantDetail.vue'
+import CompanyModifyPostBasic from '../views/company/CompanyModifyPostBasic.vue'
+import CompanyModifyPostDetail from '../views/company/CompanyModifyPostDetail.vue'
 
 // 지원자 로그인/회원가입
 import ApplicantLogin from '../views/applicant/ApplicantLogin.vue'
@@ -57,12 +58,13 @@ const routes = [
       { path: '', redirect: {name: 'CompanyDashboard'}},
       { path: 'dashboard', name: 'CompanyDashboard', component: CompanyDashboard, props: true },
       { path: 'create/post/basic', name: 'CompanyCreatePostBasic', component: CompanyCreatePostBasic, props: true },
-      { path: 'create/post/detail', name: 'CompanyCreatePostDetail', component: CompanyCreatePostDetail, props: true },
+      { path: 'create/post/detail/:templateId', name: 'CompanyCreatePostDetail', component: CompanyCreatePostDetail, props: true },
       { path: 'evaluation/list', name: 'CompanyEvaluationWeightList', component: CompanyEvaluationWeightList, props: true },
       { path: 'post/:companyTemplateId/weight', name: 'CompanySetEvaluationWeight', component: CompanySetEvaluationWeight, props: true },
-      { path: 'post/:companyTemplateId/applicant', name:'CompanyTemplateApplicant', component:CompanyTemplateApplicant, props: true },
+      { path: 'post/:companyTemplateId/detail', name:'CompanyTemplateDetail', component:CompanyTemplateDetail, props: true },
       { path: 'post/:companyTemplateId/applicant/:resumeId', name: 'CompanyApplicantDetail', component:CompanyApplicantDetail, props: true },
-      { path: 'department/set', name: 'CompanyDeptSet', component: CompanyDeptSet, props: true }
+      { path: 'modify/post/:companyTemplateId/edit/basic', name: 'CompanyModifyPostBasic', component: CompanyModifyPostBasic, props: true },
+      { path: 'modify/post/:companyTemplateId/edit/detail', name: 'CompanyModifyPostDetail', component: CompanyModifyPostDetail, props: true}
     ],
   },
 

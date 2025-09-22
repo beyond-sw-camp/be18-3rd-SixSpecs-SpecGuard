@@ -99,8 +99,18 @@
             <!-- 우: 미리보기 + 저장 -->
             <div class="col-span-12 md:col-span-3">
               <div class="flex justify-end mb-3">
-                <button class="rounded-xl bg-amber-400 px-5 py-2 font-bold text-slate-900 shadow hover:bg-amber-300"
-                        :disabled="saving" @click="createPosting">채용공고 생성하기</button>
+                <div class="flex w-full gap-2">
+                  <button
+                    class="w-1/2 rounded-xl bg-slate-200 px-5 py-2 font-bold text-slate-900 shadow hover:bg-slate-300"
+                    @click="onCancel"
+                  >취소</button>
+
+                  <button
+                    class="w-1/2 rounded-xl bg-amber-400 px-5 py-2 font-bold text-slate-900 shadow hover:bg-amber-300 disabled:opacity-50"
+                    :disabled="saving"
+                    @click="saveDetail"
+                  >채용공고 수정하기</button>
+                </div>
               </div>
 
               <div class="rounded-2xl bg-white p-5 shadow-sm border sticky top-20">
@@ -129,14 +139,14 @@
 </template>
 
 <script setup>
-import { ref, computed, defineComponent, watch } from 'vue'
+import { ref, computed, defineComponent, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/api/axios'
 
 const router = useRouter()
 const route = useRoute()
 const companySlug = route.params.companySlug
-const templateId = route.params.templateId
+const templateId = route.params.companyTemplateId || route.params.templateId
 
 const itemTitle = ref('');
 const types = ['텍스트','숫자','날짜','선택'];
@@ -158,6 +168,17 @@ const prompts = ref([
   '...에 지원한 이유와 입사 후 본인이 보유한 경험을 어떻게 활용할 계획인지 작성해주세요.',
   '...의 인재상과 본인이 얼마나 부합하는지 구체적인 사례를 바탕으로 작성해주세요.'
 ])
+
+const pad = n => String(n).padStart(2,'0')
+function splitLocal(iso){
+  if (!iso) return ['', '']
+  const d = new Date(iso)
+  return [
+    `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,
+    `${pad(d.getHours())}:${pad(d.getMinutes())}`
+  ]
+}
+const fieldTypeLabel = e => ({ TEXT:'텍스트', NUMBER:'숫자', DATE:'날짜', SELECT:'선택' }[e] || '텍스트')
 
 const addPrompt = () => {
   const t = itemTitle.value.trim();
@@ -247,63 +268,113 @@ const submitting = ref(false)
 const ok = ref(false)
 const saving = computed(() => submitting.value)
 
+const original = ref({ detailId: null, fields: [] })
+
 const fieldTypeEnum = k => ({ '텍스트':'TEXT','숫자':'NUMBER','날짜':'DATE','선택':'SELECT' }[k] || 'TEXT')
 
-async function createPosting () {
+async function saveDetail () {
   err.value=''; submitting.value=true; ok.value=false
   try {
-    if (!templateId) throw new Error('templateId 없음')
-    if (!localStorage.getItem('accessToken')) throw new Error('로그인 필요')
-
-    const startDateIso = toLocalISO(startDate.value, startTime.value, { endOfDay:false, coerceFuture:true })
-    const endDateIso   = toLocalISO(endDate.value,   endTime.value,   { endOfDay:true,  coerceFuture:true })
+    const startDateIso = toLocalISO(startDate.value, startTime.value, { endOfDay:false })
+    const endDateIso   = toLocalISO(endDate.value,   endTime.value,   { endOfDay:true })
 
     const ft = fieldTypeEnum(type.value)
-    const fields = prompts.value.map((p,i)=>({
+    const fieldsBody = prompts.value.map((p,i)=>({
+      id: original.value.fields[i]?.id,
       fieldName: p,
-      fieldType: ft,
-      isRequired: !!required.value,  
-      fieldOrder: i + 1,
-      options: ft === 'SELECT' ? ['예','아니오'] : [],
+      fieldType: original.value.fields[i]?.fieldType ?? ft,
+      isRequired: !!required.value,
+      fieldOrder: original.value.fields[i]?.fieldOrder ?? (i+1),
+      options: original.value.fields[i]?.options ?? (ft==='SELECT'?['예','아니오']:[]),
       minLength: +minLen.value || 0,
       maxLength: +maxLen.value || 0,
     }))
 
-    if (!fields.length) { err.value='최소 하나 이상의 필드가 필요합니다.'; return }
-
     const body = {
-      fields,
       detail: {
-        templateId,
+        id: original.value.detailId,
         startDate: startDateIso,
-        endDate: endDateIso
-      }
+        endDate: endDateIso,
+      },
+      fields: fieldsBody
     }
 
+    await api.patch(
+      `/companyTemplates/${templateId}/detail`,
+      body,
+      { headers: { 'X-Company-Slug': companySlug, 'Content-Type':'application/json', 'Accept':'application/json' } }
+    )
 
-    console.log('REQ start/end', startDate.value, startTime.value, startDateIso, endDate.value, endTime.value, endDateIso)
-    await api.post('/companyTemplates/detail', body, { headers: { 'X-Company-Slug': companySlug } })
-
-    const to = { name: 'CompanyDashboard', params: { companySlug } }
-    const hasRoute = router.resolve(to).matched.length > 0
-    if (!hasRoute) {
-      
-      throw new Error('라우트 "CompanyPostList" 가 없습니다')
-    }
-
-    if (router.hasRoute && router.hasRoute('CompanyDashboard')) {
-      await router.push({ name: 'CompanyDashboard', params: { companySlug } })
-    } else if (router.hasRoute && router.hasRoute('CompanyPostList')) {
-      await router.push({ name: 'CompanyDashboard', params: { companySlug } })
-    } else {
-      await router.push({ path: `/c/${companySlug}/dashboard` })
-    }
-    
+    await router.push({ name: 'CompanyDashboard', params: { companySlug } })
     ok.value = true
   } catch (e) {
-    err.value = e?.message || e?.response?.data?.message || String(e)
+    err.value = e?.response?.data?.message || e?.message || '수정 실패'
   } finally {
     submitting.value = false
+  }
+}
+
+function onCancel () {
+  router.push({ name: 'CompanyDashboard', params: { companySlug } })
+}
+
+onMounted(load)
+
+async function load () {
+  try {
+    const { data } = await api.get(`/companyTemplates/${templateId}`, {
+      headers: { 'X-Company-Slug': companySlug }
+    })
+
+    // 날짜/시간
+    const s = data.startDate || data.detail?.startDate
+    const e = data.endDate   || data.detail?.endDate
+    const [sd, st] = splitLocal(s)
+    const [ed, et] = splitLocal(e)
+    startDate.value = sd; startTime.value = st
+    endDate.value   = ed; endTime.value   = et
+
+    // 문항/필드
+    const pickFields = (d) => {
+      const cands = [d.fields, d.templateFields, d.detail?.fields, d.basic?.fields]
+      return cands.find(a => Array.isArray(a) && a.length) || []
+    }
+    const normalize = (f) => ({
+      fieldName   : f.fieldName ?? f.name ?? f.label ?? f.question ?? '',
+      fieldType   : String(f.fieldType ?? f.type ?? 'TEXT').toUpperCase(),
+      isRequired  : !!(f.isRequired ?? f.required),
+      minLength   : +((f.minLength ?? f.min_len ?? f.min) ?? 0),
+      maxLength   : +((f.maxLength ?? f.max_len ?? f.max) ?? 0),
+      options     : f.options ?? []
+    })
+
+    original.value.detailId = data.detail?.id ?? null
+    original.value.fields = (data.fields || data.templateFields || []).map(f => ({
+      id: f.id,
+      fieldOrder: f.fieldOrder,
+      fieldType: f.fieldType,
+      options: f.options ?? [],
+    }))
+    let fields = pickFields(data).map(normalize)
+    if (!fields.length) {
+      // 필요 시 상세 엔드포인트에서도 한 번 더 시도
+      try {
+        const { data: d2 } = await api.get(`/companyTemplates/${templateId}/detail`, {
+          headers: { 'X-Company-Slug': companySlug }
+        })
+        fields = pickFields(d2).map(normalize)
+      } catch {}
+    }
+    if (fields.length) {
+      prompts.value  = fields.map(f => f.fieldName).filter(Boolean)
+      const f0 = fields[0]
+      type.value     = fieldTypeLabel(f0.fieldType)
+      required.value = !!f0.isRequired
+      minLen.value   = f0.minLength ?? 0
+      maxLen.value   = f0.maxLength ?? 0
+    }
+  } catch (e) {
+    err.value = e?.response?.data?.message || e?.message || '로딩 실패'
   }
 }
 </script>

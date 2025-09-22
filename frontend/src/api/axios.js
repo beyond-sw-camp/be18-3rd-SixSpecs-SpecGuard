@@ -1,90 +1,102 @@
+// src/api/axios.js
 import axios from "axios";
 import { useAuthStore } from "@/stores/auth";
 import refreshApi from "@/api/refresh";
-import router from "@/router"; // ✅ Vue Router import
+import router from "@/router";
+
+/** 퍼블릭(무토큰) 경로 */
+const PUBLIC_PATTERNS = [
+  /^\/auth\/(login|signup|token|verify|invite)/,
+  /^\/verify(\/|$)/,
+  /^\/invite(\/|$)/,
+];
+const isPublic = (u = "") => {
+  try { u = new URL(u, "http://dummy").pathname; }
+  catch (_e) { u = String(u || ""); }
+  return PUBLIC_PATTERNS.some((re) => re.test(u));
+};
 
 const api = axios.create({
-    baseURL: "http://localhost:8080/api/v1",
-    withCredentials: true, // ✅ Refresh 쿠키 전송 허용
+  baseURL: "http://localhost:8080/api/v1",
+  withCredentials: false, // 일반 API는 쿠키 불필요
 });
 
-// ✅ 요청 인터셉터: AccessToken 자동 추가
-api.interceptors.request.use((config) => {
-    const authStore = useAuthStore();
-
-    // /auth/token 호출에는 Authorization 헤더 붙이지 않음
-    if (!config.url.includes("/auth/token")) {
-        const token = authStore.accessToken || localStorage.getItem("accessToken");
-        if (token) {
-            config.headers["Authorization"] = `Bearer ${token}`;
-        }
-    }
-
-    return config;
+/** 요청 인터셉터: 퍼블릭 제외하고 토큰 첨부 */
+api.interceptors.request.use((cfg) => {
+  const pub = isPublic(cfg.url || "");
+  const store = useAuthStore();
+  const t = store.accessToken || localStorage.getItem("accessToken");
+  if (!pub && t) {
+    cfg.headers = cfg.headers || {};
+    cfg.headers.Authorization = `Bearer ${t}`;
+  }
+  if (import.meta.env.DEV) {
+    console.debug("[api:req]", (cfg.method || "").toUpperCase(), cfg.url, "public?", pub, "auth?", !!t);
+  }
+  return cfg;
 });
 
-// ✅ 응답 인터셉터: 401 → Refresh 로직 + 에러 처리
+/** 응답 인터셉터 */
 api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        const authStore = useAuthStore();
-        const originalRequest = error.config;
+  (res) => res,
+  async (error) => {
+    const cfg = error.config || {};
 
-        // /auth/token 요청에서는 refresh 로직을 태우지 않음
-        if (originalRequest.url.includes("/auth/token")) {
-            return Promise.reject(error);
-        }
-
-        //  401 → Refresh 시도
-        if (error.response?.status === 401) {
-            const errorCode = error.response.data?.code;
-
-            if (errorCode === "ACCESS_TOKEN_EXPIRED" && !originalRequest._retry) {
-                originalRequest._retry = true;
-                try {
-                    const refreshRes = await refreshApi.post("/auth/token/refresh");
-                    const newAccessToken =
-                        refreshRes.headers["authorization"]?.replace("Bearer ", "");
-
-                    if (newAccessToken) {
-                        authStore.accessToken = newAccessToken;
-                        localStorage.setItem("accessToken", newAccessToken);
-
-                        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
-                        return api(originalRequest); // 재시도
-                    }
-                } catch (err) {
-                    authStore.logout();
-                    return Promise.reject(err);
-                }
-            }
-        }
-
-        //  팀 약속: code/error/message 기반 라우팅 처리
-        if (error.response?.data) {
-            const { code, message } = error.response.data;
-
-            switch (code) {
-                case "EMAIL_MISMATCH":
-                    router.push({ path: "/signup/invite", query: { error: code, message } });
-                    break;
-                case "EXPIRED_TOKEN":
-                    router.push({ path: "/invite/expired", query: { error: code, message } });
-                    break;
-                case "ALREADY_REGISTERED":
-                    router.push({ path: "/login", query: { error: code, message } });
-                    break;
-                case "INVALID_TOKEN":
-                    router.push({ path: "/error", query: { error: code, message } });
-                    break;
-                default:
-                    router.push({ path: "/error", query: { message } });
-                    break;
-            }
-        }
-
-        return Promise.reject(error);
+    if (isPublic(cfg.url || "") || cfg._skipGlobalError) {
+      return Promise.reject(error);
     }
+
+    // 네트워크 에러 등
+    if (!error.response) return Promise.reject(error);
+
+    const { status, data } = error.response;
+
+    // 401만 전역 처리 (토큰 만료시 refresh)
+    if (status === 401) {
+      if (data?.code === "ACCESS_TOKEN_EXPIRED" && !cfg._retry) {
+        cfg._retry = true;
+        try {
+          const r = await refreshApi.post("/auth/token/refresh"); // withCredentials:true 인스턴스
+          const newToken = r.headers["authorization"]?.replace(/^Bearer\s+/i, "");
+          if (newToken) {
+            const store = useAuthStore();
+            store.accessToken = newToken;
+            localStorage.setItem("accessToken", newToken);
+            cfg.headers = cfg.headers || {};
+            cfg.headers.Authorization = `Bearer ${newToken}`;
+            return api(cfg); // 재시도
+          }
+        } catch {
+          useAuthStore().logout();
+        }
+      }
+      // refresh 실패 또는 기타 401 → 로그인으로
+      router.push({ path: "/login", query: { error: data?.code || "UNAUTHORIZED", message: data?.message } });
+      return Promise.reject(error);
+    }
+
+    // 초대/검증 관련 특별 코드만 라우팅
+    const { code, message } = data || {};
+    if (code === "EMAIL_MISMATCH") {
+      router.push({ path: "/signup/invite", query: { error: code, message } });
+      return Promise.reject(error);
+    }
+    if (code === "EXPIRED_TOKEN") {
+      router.push({ path: "/invite/expired", query: { error: code, message } });
+      return Promise.reject(error);
+    }
+    if (code === "ALREADY_REGISTERED") {
+      router.push({ path: "/login", query: { error: code, message } });
+      return Promise.reject(error);
+    }
+    if (code === "INVALID_TOKEN") {
+      router.push({ path: "/error", query: { error: code, message } });
+      return Promise.reject(error);
+    }
+
+    // 나머지(404/409/500 등)는 라우팅하지 않고 컴포넌트로 전달
+    return Promise.reject(error);
+  }
 );
 
 export default api;

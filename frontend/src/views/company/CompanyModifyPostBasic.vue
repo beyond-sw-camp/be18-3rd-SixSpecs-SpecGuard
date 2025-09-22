@@ -104,85 +104,173 @@
                 <div>{{ preview.role || '○○○○직무' }}</div>
                 <div>{{ preview.years }}년차</div>
                 </div>
-                <div class="mt-6 space-y-2">
-                <button class="w-full rounded-md bg-slate-900 px-5 py-2 font-semibold text-white hover:bg-slate-800"
-                        :disabled="submitting" @click="saveAndNext">다음</button>
-                <p v-if="err" class="text-rose-600 text-sm">오류: {{ err }}</p>
+                <div class="mt-6 flex gap-2">
+                    <button
+                        class="w-1/2 rounded-md bg-slate-200 px-5 py-2 font-semibold text-slate-900 hover:bg-slate-300"
+                        @click="onCancel"
+                    >취소</button>
+                    <button
+                        class="w-1/2 rounded-md bg-slate-900 px-5 py-2 font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+                        :disabled="saving"
+                        @click="saveAndNext"
+                    >다음</button>
+                    </div>
+                    <p v-if="err" class="text-rose-600 text-sm mt-2">오류: {{ err }}</p>
                 </div>
             </div>
             </div>
-        </div>
         </section>
     </div>
 </template>
 
 <script setup>
-import { reactive, ref, computed } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { createBasicTemplate } from '@/api/companyTemplate'
+import api from '@/api/axios'
 
-const router = useRouter()
+// 쉘 라우트 파라미터
 const route = useRoute()
+const router = useRouter()
 const companySlug = route.params.companySlug
+const companyTemplateId = route.params.companyTemplateId
 
-const roleTags = ['프론트엔드 개발','백엔드 개발','데이터 분석','ERP','QA','네트워크 엔지니어','HR']
-const categories = ['IT','미디어, 광고','판매, 유통','제조, 생산, 화학','금융, 은행','서비스','공공기관 / 공기업']
-
-const roleQuery = ref('')
-const categoryQuery = ref('')
-const filteredRoleTags = computed(() => roleTags.filter(t => t.toLowerCase().includes(roleQuery.value.toLowerCase())))
-const filteredCategories = computed(() => categories.filter(c => c.toLowerCase().includes(categoryQuery.value.toLowerCase())))
-
+// 생성 페이지와 동일한 폼 모델 유지
 const form = reactive({
-    title: '',
-    description: '',
-    department: '',
-    role: '',
-    careerType: '',
-    years: 0
+  department: '',
+  role: '',
+  careerType: '',
+  years: 0,
+  title: '',
+  description: ''
 })
 
+// const loaded = ref({})
+const loading = ref(false)
+const saving  = ref(false)
+const err     = ref('')
+
+const canSubmit = computed(() => !!form.title && !saving.value)
+
+// const mode = ref('edit')
+// const step = ref(1)
+// const currentTab = ref('basic')
+// const isCreate = ref(false)
+// const isEdit = ref(true)
+
+
+const categories = ref(['백엔드','프론트엔드','데이터','플랫폼'])
+const roleTags   = ref(['Java','Spring','Vue','DevOps','QA']) 
+const categoryQuery = ref('')
+const roleQuery = ref('')
+const filteredCategories = computed(() =>
+  categories.value.filter(c => c.toLowerCase().includes(categoryQuery.value.toLowerCase())))
+const filteredRoleTags = computed(() =>
+  roleTags.value.filter(t => t.toLowerCase().includes(roleQuery.value.toLowerCase())))
 const selected = reactive({ category: new Set(), role: new Set() })
-function toggleChip(type, v) { const s = selected[type]; s.has(v) ? s.delete(v) : s.add(v) }
 
-const preview = computed(() => ({
-    title: form.title || '주니어개발자 채용',
-    department: form.department,
-    role: form.role,
-    years: Number.isFinite(form.years) ? form.years : 0
-    }))
+watch(() => form.careerType, v => { if (v === '신입') form.years = 0 })
+watch(() => form.years, n => { form.careerType = n > 0 ? '경력' : '신입' })
 
-const err = ref('')
-const submitting = ref(false)
+// helpers
+function clean(v){
+  if (v == null) return undefined
+  const s = typeof v === 'string' ? v.trim() : v
+  return s === '' ? undefined : s
+}
+function makePayload(){
+  const p = {
+    name: clean(form.title),
+    description: clean(form.description),
+    department: clean(form.department),
+    category: clean(form.role),
+    yearsOfExperience: Number.isFinite(+form.years) ? +form.years : undefined,
+  }
+  // 빈/undefined 필드 제거
+  Object.keys(p).forEach(k => p[k] == null && delete p[k])
+  return p
+}
 
-async function saveAndNext() {
-    err.value = ''
-    if (!form.department || !form.role || !form.title) { err.value = '필수값 확인'; return }
-    submitting.value = true
+
+function toggleChip(kind,v){
+  const set = selected[kind]; set.has(v)?set.delete(v):set.add(v)
+  if (kind==='category' || kind==='role') form.role = [...selected[kind]][0] || form.role
+}
+const preview = computed(()=>({ title: form.title||'(제목 없음)', department: form.department, role: form.role, years: form.years||0 }))
+
+
+
+
+
+// 저장 버튼 핸들러(템플릿의 @click="saveAndNext")
+async function saveAndNext(){
+  await onSubmit()
+}
+
+
+// 최초 진입 시 기존 값 로드
+onMounted(load)
+async function load(){
+  loading.value = true; err.value = ''
+  try{
+    const { data } = await api.get(`/companyTemplates/${companyTemplateId}`, {
+      headers: { 'X-Company-Slug': companySlug },
+      params: { companySlug }
+    })
+    const b = data.basic ?? data
+    // 백엔드 -> 화면 폼 매핑
+    form.title       = b.name ?? ''
+    form.description = b.description ?? ''
+    form.department  = b.department ?? ''
+    form.role        = b.category ?? ''
+    form.years       = Number(b.yearsOfExperience ?? 0)
+    form.careerType  = form.years > 0 ? '경력' : '신입'
+    // 선택칩 초기화(선택)
+    if (form.role) selected.role = new Set([form.role])
+  }catch(e){
+    err.value = e.response?.data?.message || e.message || '로드 실패'
+  }finally{
+    loading.value = false
+  }
+}
+
+// 제출 핸들러: 생성 페이지와 동일한 버튼에서 호출
+async function onSubmit () {
+  if (!canSubmit.value || saving.value) return
+  saving.value = true; err.value = ''
+
+  const headers = {
+    'X-Company-Slug': companySlug,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  }
+
+  const payload = makePayload()
+
+  try {
+    // 1) PATCH + 평면 바디
+    await api.patch(`/companyTemplates/${companyTemplateId}/basic`, payload, { headers })
+  } catch (e1) {
     try {
-        // API 스키마 매핑
-        const body = {
-        name: form.title,
-        description: form.description,
-        department: form.department,
-        category: [...selected.category][0] || form.role, // 임시 매핑
-        yearsOfExperience: Number(form.years) || 0
-        }
-    
-        const { data } = await createBasicTemplate(body)
-        const templateId = data.id || data.templateId
-        if (!templateId) throw new Error('templateId 없음')
-        router.push({ name: 'CompanyCreatePostDetail', params: { companySlug, templateId } })
-    } catch (e) {
-        err.value = e.response?.data?.message || e.message || String(e)
-    } finally {
-        submitting.value = false
+      // 2) PATCH + { basic: ... }
+      await api.patch(`/companyTemplates/${companyTemplateId}/basic`, { basic: payload }, { headers })
+    } catch (e2) {
+      try {
+        // 3) 최종 폴백: POST
+        await api.post(`/companyTemplates/${companyTemplateId}/basic`, payload, { headers })
+      } catch (e3) {
+        err.value = e3.response?.data?.message || e3.message || '저장 실패'
+        saving.value = false
+        return
+      }
     }
+  }
+
+  router.push({ path: `/c/${companySlug}/modify/post/${companyTemplateId}/edit/detail`})
+  saving.value = false
+}
+
+// 취소 버튼은 생성 페이지와 동일한 위치에서 이 함수만 연결
+function onCancel () {
+  router.push({ name: 'CompanyDashboard', params: { companySlug } })
 }
 </script>
-
-<style scoped>
-.fade-slide-enter-active,.fade-slide-leave-active{transition:all .18s ease}
-.fade-slide-enter-from{opacity:0;transform:translateX(-6px)}
-.fade-slide-leave-to{opacity:0;transform:translateX(-6px)}
-</style>
