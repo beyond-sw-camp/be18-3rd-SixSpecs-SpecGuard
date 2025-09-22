@@ -108,7 +108,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useResumeStore } from '@/stores/resumeStore'
 import ResumeHeader from './ResumeHeader.vue';
-import { saveTemplateResponse } from '@/service/resumeService';
+import applicantApi from '@/api/applicantApi';
     
 const resumeStore = useResumeStore();
 const router = useRouter()
@@ -205,7 +205,7 @@ const allValid = computed(() =>
             }))
         }
         try {
-        const res = await saveTemplateResponse(payload);
+        const res = await applicantApi.post(`/resumes/template-responses`, payload);
 
         console.log("templateResponse info saved:", res.data);
         // 저장된 기본정보를 store에 반영

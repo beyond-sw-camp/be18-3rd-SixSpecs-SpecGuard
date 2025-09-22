@@ -164,7 +164,7 @@ import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useResumeStore } from '@/stores/resumeStore'
 import ResumeHeader from "./ResumeHeader.vue";
-import { saveSubmit } from "@/service/resumeService"
+import applicantApi from "../../api/applicantApi";
 
 const resumeStore = useResumeStore();
 const router = useRouter();
@@ -204,7 +204,7 @@ const submitForm = async () => {
     if (!agree.value) return;
 
     try {
-        const res = await saveSubmit();
+        const res = await applicantApi.post(`/resumes/submit`);
         resumeStore.template = res.data
         templateName.value = res.data.templateName
         alert("제출이 완료되었습니다.");
