@@ -374,8 +374,8 @@ async function fetchTemplateDetail(id) {
         if (reset) { page.value = 0; applicants.value = [] }
 
         const res = await api.get('company/resumes/list', {
-        headers: { 'X-Company-Slug': companySlug.value, Accept: 'application/json' },
-        params: { page: page.value, size: pageSize, sort: 'createdAt,desc' },
+        headers: { Accept: 'application/json' },
+        params: { templateId: companyTemplateId.value, page: page.value, size: pageSize, sort: 'createdAt,desc' },
         paramsSerializer: { indexes: null },
         });
 

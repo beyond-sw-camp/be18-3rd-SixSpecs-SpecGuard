@@ -10,7 +10,7 @@
             </h1>
 
             <!-- 상단 카드 -->
-            <div class="mt-4 grid grid-cols-12 gap-4">s
+            <div class="mt-4 grid grid-cols-12 gap-4">
             <div class="col-span-12 xl:col-span-7 rounded-xl border p-4">
                 <div class="flex items-start gap-4">
                 <img :src="resume?.avatarUrl || fallbackAvatar" class="w-20 h-20 rounded-xl object-cover ring-1 ring-slate-200" alt="">
@@ -230,82 +230,154 @@
     </div>
     </template>
 
-    <script setup>
-    import { ref, computed, onMounted } from 'vue'
-    import { useRoute, useRouter } from 'vue-router'
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import api from '@/api/axios'
 
-    /* Shell 로부터 companySlug 전달 가능 */
-    const props = defineProps({ companySlug: { type: String, required: false } })
+const props = defineProps({ companySlug: { type: String, required: false } })
+const route = useRoute()
+const router = useRouter()
 
-    const route = useRoute()
-    const router = useRouter()
+// route params
+const companySlug = props.companySlug || route.params.companySlug
+const companyTemplateId = route.params.companyTemplateId
+const resumeId = String(route.params.resumeId)
 
-    const jobId = route.params.jobId || route.params.job_id || route.params.jid
-    const applicantId = Number(route.params.id || route.params.applicantId)
+// state
+const job = ref(null)
+const resume = ref(null)
+const list = ref([])
+const filter = ref({ dept: '', role: '', careerType: '' })
+const comment = ref('')
+const fallbackAvatar = 'https://placehold.co/96x96/png'
 
-    const base = props.companySlug
-    ? `/api/v1/companies/${props.companySlug}`
-    : `/api/v1`
+// common headers (원시 문자열 사용, .value 금지)
+const headers = computed(() => ({ 'X-Company-Slug': companySlug, Accept: 'application/json' }))
 
-    const job = ref(null)
-    const resume = ref(null)
-    const list = ref([])
-    const filter = ref({ dept: '', role: '', careerType: '' })
+onMounted(async () => {
+  await Promise.all([fetchResume(), fetchList()])
+})
 
-    const comment = ref('')
-    const fallbackAvatar = 'https://placehold.co/96x96/png'
+// resume 불러오기: company 네임스페이스 우선 → 글로벌 폴백
+async function fetchResume() {
+  const [b, d, fs, pct] = await Promise.all([
+    api.get(`/company/resumes/${resumeId}/basic`,  { headers: headers.value, validateStatus:s=>s<500 }),
+    api.get(`/company/resumes/${resumeId}/detail`, { headers: headers.value, validateStatus:s=>s<500 }),
+    api.get(`/validation/${resumeId}/final`,       { headers: headers.value, validateStatus:s=>s<500 }),
+    api.get(`/validation/percentile`,              { headers: headers.value, params:{ resumeId }, validateStatus:s=>s<500 })
+  ])
 
-    onMounted(async () => {
-    await Promise.all([fetchJob(), fetchResume(), fetchList()])
-    })
+  const basic = b.status===200 ? (b.data?.data ?? b.data ?? {}) : {}
+  const detail= d.status===200 ? (d.data?.data ?? d.data ?? {}) : {}
 
-    async function fetchJob() {
-    const r = await fetch(`${base}/jobs/${jobId}`, { headers: { Accept: 'application/json' } })
-    if (r.ok) job.value = await r.json()
+  const finalScore = fs.status===200 ? ((fs.data?.data ?? fs.data ?? {}).finalScore ?? (fs.data?.data ?? fs.data ?? {}).score ?? null) : null
+  const percentile = pct.status===200 ? (pct.data?.percentile ?? null) : null
+
+  // 통합 엔드포인트가 있다면 덮어쓰기
+  if (!basic.id && !detail.id) {
+    const g = await api.get(`/company/resumes/${resumeId}`, { headers: headers.value, validateStatus:s=>s<500 })
+    if (g.status===200) {
+      const root = g.data?.data ?? g.data ?? {}
+      Object.assign(basic, root.basic ?? root.resume ?? root)
+      Object.assign(detail, root.detail ?? root.details ?? root)
     }
+  }
 
-    async function fetchResume() {
-    // 1) 회사 네임스페이스 경로 우선
-    let r = await fetch(`${base}/jobs/${jobId}/applicants/${applicantId}/resume`, { headers: { Accept: 'application/json' } })
-    if (!r.ok) {
-        // 2) 일반 경로 폴백
-        r = await fetch(`/api/v1/applicants/${applicantId}/resume`, { headers: { Accept: 'application/json' } })
-    }
-    if (r.ok) resume.value = await r.json()
-    }
+  resume.value = normalizeResume(basic, detail, { finalScore, percentile })
+}
 
-    async function fetchList() {
-    // 동일 공고의 지원자 목록
-    const qs = new URLSearchParams()
-    if (filter.value.dept) qs.set('dept', filter.value.dept)
-    if (filter.value.role) qs.set('role', filter.value.role)
-    if (filter.value.careerType) qs.set('careerType', filter.value.careerType)
-    const r = await fetch(`${base}/jobs/${jobId}/applicants?${qs.toString()}`, { headers: { Accept: 'application/json' } })
-    if (r.ok) {
-        const data = await r.json()
-        list.value = Array.isArray(data.content) ? data.content : data
-    }
-    }
 
-    const filteredList = computed(() => list.value)
+// 동일 템플릿 내 지원자 목록
+async function fetchList() {
+  const r = await api.get('company/resumes/list', {
+    headers: headers.value,
+    params: { page: 0, size: 30, sort: 'createdAt,desc' },
+    validateStatus: s => s < 500
+  })
+  if (r.status === 200) {
+    const body = r.data ?? {}
+    const data = body.data ?? body
+    const rows = (Array.isArray(data) ? data :
+      data.contents ?? data.content ?? data.items ?? data.list ?? data.rows) ?? []
+    list.value = rows.map(x => ({
+      id: x.id || x.resumeId,
+      name: x.name || x.applicantName || '이름 없음'
+    }))
+  }
+}
 
-    function goApplicant(id) {
-    router.push({ name: 'ApplicantDetail', params: { jobId, id } })
-    }
+// basic/detail 병합
+function normalizeResume(basic = {}, detail = {}, extra = {}) {
+  const b = basic, d = detail
+  return {
+    id: b.id || d.id,
+    name: b.name || d.name || '-',
+    avatarUrl: b.avatarUrl || d.avatarUrl || null,
+    careerType: (b.yearsOfExperience ?? d.yearsOfExperience ?? 0) > 0 ? '경력' : '신입',
+    univ: d.universityName || b.universityName || b.univ || '-',
+    major: d.major || b.major || '',
+    gpa: d.gpa ?? b.gpa ?? null,
+    gpaScale: d.gpaScale ?? b.gpaScale ?? 4.5,
+    matchScore: extra?.finalScore ?? d.finalScore ?? b.finalScore ?? null,
+    rankTop: extra?.percentile != null ? (100 - extra.percentile) : null,
+    analyzedAt: d.analyzedAt || b.analyzedAt || null,
+    analysis: {
+      integrity: d.analysis?.integrity || b.analysis?.integrity || null,
+      insight:   d.analysis?.insight   || b.analysis?.insight   || null,
+      overall:   d.analysis?.overall   || b.analysis?.overall   || null,
+    },
+    scores: d.scores || b.scores || {},
+    details: d.details || {},
+    links: {
+      github: d.github || b.github || '',
+      notion: d.notion || b.notion || '',
+      velog:  d.velog  || b.velog  || ''
+    },
+    certs: (d.certificates || b.certs || []).map(c => ({ name: c.name || c.title || '', no: c.number || c.no || '' })),
+    edu: {
+      college: {
+        name: d.universityName || b.universityName || b.univ || '',
+        major: d.major || b.major || '',
+        period: (d.univStart && d.univEnd) ? `${d.univStart} ~ ${d.univEnd}` : ''
+      },
+      high: {
+        name: d.highSchoolName || '',
+        period: (d.highStart && d.highEnd) ? `${d.highStart} ~ ${d.highEnd}` : ''
+      }
+    },
+    essays: d.essays || b.essays || [],
+    essays2: d.essays2 || b.essays2 || [],
+    summary: d.summary || b.summary || null,
+  }
+}
 
-    function fmtScore(s) { return s == null ? '-' : Number(s).toFixed(2) }
-    function fmtDateTime(iso) { return iso ? new Date(iso).toLocaleString() : '-' }
 
-    async function saveComment() {
-    await fetch(`${base}/jobs/${jobId}/applicants/${applicantId}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: comment.value })
-    })
-    comment.value = ''
-    }
+// 우측 패널
+const filteredList = computed(() => list.value)
+
+function goApplicant(id) {
+  router.push({
+    name: 'CompanyApplicantDetail',
+    params: { companySlug, companyTemplateId, resumeId: String(id) }
+  })
+}
+
+// utils
+function fmtScore(s) { return s == null ? '-' : Number(s).toFixed(2) }
+function fmtDateTime(iso) { return iso ? new Date(iso).toLocaleString() : '-' }
+
+// 코멘트 저장
+async function saveComment() {
+  await api.post(
+    `company/resumes/${resumeId}/comments`,
+    { content: comment.value },
+    { headers: { ...headers.value, 'Content-Type': 'application/json' } }
+  )
+  comment.value = ''
+}
 </script>
 
 <style scoped>
-/* 필요 시 섹션 간 미세 조정만 */
+
 </style>
