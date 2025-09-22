@@ -144,7 +144,7 @@
     onMounted(async () => {
         try {
             const response = await axios.get(`${API}/api/v1/resumes/companies/${companySlug}/templates`);
-            templates.value = response.data.templates || [];
+            templates.value = templates.value = (response.data.templates || []).map(t => t.basic);
             console.log("Fetched templates:", templates.value)
         } catch (error) {
             console.error("Error fetching templates:", error)
