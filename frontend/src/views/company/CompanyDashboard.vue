@@ -1,4 +1,4 @@
-<!-- JobList.vue -->
+<!-- TemplateList.vue -->
 <template>
   <div class="w-full grid grid-cols-12 gap-6">
     <!-- Main -->
@@ -12,15 +12,15 @@
           </div>
         </div>
       </div>
-      <p class="mb-6 font-semibold">총 <span class="text-rose-500">{{ filteredJobs.length }}</span> 건의 채용이 진행중 입니다.</p>
+      <p class="mb-6 font-semibold">총 <span class="text-rose-500">{{ filteredTemplates.length }}</span> 건의 채용이 진행중 입니다.</p>
 
-      <!-- Job cards -->
+      <!-- Templates cards -->
       <section class="space-y-6">
         <article
-          v-for="job in filteredJobs"
-          :key="job.id"
+          v-for="template in filteredTemplates"
+          :key="template.id"
           class="rounded-2xl border border-slate-200 shadow-sm cursor-pointer"
-          @click="goDetail(job.id)"
+          @click="goDetail(template.id)"
         >
           <div class="flex items-start justify-between p-6">
             <div class="flex items-start gap-4">
@@ -31,18 +31,17 @@
               </div>
               <div>
                 <h3 class="text-2xl font-extrabold">
-                  <button class="hover:underline" @click.stop="goDetail(job.id)">{{ job.title }}</button>
+                  <button class="hover:underline" @click.stop="goDetail(template.id)">{{ template.title }}</button>
                 </h3>
-                <p class="mt-2 text-slate-600">{{ job.desc }}</p>
+                <p class="mt-2 text-slate-600">{{ template.desc }}</p>
                 <div class="mt-3 flex gap-2 text-sm">
-                  <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="goDetail(job.id)">조회</button>
-                  <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="onCreate()">생성</button>
-                  <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="onEdit(job)">수정</button>
-                  <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="onDelete(job)">삭제</button>
+                  <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="goDetail(template.id)">조회</button>
+                  <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="onEdit(template.id)">수정</button>
+                  <button class="rounded-md bg-slate-100 px-3 py-1" @click.stop="onDelete(template)">삭제</button>
                 </div>
               </div>
             </div>
-            <div class="text-2xl font-extrabold pr-4 pt-1">D-{{ dday(job.endAt) }}</div>
+            <div class="text-2xl font-extrabold pr-4 pt-1">D-{{ dday(template.endAt) }}</div>
           </div>
         </article>
 
@@ -56,23 +55,35 @@
       <div class="sticky top-20 space-y-6">
         <div class="rounded-2xl border border-slate-200 p-6">
           <h4 class="text-xl font-extrabold mb-4">부서</h4>
-          <select v-model="dept" class="w-full rounded-lg border-slate-300 text-sm">
+          <input
+            v-model.trim="dept"
+            type="text"
+            class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            placeholder="부서 입력"
+          />
+          <!-- <select v-model="dept" class="w-full rounded-lg border-slate-300 text-sm">
             <option value="">전체</option>
             <option>백엔드</option>
             <option>프론트엔드</option>
             <option>데이터</option>
             <option>플랫폼</option>
-          </select>
+          </select> -->
         </div>
         <div class="rounded-2xl border border-slate-200 p-6">
           <h4 class="text-xl font-extrabold mb-4">직무</h4>
-          <select v-model="role" class="w-full rounded-lg border-slate-300 text-sm">
+          <input
+            v-model.trim="role"
+            type="text"
+            class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            placeholder="직무 입력"
+          />
+          <!-- <select v-model="role" class="w-full rounded-lg border-slate-300 text-sm">
             <option value="">전체</option>
             <option>백엔드</option>
             <option>프론트엔드</option>
             <option>DevOps</option>
             <option>QA</option>
-          </select>
+          </select> -->
         </div>
         <div class="rounded-2xl border border-slate-200 p-6">
           <h4 class="text-xl font-extrabold mb-2">시작일</h4>
@@ -93,92 +104,160 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import api from '@/api/axios'
 
+const route = useRoute()
 const router = useRouter()
+const companySlug = route.params.companySlug || ''
 
-// 검색 및 필터
+const norm = s => (s ?? '').toString().trim().toLowerCase()
+
+// UI 상태
 const query = ref('')
 const dept = ref('')
 const role = ref('')
+const status = ref('')
+const years = ref('')
 const startDate = ref('')
-const startTime = ref('')
+const startTime = ref('')   // 추가
 const endDate = ref('')
-const endTime = ref('')
+const endTime = ref('')     // 추가
+const page = ref(0)
+const size = ref(10)
+const sort = ref('createdAt,DESC')
+const total = ref(0)
 
-// 서버 데이터
-const jobs = ref([])
+// 데이터 상태
+const templates = ref([])
 const loading = ref(false)
 const error = ref('')
 
-// 최초 로드
-onMounted(fetchJobs)
+// 로드 및 필터 변경 시 재조회
+onMounted(fetchTemplates)
+watch([status, years, startDate, endDate, page, size, sort], fetchTemplates)
 
-// 필터 변경 시 서버에 다시 요청하고 싶으면 아래 watch를 사용
-watch([dept, role, startDate, startTime, endDate, endTime], fetchJobs)
-
-async function fetchJobs() {
+async function fetchTemplates () {
+  loading.value = true; error.value = ''
   try {
-    loading.value = true
-    error.value = ''
-
-    // 필요 시 쿼리 파라미터 구성 (백엔드에 맞춰 수정)
-    const params = new URLSearchParams()
-    if (dept.value) params.set('dept', dept.value)
-    if (role.value) params.set('role', role.value)
-    if (startDate.value) params.set('start', combine(startDate.value, startTime.value).toISOString())
-    if (endDate.value) params.set('end', combine(endDate.value, endTime.value).toISOString())
-    // 검색어는 서버 필터로 넘기거나 클라이언트에서만 필터링
-    // params.set('q', query.value)
-
-    const res = await fetch(`/api/v1/company/template?${params.toString()}`, {
-      headers: { Accept: 'application/json' },
+    const { data } = await api.get('/companyTemplates', {
+      params: { page: page.value, size: size.value, sort: sort.value }
     })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    jobs.value = await res.json()   // [{id,title,desc,dept,role,startAt,endAt}, ...]
+
+    const list = Array.isArray(data.templates) ? data.templates : (data.content ?? [])
+    total.value = data.totalElements ?? list.length
+
+    templates.value = list.map(item => {
+      const b = item.basic ?? {}
+      const d = item.detail ?? {}
+      return {
+        id: b.id,
+        title: b.name || '(제목 없음)',
+        desc: b.description || '',
+        dept: b.department || '',
+        role: b.category || '',
+        startAt: d.startDate || null,     // e.g. "2025-09-19T09:00:00"
+        endAt: d.endDate || null,         // e.g. "2025-10-09T23:59:59"
+      }
+    })
   } catch (e) {
-    error.value = String(e.message || e)
+    error.value = e.response?.data?.message || e.message || String(e)
   } finally {
     loading.value = false
   }
 }
 
-// 클라이언트 검색 필터
-const filteredJobs = computed(() => {
-  const q = query.value.toLowerCase().trim()
-  if (!q) return jobs.value
-  return jobs.value.filter(j =>
-    (j.title || '').toLowerCase().includes(q) ||
-    (j.desc || '').toLowerCase().includes(q)
-  )
-})
-
-// 날짜 결합
-function combine(date, time) {
-  if (!date && !time) return ''
-  const t = time || '00:00'
-  return new Date(`${date}T${t}`)
+async function goDetail(id) {
+  router.push({ path: `/c/${companySlug}/post/${id}/detail` })
 }
 
+async function onDelete(t) {
+  if (!t?.id) return
+  if (!confirm('이 채용공고를 삭제하시겠습니까?')) return
+  try {
+    await api.delete(`/companyTemplates/${t.id}`, {
+      headers: { 'X-Company-Slug': companySlug },
+      params: { companySlug }
+    })
+    templates.value = templates.value.filter(x => x.id !== t.id)
+    total.value = Math.max(0, total.value - 1)
+  } catch (e) {
+    alert(e.response?.data?.message || e.message || '삭제 실패')
+  }
+}
+
+async function onEdit(id) {
+  router.push({ path: `/c/${companySlug}/modify/post/${id}/edit/basic` })
+}
+// { path: 'modify/post/:companyTemplateId/basic',
+
+function toLocalTs(dateStr, timeStr, endOfDay = false) {
+  if (!dateStr) return null
+  const [y, m, d] = dateStr.split('-').map(Number)
+  let hh = 0, mm = 0
+  if (timeStr) {
+    ;[hh, mm] = timeStr.split(':').map(Number)
+  } else if (endOfDay) {
+    hh = 23; mm = 59
+  }
+  return new Date(y, m - 1, d, hh, mm, 0, 0).getTime()
+}
+
+// 검색 필터
+const filteredTemplates = computed(() => {
+  const q = norm(query.value)
+  const d = norm(dept.value)
+  const r = norm(role.value)
+  const sTs = toLocalTs(startDate.value, startTime.value, false)
+  const eTs = toLocalTs(endDate.value, endTime.value, true)    
+
+  return templates.value.filter(j => {
+    const title = norm(j.title)
+    const desc  = norm(j.desc)
+    const jd    = norm(j.dept)
+    const jr    = norm(j.role)
+
+    const matchQuery = !q || title.includes(q) || desc.includes(q)
+    const matchDept  = !d || jd.includes(d)
+    const matchRole  = !r || jr.includes(r)
+
+    const jStartTs = j.startAt ? new Date(j.startAt).getTime() : null
+    const jEndTs   = j.endAt   ? new Date(j.endAt).getTime()   : null
+
+    const matchStart = !sTs || (jStartTs !== null && jStartTs >= sTs) // 설정한 시작일 이후(포함)
+    const matchEnd   = !eTs || (jEndTs   !== null && jEndTs   <= eTs) // 설정한 마감일
+    
+    return matchQuery && matchDept && matchRole && matchStart && matchEnd
+  })
+})
+
 // D-day
-function dday(endIso) {
-  const end = new Date(endIso)
-  const today = new Date()
-  const ms = end.setHours(0,0,0,0) - today.setHours(0,0,0,0)
-  const days = Math.ceil(ms / 86400000)
+function parseLocalDate(dateLike) {
+  if (!dateLike) return null
+  if (typeof dateLike === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateLike)) {
+    // "YYYY-MM-DD" 또는 "YYYY-MM-DDTHH:mm:ss"
+    const [datePart, timePart] = dateLike.split('T')
+    const [y, m, d] = datePart.split('-').map(Number)
+    if (!timePart) return new Date(y, m - 1, d, 0, 0, 0, 0)
+    const [hh, mm, ss] = timePart.split(':').map(Number)
+    return new Date(y, m - 1, d, hh || 0, mm || 0, ss || 0, 0)
+  }
+  const dt = new Date(dateLike)
+  return isNaN(dt) ? null : dt
+}
+function dday(endLike) {
+  const end = parseLocalDate(endLike)
+  if (!end) return 0
+  const today0 = new Date(); today0.setHours(0,0,0,0)
+  const eod = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999)
+  const days = Math.ceil((eod.getTime() - today0.getTime()) / 86400000)
   return days > 0 ? days : 0
 }
 
-// 이동
-function goDetail(id) {
-  router.push({ name: 'JobDetail', params: { id } })  // /jobs/:id
-}
 
-// 기타 액션(더미)
-function onCreate() { /* 구현 */ }
-// function onEdit(job) { /* 구현 */ }
-// function onDelete(job) { /* 구현 */ }
+
 </script>
+
 
 <style scoped>
 .fade-slide-enter-active,.fade-slide-leave-active{transition:opacity .2s cubic-bezier(.22,.61,.36,1),transform .2s cubic-bezier(.22,.61,.36,1);will-change:transform,opacity}
