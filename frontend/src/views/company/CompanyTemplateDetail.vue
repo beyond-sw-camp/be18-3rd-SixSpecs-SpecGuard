@@ -277,8 +277,18 @@ async function fetchTemplateDetail(id) {
     }
 
     // --- UI
-    function openApplicant(applicantId) { router.push({ name: 'ApplicantDetail', params: { id: applicantId } }) }
-    // function verify(applicantId) { api.post(`applicants/${applicantId}/verify`).then(() => fetchApplicants(true)) }
+    function openApplicant(applicantId) {
+    const id = String(applicantId || '').trim()
+    if (!id) return
+    router.push({
+        name: 'CompanyApplicantDetail',
+        params: {
+        companySlug: companySlug.value,
+        companyTemplateId: companyTemplateId.value,
+        resumeId: id
+        }
+    })
+    }
     
     // 단건 정합성 계산
     async function verify(applicantId) {
@@ -403,8 +413,8 @@ async function fetchTemplateDetail(id) {
         hasMore.value = (data.last === false) || rows.length === pageSize
 
         for (const a of mapped){
-        const p = await fetchPercentile(a.id)   // 숫자 또는 null
-        a.percentile = p                        // <-- 여기! p?.percentile 아님
+        const p = await fetchPercentile(a.id)
+        a.percentile = p
         const fs = await fetchFinalScore(a.id)
         a.finalScore = fs
         }
