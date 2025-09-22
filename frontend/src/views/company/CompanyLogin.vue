@@ -3,7 +3,16 @@
         <header class="bg-slate-800 text-white">
         <div class="mx-auto max-w-6xl h-16 px-6 flex items-center justify-between">
             <div class="flex items-end gap-3">
-            <span class="text-2xl font-extrabold tracking-tight">SPECGUARD</span>
+        
+    <!--메인 홈으로 돌아가~!-->
+    <RouterLink 
+    :to="`/${companySlug}/dashboard`" 
+    class="text-2xl font-extrabold tracking-tight hover:text-amber-400 transition-colors"
+    >
+    SPECGUARD
+    </RouterLink>
+
+
             <span class="text-[11px] leading-none text-slate-300 mb-1">이력 검증 시스템</span>
             </div>
         </div>
