@@ -199,9 +199,9 @@
                 />
                 <select v-model.number="u.maxGpa" class="rounded-md border px-3 py-2">
                     <option disabled value="">--- 총점 ---</option>
-                    <option value="4.0">4.0점</option>
-                    <option value="4.5">4.5점</option>
-                    <option value="5.0">5.0점</option>
+                    <option :value="4.0">4.0점</option>
+                    <option :value="4.5">4.5점</option>
+                    <option :value="5.0">5.0점</option>
                 </select>
                 </div>
             </div>
@@ -322,9 +322,9 @@
                 />
                 <select v-model.number="g.maxGpa" class="rounded-md border px-3 py-2">
                     <option disabled value="">--- 총점 ---</option>
-                    <option value="4.0">4.0점</option>
-                    <option value="4.5">4.5점</option>
-                    <option value="5.0">5.0점</option>
+                    <option :value="4.0">4.0점</option>
+                    <option :value="4.5">4.5점</option>
+                    <option :value="5.0">5.0점</option>
                 </select>
                 </div>
             </div>
@@ -403,9 +403,18 @@
 
         <section v-for="(l, i) in links" :key="l.id ?? i" class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
         
-            <div class="grid grid-cols-12 gap-3 items-center">
-                <label class="col-span-12 sm:col-span-2 font-semibold">{{ l.linkType.toLocaleLowerCase() }}</label>
-                <input v-model.trim="l.url" type="url" class="col-span-12 sm:col-span-10 rounded-md border px-3 py-2" :placeholder="l.linkType.toLocaleLowerCase() + ' 링크첨부' " />
+            <div class="col-span-12 sm:col-span-10">
+            <input
+                v-model.trim="l.url"
+                type="url"
+                class="w-full rounded-md border px-3 py-2"
+                :placeholder="l.linkType.toLocaleLowerCase() + ' 링크 첨부'"
+            />
+            <p class="text-sm text-gray-500 mt-1">
+                <span v-if="l.linkType === 'NOTION'">공개 설정된 Notion 페이지 링크를 입력해주세요.</span>
+                <span v-else-if="l.linkType === 'GITHUB'">깃허브 메인 프로필 페이지 (예: https://github.com/username)</span>
+                <span v-else-if="l.linkType === 'VELOG'">Velog 블로그 (예: https://velog.io/@username/posts)</span>
+            </p>
             </div>
             
             <div class="mt-6 flex justify-end gap-3"></div>

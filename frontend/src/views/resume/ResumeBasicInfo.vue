@@ -324,8 +324,8 @@ async function goNext() {
         console.log("Resume store updated:", resumeStore.resume);
     }
     catch (error) {
-        console.error("Error uploading photo:", error);
-        alert("사진 업로드에 실패했습니다. 다시 시도해주세요.");
+        console.error("Error saving resume basic info:", error);
+        alert("기본 정보를 저장하는 데 실패했습니다. 다시 시도해주세요.");
         return;
     }
     router.push({ name: 'ResumeAcademicInfo', params: { applicantSlug } })
