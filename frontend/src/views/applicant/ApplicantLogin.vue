@@ -180,8 +180,9 @@
             if (!resumeStore.canAccess()) {
                 alert('제출 완료 했습니다.')
                 router.push({ name: 'ApplicantLogin', params: { companySlug: route.params.companySlug }})
-            return
-        }
+                return
+            }
+            
             router.push({
                 name: 'ResumeBasicInfo',
                 params: { companySlug, applicantSlug: selectedTemplateId.value }
