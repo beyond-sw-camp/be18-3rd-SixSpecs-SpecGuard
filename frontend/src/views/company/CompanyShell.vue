@@ -3,7 +3,12 @@
         <header class="sticky top-0 z-30 bg-slate-800 text-white">
         <div class="mx-auto max-w-10xl h-14 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <div class="flex items-end gap-3">
-            <span class="text-2xl font-extrabold tracking-tight">SPECGUARD</span>
+            
+        <RouterLink to="/" class="text-2xl font-extrabold tracking-tight hover:text-amber-400 transition-colors">
+        SPECGUARD
+        </RouterLink>
+
+
             <span class="text-[11px] leading-none text-slate-300 mb-1">이력 검증 시스템</span>
             </div>
             <div class="flex items-center gap-6">
@@ -75,13 +80,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/>
                     </svg>
                 </summary>
-                <div class="mt-2 rounded-xl bg-white/80 p-3 shadow-sm">
-                    <ul class="list-disc pl-5 text-sm leading-8">
-                    <li><button class="hover:underline" @click="pageMove('CompanyDashboard')">채용공고 조회</button></li>
-                    <li><button class="hover:underline" @click="pageMove('CompanyCreatePostBasic')">채용공고 생성</button></li>
-                    <li><button class="hover:underline" @click="onReport('dashboard')">채용공고 수정</button></li>
-                    </ul>
-                </div>
+                <!--공고 관리 탭 삭제함.-->
                 </details>
 
                 <details class="group">
