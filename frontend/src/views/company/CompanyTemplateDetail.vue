@@ -227,7 +227,7 @@ async function fetchTemplateDetail(id) {
         const r = await api.get(`company/resumes/${resumeId}/photo`, { headers, responseType: 'blob', validateStatus:s=>s<500 })
         if (r.status === 200) return r.data
     } catch {}
-    const r2 = await api.get(`resumes/${resumeId}/photo`, { headers, responseType: 'blob', validateStatus:s=>s<500 })
+    const r2 = await api.get(`company/resumes/${resumeId}/photo`, { headers, responseType: 'blob', validateStatus:s=>s<500 })
     if (r2.status === 200) return r2.data
     throw new Error('no-photo')
     }

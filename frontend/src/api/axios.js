@@ -54,6 +54,12 @@ api.interceptors.response.use(
 
     // 401만 전역 처리 (토큰 만료시 refresh)
     if (status === 401) {
+      console.warn(
+        '[401]',
+        cfg.method?.toUpperCase(),
+        cfg.url,
+        { params: cfg.params, data: cfg.data }
+      )
       if (data?.code === "ACCESS_TOKEN_EXPIRED" && !cfg._retry) {
         cfg._retry = true;
         try {

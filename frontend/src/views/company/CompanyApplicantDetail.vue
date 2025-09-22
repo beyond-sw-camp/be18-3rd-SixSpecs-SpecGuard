@@ -106,11 +106,16 @@
             </div>
 
             <div class="rounded-xl border p-5">
-                <h3 class="font-bold">포트폴리오</h3>
-                <div class="mt-2 space-y-2">
-                <input class="w-full rounded-md border px-3 py-2" :value="resume?.links?.github || ''" readonly>
-                <input class="w-full rounded-md border px-3 py-2" :value="resume?.links?.notion || ''" readonly>
+            <h3 class="font-bold">포트폴리오</h3>
+
+            <div v-if="portfolioLinks.length" class="mt-2 space-y-2">
+                <div v-for="l in portfolioLinks" :key="l.key" class="flex items-center gap-2">
+                <span class="w-28 shrink-0 text-sm text-slate-500">{{ l.label }}</span>
+                <input class="w-full rounded-md border px-3 py-2" :value="l.url" readonly>
+                <a :href="l.url" target="_blank" rel="noopener" class="text-sm underline">열기</a>
                 </div>
+            </div>
+            <div v-else class="mt-2 text-sm text-slate-500">등록된 링크가 없습니다.</div>
             </div>
             </div>
 
@@ -217,7 +222,7 @@
                 <li v-for="a in filteredList" :key="a.id">
                 <button
                     class="w-full text-left px-3 py-2 hover:bg-slate-50"
-                    :class="a.id===applicantId ? 'bg-slate-200/60 rounded-md' : ''"
+                    :class="String(a.id)===resumeId ? 'bg-slate-200/60 rounded-md' : ''"
                     @click="goApplicant(a.id)"
                 >
                     {{ a.name }}
@@ -231,7 +236,7 @@
     </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/api/axios'
 
@@ -252,59 +257,174 @@ const filter = ref({ dept: '', role: '', careerType: '' })
 const comment = ref('')
 const fallbackAvatar = 'https://placehold.co/96x96/png'
 
-// common headers (원시 문자열 사용, .value 금지)
-const headers = computed(() => ({ 'X-Company-Slug': companySlug, Accept: 'application/json' }))
+const portfolioLinks = computed(() => {
+  // 1) 백엔드가 배열로 주는 경우 우선 사용 (예: [{ linkType, url, label? }])
+  const rawArray = Array.isArray(resume.value?.linksList)
+    ? resume.value.linksList
+    : Array.isArray(resume.value?.links)
+      ? resume.value.links
+      : []
 
-onMounted(async () => {
-  await Promise.all([fetchResume(), fetchList()])
+  const arr = rawArray
+    .filter(x => x && x.url)
+    .map(x => ({
+      key: String(x.key || x.linkType || x.label || x.url).toLowerCase(),
+      label: x.label || x.linkType || 'LINK',
+      url: x.url
+    }))
+
+  if (arr.length) return arr
+
+  // 2) 객체 형태(github/notion/velog/website 등)에서 비어있지 않은 것만
+  const l = resume.value?.links || {}
+  const labelMap = { github: 'GitHub', notion: 'Notion', velog: 'Velog', blog: 'Blog', website: 'Website' }
+
+  return Object.entries(l)
+    .filter(([, url]) => !!url)
+    .map(([k, url]) => ({
+      key: k.toLowerCase(),
+      label: labelMap[k] || k.toUpperCase(),
+      url: String(url)
+    }))
 })
 
-// resume 불러오기: company 네임스페이스 우선 → 글로벌 폴백
-async function fetchResume() {
-  const [b, d, fs, pct] = await Promise.all([
-    api.get(`/company/resumes/${resumeId}/basic`,  { headers: headers.value, validateStatus:s=>s<500 }),
-    api.get(`/company/resumes/${resumeId}/detail`, { headers: headers.value, validateStatus:s=>s<500 }),
-    api.get(`/validation/${resumeId}/final`,       { headers: headers.value, validateStatus:s=>s<500 }),
-    api.get(`/validation/percentile`,              { headers: headers.value, params:{ resumeId }, validateStatus:s=>s<500 })
-  ])
+const headers = computed(() => ({ 'X-Company-Slug': companySlug, Accept: 'application/json' }))
+const noCompanyHeaders = { Accept: 'application/json' }
+// 전역 토큰 존재 여부
+const hasAuth = computed(() =>
+  !!(api.defaults.headers?.common?.Authorization || api.defaults.headers?.Authorization)
+)
 
-  const basic = b.status===200 ? (b.data?.data ?? b.data ?? {}) : {}
-  const detail= d.status===200 ? (d.data?.data ?? d.data ?? {}) : {}
+onMounted(async () => {
+  await fetchResume()
+  await fetchList()
+})
 
-  const finalScore = fs.status===200 ? ((fs.data?.data ?? fs.data ?? {}).finalScore ?? (fs.data?.data ?? fs.data ?? {}).score ?? null) : null
-  const percentile = pct.status===200 ? (pct.data?.percentile ?? null) : null
+watch(() => route.params.resumeId, (nid, oid) => {
+  if (nid && nid !== oid) fetchResume(String(nid))
+})
 
-  // 통합 엔드포인트가 있다면 덮어쓰기
-  if (!basic.id && !detail.id) {
-    const g = await api.get(`/company/resumes/${resumeId}`, { headers: headers.value, validateStatus:s=>s<500 })
-    if (g.status===200) {
-      const root = g.data?.data ?? g.data ?? {}
-      Object.assign(basic, root.basic ?? root.resume ?? root)
-      Object.assign(detail, root.detail ?? root.details ?? root)
-    }
+function normalizeFromSwagger(src = {}, extra = {}) {
+  const linksMap = (src.links || []).reduce((m, l) => {
+    m[(l.linkType || '').toUpperCase()] = l.url || ''
+    return m
+  }, {})
+
+  // 학력 분해
+  const eduList = Array.isArray(src.educations) ? src.educations : []
+  const high = eduList.find(e => (e.schoolType||'').toUpperCase()==='HIGH' || (e.degree||'').toUpperCase()==='HIGH_SCHOOL') || {}
+  const college = eduList.find(e => (e.schoolType||'').toUpperCase()!=='HIGH' && (e.degree||'').toUpperCase()!=='HIGH_SCHOOL') || {}
+
+  // 자소서: fields(id, fieldName) ↔ templateResponses(fieldId, answer)
+  const fieldNameById = Object.fromEntries((src.fields||[]).map(f => [f.id, f.fieldName || f.title || '']))
+  const essays = (src.templateResponses || []).map(tr => ({
+    question: fieldNameById[tr.fieldId] || '',
+    answer: tr.answer || '',
+    tags: []
+  }))
+
+  return {
+    id: src.id,
+    name: src.name || '-',
+    email: src.email || '',
+    avatarUrl: src.basic?.profileImageUrl || null,
+    careerType: (src.experiences?.length ? '경력' : '신입'),
+    univ: college.schoolName || '-',
+    major: college.major || '',
+    gpa: typeof college.gpa === 'number' ? college.gpa : null,
+    gpaScale: typeof college.maxGpa === 'number' ? college.maxGpa : 4.5,
+    matchScore: extra.finalScore ?? null,
+    rankTop: extra.percentile != null ? (100 - extra.percentile) : null,
+    analyzedAt: null,
+    analysis: {},
+    scores: {},
+    details: {},
+    links: {
+      github: linksMap.GITHUB || '',
+      notion: linksMap.NOTION || '',
+      velog:  linksMap.VELOG  || ''
+    },
+    certs: (src.certificates||[]).map(c => ({
+      name: c.certificateName || '',
+      no: c.certificateNumber || ''
+    })),
+    edu: {
+      college: {
+        name: college.schoolName || '',
+        major: college.major || '',
+        period: (college.startDate && college.endDate) ? `${college.startDate} ~ ${college.endDate}` : ''
+      },
+      high: {
+        name: high.schoolName || '',
+        period: (high.startDate && high.endDate) ? `${high.startDate} ~ ${high.endDate}` : ''
+      }
+    },
+    essays,
+    essays2: [],
+    summary: null,
   }
-
-  resume.value = normalizeResume(basic, detail, { finalScore, percentile })
 }
 
+async function fetchResume(id = resumeId) {
+  const r = await api.get(`company/resumes/${id}`)
+  if (r.status !== 200) { resume.value = null; return }
 
-// 동일 템플릿 내 지원자 목록
+  const root = r.data?.data ?? r.data ?? {}
+
+  let finalScore = null, percentile = null
+ if (hasAuth.value) {
+   try {
+     const [fs, pct] = await Promise.all([
+       api.get(`validation/${id}/final`, {
+        __skipAuthRedirect: true,
+        validateStatus: () => true
+      }),
+      api.get(`validation/percentile`, {
+        params: { resumeId: id },
+        __skipAuthRedirect: true,
+        validateStatus: () => true
+      })
+     ])
+     finalScore = fs.status===200 ? ((fs.data?.data ?? fs.data ?? {}).finalScore ?? (fs.data?.data ?? fs.data ?? {}).score ?? null) : null
+     percentile = pct.status===200 ? (pct.data?.percentile ?? null) : null
+   } catch (e) { /* 401 등은 조용히 무시 */ }
+ }
+
+  resume.value = normalizeFromSwagger(root, { finalScore, percentile })
+}
+
 async function fetchList() {
-  const r = await api.get('company/resumes/list', {
-    headers: headers.value,
-    params: { page: 0, size: 30, sort: 'createdAt,desc' },
-    validateStatus: s => s < 500
-  })
-  if (r.status === 200) {
-    const body = r.data ?? {}
-    const data = body.data ?? body
-    const rows = (Array.isArray(data) ? data :
-      data.contents ?? data.content ?? data.items ?? data.list ?? data.rows) ?? []
-    list.value = rows.map(x => ({
-      id: x.id || x.resumeId,
-      name: x.name || x.applicantName || '이름 없음'
-    }))
+  try {
+    const r = await api.get('company/resumes/list', {
+      headers: { 'X-Company-Slug': companySlug },
+      params: { page: 0, size: 30, sort: 'createdAt,desc' },
+      validateStatus: s => s < 500,
+    })
+
+    if (r.status === 200) {
+      const body = r.data ?? {}
+      const data = body.data ?? body
+      const rows = (Array.isArray(data) ? data :
+        data.contents ?? data.content ?? data.items ?? data.list ?? data.rows) ?? []
+      list.value = rows.map(x => ({
+        id: x.resumeId || x.id,
+        name: x.applicantName || x.name || '이름 없음',
+      }))
+    } else {
+      list.value = []
+    }
+  } catch {
+    list.value = []
   }
+}
+
+async function saveComment() {
+  await api.post(
+    `company/resumes/${resumeId}/comments`,
+    { content: comment.value },
+    { headers: { ...headers.value, 'Content-Type': 'application/json' } }
+  )
+  comment.value = ''
 }
 
 // basic/detail 병합
@@ -367,15 +487,6 @@ function goApplicant(id) {
 function fmtScore(s) { return s == null ? '-' : Number(s).toFixed(2) }
 function fmtDateTime(iso) { return iso ? new Date(iso).toLocaleString() : '-' }
 
-// 코멘트 저장
-async function saveComment() {
-  await api.post(
-    `company/resumes/${resumeId}/comments`,
-    { content: comment.value },
-    { headers: { ...headers.value, 'Content-Type': 'application/json' } }
-  )
-  comment.value = ''
-}
 </script>
 
 <style scoped>
