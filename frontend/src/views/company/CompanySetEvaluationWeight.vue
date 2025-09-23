@@ -269,18 +269,10 @@ async function tryFetchProfilesByTemplate () {
 
   // 2) 템플릿 경로 방식 A
   try {
-    const { data } = await api.get(`/evaluationProfiles/by-template/${id}`, { headers })
+    const { data } = await api.get(`/evaluationProfiles/${id}`, { headers })
     const list = Array.isArray(data) ? data : (data?.content ?? data?.items ?? [])
     if (Array.isArray(list) && list.length > 0) return list
   } catch (e) { console.warn('[profiles by-template] miss', e?.response?.status) }
-
-  // 3) 템플릿 경로 방식 B
-  try {
-    const { data } = await api.get(`/company-template/${id}/evaluationProfiles`, { headers })
-    const list = Array.isArray(data) ? data : (data?.content ?? data?.items ?? [])
-    if (Array.isArray(list) && list.length > 0) return list
-  } catch (e) { console.warn('[profiles nested] miss', e?.response?.status) }
-
   return []
 }
 
