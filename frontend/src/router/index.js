@@ -19,6 +19,7 @@ import CompanyCreatePostBasic from '../views/company/CompanyCreatePostBasic.vue'
 import CompanyCreatePostDetail from '../views/company/CompanyCreatePostDetail.vue'
 import CompanySetEvaluationWeight from '../views/company/CompanySetEvaluationWeight.vue'
 import CompanyEvaluationWeightList from '../views/company/CompanyEvaluationWeightList.vue'
+import CompanyEvaluationWeightUpdate from '@/views/company/CompanyEvaluationWeightUpdate.vue'
 import CompanyTemplateDetail from '../views/company/CompanyTemplateDetail.vue'
 import CompanyApplicantDetail from '../views/company/CompanyApplicantDetail.vue'
 import CompanyModifyPostBasic from '../views/company/CompanyModifyPostBasic.vue'
@@ -75,6 +76,7 @@ const routes = [
       { path: 'create/post/basic', name: 'CompanyCreatePostBasic', component: CompanyCreatePostBasic, props: true },
       { path: 'create/post/detail/:templateId', name: 'CompanyCreatePostDetail', component: CompanyCreatePostDetail, props: true },
       { path: 'evaluation/list', name: 'CompanyEvaluationWeightList', component: CompanyEvaluationWeightList, props: true },
+      { path: 'evaluation/list', name: 'CompanyEvaluationWeightUpdate', component: CompanyEvaluationWeightUpdate, propa: true},
       { path: 'post/:companyTemplateId/weight', name: 'CompanySetEvaluationWeight', component: CompanySetEvaluationWeight, props: true },
       { path: 'post/:companyTemplateId/detail', name:'CompanyTemplateDetail', component:CompanyTemplateDetail, props: true },
       { path: 'post/:companyTemplateId/applicant/:resumeId', name: 'CompanyApplicantDetail', component:CompanyApplicantDetail, props: true },
