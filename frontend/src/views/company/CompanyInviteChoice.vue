@@ -58,44 +58,45 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import api from "@/api/axios";
+import { ref, onMounted, computed } from "vue"
+import { useRoute, useRouter } from "vue-router"
+import api from "@/api/axios"
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:8080").replace(/\/$/,"")
 
-const route = useRoute();
-const router = useRouter();
-const token = route.query.token;
-
-// 에러 메시지 상태
-const errorMessage = ref(route.query.message || null);
+// 먼저 라우터 훅과 토큰
+const route = useRoute()
+const router = useRouter()
+const token = String(route.query.token || "")
 
 // 초대 정보
-const inviteInfo = ref(null);
+const inviteInfo = ref(null)
+
+// 헤더용 companySlug
+const companySlug = computed(() =>
+  inviteInfo.value?.companySlug || route.params.companySlug || route.query.companySlug || ""
+)
+
+// 에러 메시지
+const errorMessage = ref(route.query.message || null)
 
 onMounted(async () => {
   try {
-    // 초대 토큰 검증 API 호출
-    const res = await api.get(`/auth/signup/invite/check?token=${token}`);
-    console.log("🔍 checkInvite API 응답:", res.data);
-    inviteInfo.value = res.data;
+    const res = await api.get(`/auth/signup/invite/check?token=${encodeURIComponent(token)}`)
+    inviteInfo.value = res.data
   } catch (err) {
-    console.error("초대 검증 실패:", err);
-    // 에러 인터셉터가 이미 라우팅 처리하므로 여기서는 추가 동작 없음
+    console.error("초대 검증 실패:", err)
   }
-});
+})
 
 const goForm = () => {
-  router.push({ name: "CompanyInviteSignup", query: { token } });
+  window.location.href = `/oauth2/authorization/naver?inviteToken=${route.query.token}`;
+}
+const goNaverLogin = () => {
+    window.location.href = `${API_URL}/oauth2/authorization/naver?inviteToken=${token}`;
 };
-
 const goGoogleLogin = () => {
   window.location.href = `${API_URL}/oauth2/authorization/google?inviteToken=${token}`;
-};
-
-const goNaverLogin = () => {
-  window.location.href = `${API_URL}/oauth2/authorization/naver?inviteToken=${token}`;
 };
 </script>
 

@@ -48,39 +48,6 @@
                 </div>
             </div>
 
-            <!-- 기업/담당자 정보 -->
-            <!-- <div>
-                <h2 class="text-2xl font-extrabold tracking-tight">기업 정보</h2>
-
-                <label class="mt-6 block text-sm font-semibold">기업명 *</label>
-                <input v-model.trim="form.companyName" required
-                :readonly="prefilled.company"
-                class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
-                <p v-if="errors.companyName" class="mt-1 text-xs text-red-600">{{ errors.companyName }}</p>
-
-                <label class="mt-5 block text-sm font-semibold">사업자 번호(10자리) *</label>
-                <input v-model.trim="form.bizRegNo" inputmode="numeric" required
-                class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
-                <p v-if="errors.bizRegNo" class="mt-1 text-xs text-red-600">{{ errors.bizRegNo }}</p>
-
-                <h3 class="mt-6 text-xl font-extrabold">담당자 정보</h3>
-
-                <label class="mt-4 block text-sm font-semibold">담당자 명 *</label>
-                <input v-model.trim="form.managerName" required
-                class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
-                <p v-if="errors.managerName" class="mt-1 text-xs text-red-600">{{ errors.managerName }}</p>
-
-                <label class="mt-5 block text-sm font-semibold">대표 연락처 *</label>
-                <input v-model.trim="form.managerPhone" inputmode="tel" required
-                class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
-                <p v-if="errors.managerPhone" class="mt-1 text-xs text-red-600">{{ errors.managerPhone }}</p>
-
-                <label class="mt-5 block text-sm font-semibold">연락 가능한 이메일 *</label>
-                <input v-model.trim="form.managerEmail" type="email" required
-                class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
-                <p v-if="errors.managerEmail" class="mt-1 text-xs text-red-600">{{ errors.managerEmail }}</p>
-            </div> -->
-
             <!-- next -->
             <div class="md:col-span-2 flex justify-end">
                 <button type="submit"

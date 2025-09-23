@@ -25,6 +25,10 @@ import CompanyModifyPostBasic from '../views/company/CompanyModifyPostBasic.vue'
 import CompanyModifyPostDetail from '../views/company/CompanyModifyPostDetail.vue'
 import CompanyInvite from '../views/company/CompanyInvite.vue'
 
+// oauth2
+import Oauth2Redirect from "../views/company/Oauth2Redirect.vue";
+import Oauth2Failure from "../views/company/Oauth2Failure.vue";
+
 // 지원자 로그인/회원가입
 import ApplicantLogin from '../views/applicant/ApplicantLogin.vue'
 import ApplicantSignup from '../views/applicant/ApplicantSignup.vue'
@@ -60,6 +64,10 @@ const routes = [
   { path: '/signup/invite', name: 'CompanyInviteChoice', component: CompanyInviteChoice, props: route => ({ token: route.query.token })},
   { path: '/signup/invite/info', name: 'CompanyInviteSignup', component: CompanyInviteSignup, props: route => ({ token: route.query.token })},
   { path: '/signup/invite/condition', name: 'CompanyInviteSignupCondition', component: CompanyInviteSignupCondition, props: route => ({ token: route.query.token})},
+
+  // oauth2
+  { path: '/oauth2/redirect', name: 'Oauth2Redirect', component: Oauth2Redirect},
+  { path: '/oauth2/failure', name: 'Oauth2Failure', component: Oauth2Failure},
   
   // 기업 쉘
   { path: '/c/:companySlug',

@@ -4,6 +4,11 @@ import { useAuthStore } from "@/stores/auth";
 import refreshApi from "@/api/refresh";
 import router from "@/router";
 
+const api = axios.create({
+    baseURL: "http://localhost:8080/api/v1",
+    withCredentials: true, // Refresh 쿠키 전송 허용
+});
+
 /** 퍼블릭(무토큰) 경로 */
 const PUBLIC_PATTERNS = [
   /^\/auth\/(login|signup|token|verify|invite)/,
@@ -15,11 +20,6 @@ const isPublic = (u = "") => {
   catch (_e) { u = String(u || ""); }
   return PUBLIC_PATTERNS.some((re) => re.test(u));
 };
-
-const api = axios.create({
-  baseURL: "http://localhost:8080/api/v1",
-  withCredentials: false, // 일반 API는 쿠키 불필요
-});
 
 /** 요청 인터셉터: 퍼블릭 제외하고 토큰 첨부 */
 api.interceptors.request.use((cfg) => {
