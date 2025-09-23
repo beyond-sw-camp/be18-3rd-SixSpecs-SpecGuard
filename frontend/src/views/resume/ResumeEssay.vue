@@ -1,9 +1,6 @@
 <!-- ResumeEssay.vue -->
 <template>
     <div class="min-h-screen bg-slate-100 text-slate-900">
-        <!-- Header + Tabs -->
-        <ResumeHeader />
-
         <!-- Main -->
         <main class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-8 pb-28">
         <section class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
@@ -91,7 +88,7 @@
         <footer class="sticky bottom-0 bg-white border-t">
         <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-end gap-3">
             <button type="button" class="rounded-md border px-5 py-2"
-                    :disabled="saving" @click="saveDraft">
+                    :disabled="saving" @click="save">
             {{ saving ? '저장 중' : '임시저장' }}
             </button>
             <button type="button" class="rounded-md bg-sky-600 px-6 py-2 text-white disabled:opacity-50"
@@ -107,7 +104,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useResumeStore } from '@/stores/resumeStore'
-import ResumeHeader from './ResumeHeader.vue';
 import applicantApi from '@/api/applicantApi';
     
 const resumeStore = useResumeStore();
@@ -185,51 +181,62 @@ function validLen(field) {
 
     default:
         return true
-}
+    }
 }
 
 const allValid = computed(() =>
     questions.value.length > 0 && questions.value.every(validLen)
 )
 
-    function onDirty() { dirty.value = true }
+function onDirty() { dirty.value = true }
 
-    async function saveDraft() {
+async function save() {
+    if (!allValid.value) { alert('모든 질문에 조건을 충족하세요.'); return false}
+
+    if (!dirty.value) {
+        return true;
+    }
+    
     saving.value = true
+    
+    
+    const payload = {
+        responses: Object.entries(answers.value).map(([fieldId, { answer, id }]) => ({
+            id: id || null,         // 기존 답변이 있으면 id 포함, 없으면 null
+            fieldId: fieldId,       // 필드 ID
+            answer: answer || ""    // null일 경우 빈 문자열로
+        }))
+    }
     try {
-        const payload = {
-            responses: Object.entries(answers.value).map(([fieldId, { answer, id }]) => ({
-                id: id || null,         // 기존 답변이 있으면 id 포함, 없으면 null
-                fieldId: fieldId,       // 필드 ID
-                answer: answer || ""    // null일 경우 빈 문자열로
-            }))
-        }
-        try {
         const res = await applicantApi.post(`/resumes/template-responses`, payload);
-
+        
         console.log("templateResponse info saved:", res.data);
         // 저장된 기본정보를 store에 반영
         resumeStore.resume.templateResponses = res.data.responses;
-
+        
         console.log("Resume store updated:", resumeStore.resume);
-        }
-        catch (error) {
-            console.error("Error :", error);
-            return;
-        }
         dirty.value = false
-        alert('저장 되었습니다.')
-    } finally {
+        alert('저장 완료했습니다.')
+        return true;
+    }
+    catch (error) {
+        alert(error)
+        console.error("Error :", error);
+        return false;
+    }
+    finally {
         saving.value = false
     }
-    }
+}
 
-    async function goNext() {
-        if (!allValid.value) { alert('모든 질문에 조건을 충족하세요.'); return }
-        if (dirty.value) await saveDraft()
-        router.push({ name: 'ResumeSubmit', params: { applicantSlug } })
+async function goNext() {
+    const success = await save();
+    if (success) {
+        router.push({ name: 'ResumeSubmit', params: { applicantSlug } });
     }
+}
 
+defineExpose({ save })
 </script>
 
 <style scoped>

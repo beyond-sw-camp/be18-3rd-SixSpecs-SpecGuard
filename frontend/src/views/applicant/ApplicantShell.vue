@@ -1,7 +1,6 @@
 <template>
     <div>
         <header class="border-b">
-        <CompanySwitcher :activeSlug="applicantSlug" />
         </header>
         <RouterView :applicantSlug="applicantSlug" />
     </div>

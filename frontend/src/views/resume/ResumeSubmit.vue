@@ -1,8 +1,6 @@
 <!-- ResumeFinalSubmit.vue -->
 <template>
     <div class="min-h-screen bg-slate-100 text-slate-900">
-        <!-- Title + Steps -->
-        <ResumeHeader />
 
         <main class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         <!-- Top step infographic -->
@@ -163,15 +161,11 @@
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useResumeStore } from '@/stores/resumeStore'
-import ResumeHeader from "./ResumeHeader.vue";
 import applicantApi from "../../api/applicantApi";
 
 const resumeStore = useResumeStore();
 const router = useRouter();
 const route = useRoute();
-
-const applicantSlug = route.params.applicantSlug
-
 
 const checks = ["기본정보", "학력/연구/NCS", "어학/자격", "자기소개서/역량기술서"];
 
@@ -181,44 +175,50 @@ const applicantName = ref('')
 const submitDate = ref('')
 const templateName = ref('')
 
-async function fetchResumeInfo() {
+onMounted(async () => {
+    await resumeStore.fetchResumeAndTemplate();
+
     if (!resumeStore.canAccess()) {
-        alert('접근할 수 없는 페이지입니다.')
-        router.push({ name: 'ApplicantLogin', params: { companySlug: route.params.companySlug }})
-        return
+        alert('접근할 수 없는 페이지입니다.');
+        router.push({ name: 'ApplicantLogin', params: { companySlug: route.params.companySlug }});
+        return;
     }
 
     // 오늘 날짜 세팅
     submitDate.value = new Date().toISOString().split('T')[0] // YYYY-MM-DD
 
-    await resumeStore.fetchResumeAndTemplate();
-
     console.log(resumeStore.template);
 
     templateName.value = resumeStore.template.name + "(" + resumeStore.template.description + ")";
+})
+
+async function save() {
+    return true;
 }
 
-onMounted(fetchResumeInfo)
-
-const submitForm = async () => {
-    if (!agree.value) return;
-
-    try {
-        const res = await applicantApi.post(`/resumes/submit`);
-        resumeStore.template = res.data
-        templateName.value = res.data.templateName
-        alert("제출이 완료되었습니다.");
-        resumeStore.resume.status = "PENDING"
-        router.push({ name: 'ApplicantLogin', params: { companySlug: route.params.companySlug }})
-    } catch (e) {
-        console.log(e);
+async function submitForm() {
+    if (!agree.value) return false;
+    const success = await save();
+    if (success) {
+        try {
+            const res = await applicantApi.post(`/resumes/submit`);
+            
+            resumeStore.resume.status = res.data.status;
+        
+            alert("제출이 완료되었습니다.");
+            router.push({ name: 'ApplicantLogin', params: { companySlug: route.params.companySlug }})
+        
+        } catch (e) {
+            alert(e);
+            return false;
+        }
     }
-    
-};
+}
     // const extendSession = () => {
     // // TODO: 연장 API
     // alert("세션이 연장되었습니다.");
     // };
+defineExpose({save})
 </script>
 
 <style scoped>

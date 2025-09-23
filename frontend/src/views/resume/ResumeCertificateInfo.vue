@@ -2,9 +2,6 @@
 <template>
     <!-- <div class="min-h-dvh flex flex-col bg-slate-100 text-slate-900"> -->
     <div class="min-h-screen bg-slate-100 text-slate-900">
-        <!-- Title + Steps -->
-        <ResumeHeader />
-
         <main class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-10 pb-16">
         <!-- 빈 상태 -->
         <section v-if="certs.length === 0" class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
@@ -151,15 +148,16 @@ function openCertSearch() {
 }
 
 onMounted(async () => {
+    await resumeStore.fetchResumeAndTemplate();
+
     if (!resumeStore.canAccess()) {
         alert('접근할 수 없는 페이지입니다.')
         router.push({ name: 'ApplicantLogin', params: { companySlug: route.params.companySlug }})
-        return
+        return false;
     }
 
     console.log("onMounted Certificate info saved:", resumeStore.resume);
 
-    await resumeStore.fetchResumeAndTemplate();
     const data = resumeStore.resume
     if (data?.certificates) {
         certs.value = data.certificates?.map(l => ({
@@ -181,8 +179,9 @@ onMounted(async () => {
     }
 )
 
-async function goNext() {
-if (!validateForm()) return
+async function save() {
+    if (!validateForm()) return false;
+
     const payload = {
         "certificates": [
             ...certs.value.map(l => ({
@@ -208,13 +207,24 @@ if (!validateForm()) return
                     issuer: l.issuer,
                     issuedDate: l.acquired,
             }))]
+
+        alert("저장 완료했습니다.")
+        return true;
     }
     catch (error) {
         console.log(error);
-        return;
+        return false;
     }
-    router.push({ name: 'ResumeEssay', params: { applicantSlug } })
 }
+
+async function goNext() {
+    const success = await save()
+    if (success) {
+        router.push({ name: 'ResumeEssay', params: { applicantSlug } })
+    }
+}
+
+defineExpose( { save } );
 </script>
 
 <style scoped></style>

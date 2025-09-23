@@ -1,9 +1,6 @@
 <!-- ResumeAcademicResearch.vue -->
 <template>
     <div class="min-h-screen bg-slate-100 text-slate-900">
-        <!-- Title + Steps -->
-        <ResumeHeader />
-
         <main class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-10">
         <!-- High school -->
         <section class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
@@ -436,7 +433,6 @@ import { useResumeStore } from '@/stores/resumeStore'
 
 import { KR_REGIONS, MAJORS, highStatusOptions, univDegreeOptions, gradDegreeOptions } from "@/constants/education";
 import { makeUniv, makeGrad, makeCareer, enforceMax } from "@/utils/education";
-import ResumeHeader from './ResumeHeader.vue'
 import applicantApi from '../../api/applicantApi';
 
 const resumeStore = useResumeStore();
@@ -624,9 +620,9 @@ onMounted(async () => {
     ];
 });
 
-async function goNext() {
+async function save() {
     console.log("Academic info saved:", resumeStore.resume);
-    if (!validateForm()) return
+    if (!validateForm()) return false;
     
     const payload = {
     educations: [
@@ -768,15 +764,26 @@ async function goNext() {
                 linkType: l.linkType
             }))
         ]
-
+        
+        alert("저장 완료했습니다.")
+        return true;
     }
     catch (error) {
         console.log(error);
         alert(error);
-        return;
+        return false;
     }
-    router.push({ name: 'ResumeCertificateInfo', params: { applicantSlug } })
 }
+
+async function goNext() {
+    const success = await save()
+    if (success) {
+        router.push({ name: 'ResumeCertificateInfo', params: { applicantSlug } })
+    }
+}
+
+defineExpose({ save })
+
 </script>
 
 <style scoped></style>
