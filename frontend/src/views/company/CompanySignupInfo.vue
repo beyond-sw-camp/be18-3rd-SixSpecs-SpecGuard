@@ -1,5 +1,4 @@
 <template>
-    ...
     <main class="mx-auto max-w-6xl px-6 py-12">
         <!-- form으로 감싸기 -->
         <form @submit.prevent="nextStep">

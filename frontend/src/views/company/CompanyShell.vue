@@ -7,7 +7,7 @@
             <span class="text-[11px] leading-none text-slate-300 mb-1">이력 검증 시스템</span>
             </div>
             <div class="flex items-center gap-6">
-            <button class="rounded-md bg-amber-400 text-slate-900 px-4 py-1.5 text-sm font-semibold hover:bg-amber-300">초대 하기</button>
+            <RouterLink :to="{ name: 'CompanyInvite', params: { companySlug } }" class="rounded-md bg-amber-400 text-slate-900 px-4 py-1.5 text-sm font-semibold hover:bg-amber-300">초대하기</RouterLink>
             <button class="p-1 hover:text-amber-300" aria-label="알림">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1"/></svg>
             </button>
@@ -158,6 +158,7 @@ const router = useRouter()
 const route = useRoute()
 const companySlug = route.params.companySlug
 
+
 onMounted(async () => {
     userName.value =
         sessionStorage.getItem('specguard.managerName') ||
@@ -198,28 +199,4 @@ function toggleSidebar() { sidebarOpen.value = !sidebarOpen.value }
 
 // 사용자명
 const userName = ref('OOO')
-
-
-// import { ref, provide } from 'vue'
-// import { useRoute, useRouter } from 'vue-router'
-
-// const route = useRoute()
-// const router = useRouter()
-// const companySlug = route.params.companySlug
-
-// const sidebarOpen = ref(true)
-// const toggleSidebar = () => (sidebarOpen.value = !sidebarOpen.value)
-// function sidebarGo(name, extraParams = {}, query) {
-//   router.push({ name, params: { companySlug, ...extraParams }, query })
-// }
-
-/* 자식에서 필요하면 주입받아 사용 가능 */
-// provide('companyShell', { sidebarOpen, toggleSidebar, companySlug, pageMove })
-
-
-
-// const props = defineProps({
-//     companySlug: { type: String, required: true }
-// })
-// const companySlug = props.companySlug
 </script>
