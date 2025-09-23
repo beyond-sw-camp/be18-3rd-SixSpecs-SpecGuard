@@ -224,7 +224,7 @@
                 templateId: applicantSlug,
                 email: form.value.email,
                 password: form.value.password
-            });
+            }, {withCredentials: true});
 
             console.log("Login response:", loginRes.data);
 

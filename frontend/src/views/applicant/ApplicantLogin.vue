@@ -5,8 +5,16 @@
         <header class="bg-[#2c3e50] text-white">
         <div class="mx-auto max-w-6xl px-6 py-4">
             <div class="flex items-end gap-3">
-                <div class="text-3xl font-extrabold tracking-widest">SPECGUARD</div>
-                <div class="mt-1 h-1 w-28 bg-white/80"></div>
+
+<!--왼쪽 상단 SPECGUARD 누르면, 메인 홈으로 들어가는 기능-->
+<RouterLink 
+  to="/" 
+  class="text-3xl font-extrabold tracking-widest hover:text-amber-300 transition-colors"
+>
+  SPECGUARD
+</RouterLink>
+                
+        <div class="mt-1 h-1 w-28 bg-white/80"></div>
             </div>
             <p class="sr-only">이력 검증 시스템</p>
         </div>
@@ -180,8 +188,9 @@
             if (!resumeStore.canAccess()) {
                 alert('제출 완료 했습니다.')
                 router.push({ name: 'ApplicantLogin', params: { companySlug: route.params.companySlug }})
-            return
-        }
+                return
+            }
+            
             router.push({
                 name: 'ResumeBasicInfo',
                 params: { companySlug, applicantSlug: selectedTemplateId.value }

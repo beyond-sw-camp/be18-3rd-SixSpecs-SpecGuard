@@ -17,7 +17,7 @@ const PUBLIC_PATTERNS = [
 ];
 const isPublic = (u = "") => {
   try { u = new URL(u, "http://dummy").pathname; }
-  catch (_e) { u = String(u || ""); }
+  catch (e) { u = String(u || ""); }
   return PUBLIC_PATTERNS.some((re) => re.test(u));
 };
 

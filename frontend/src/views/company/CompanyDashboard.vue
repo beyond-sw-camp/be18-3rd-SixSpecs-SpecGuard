@@ -245,12 +245,14 @@ function parseLocalDate(dateLike) {
   const dt = new Date(dateLike)
   return isNaN(dt) ? null : dt
 }
+
+// D-day 계산하는 함수. 남은 일자 달랐던 거, 수정함.
 function dday(endLike) {
   const end = parseLocalDate(endLike)
   if (!end) return 0
   const today0 = new Date(); today0.setHours(0,0,0,0)
-  const eod = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999)
-  const days = Math.ceil((eod.getTime() - today0.getTime()) / 86400000)
+  const end0 = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 0, 0, 0, 0)
+  const days = Math.floor((end0.getTime() - today0.getTime()) / 86400000)
   return days > 0 ? days : 0
 }
 

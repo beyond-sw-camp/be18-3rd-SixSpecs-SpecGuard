@@ -107,12 +107,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter} from 'vue-router'
 import { useResumeStore } from '@/stores/resumeStore'
-import axios from 'axios'
 import ResumeHeader from './ResumeHeader.vue'
+import applicantApi from '@/api/applicantApi'
 
 const resumeStore = useResumeStore();
 
-const API = import.meta.env.VITE_API_URL
 const router = useRouter()
 const route = useRoute()
 
@@ -199,10 +198,7 @@ if (!validateForm()) return
     console.log(payload);
 
     try {
-        await axios.post(`${API}/api/v1/resumes/certificates`, payload, {
-            withCredentials: true,
-            headers: { 'Content-Type': 'application/json' }
-        });
+        await applicantApi.post(`/resumes/certificates`, payload);
 
         resumeStore.resume.certificates = [
             ...certs.value.map(l => ({
