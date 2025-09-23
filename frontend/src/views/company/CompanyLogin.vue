@@ -45,8 +45,8 @@
                     <img alt="Google" class="h-4 w-4" src="https://www.svgrepo.com/show/475656/google-color.svg" />
                     Continue with Google
                 </button>
-                <button type="button" class="inline-flex items-center justify-center gap-2 rounded-md bg-[#03C75A] px-3 py-2 text-sm font-medium text-white shadow-sm">
-                    <img alt="Naver" class="h-4 w-4" src="https://static.nid.naver.com/oauth/small_g_invert.png" />
+                <button @click="goNaver" type="button" class="inline-flex items-center justify-center gap-2 rounded-md bg-[#03C75A] px-3 py-2 text-sm font-medium text-white shadow-sm">
+                    <img alt="Naver" class="h-4 w-4" src="https://static.nid.naver.com/oauth/small_g_invert.png" /> 
                     Continue with Naver
                 </button>
                 </div>
@@ -130,19 +130,32 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 
+
 const companySlug = computed(() => auth.companySlug)
+
+const notice = computed(() =>
+  route.query.msg === 'oauth_signup_ok' ? 'SNS 가입이 완료되었습니다. 로그인해 주세요.' : ''
+)
+
 const email = ref('')
 const password = ref('')
 const submitting = ref(false)
 const errorMsg = ref('')
+
 
 onMounted(() => {
   if (auth.isLoggedIn && companySlug.value) {
     router.replace({ name: 'CompanyDashboard', params: { companySlug: companySlug.value } })
   }
 })
+
+const goNaver = () => {
+  window.location.href = "http://localhost:8080/oauth2/authorization/naver";
+};
+
 
 async function doLogin() {
     errorMsg.value = ''

@@ -20,6 +20,7 @@ export const useAuthStore = defineStore("auth", {
         isLoggedIn: (state) => !!state.accessToken && !!state.user
     },
     actions: {
+        // local login
         async login(email, password) {
         const res = await loginApi(email, password);
         const token = extractToken(res);

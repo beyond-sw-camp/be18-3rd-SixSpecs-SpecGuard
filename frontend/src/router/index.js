@@ -7,6 +7,11 @@ import CompanySignupChoice from'../views/company/CompanySignupChoice.vue'
 import CompanySignupInfo from '../views/company/CompanySignupInfo.vue'
 import CompanySignupCondition from '../views/company/CompanySignupCondition.vue'
 
+// 기업 초대
+import CompanyInviteChoice from '../views/company/CompanyInviteChoice.vue'
+import CompanyInviteSignup from '../views/company/CompanyInviteSignup.vue'
+import CompanyInviteSignupCondition from '../views/company/CompanyInviteSignupCondition.vue'
+
 // 기업 쉘
 import CompanyShell from '../views/company/CompanyShell.vue'
 import CompanyDashboard from '../views/company/CompanyDashboard.vue'
@@ -18,6 +23,11 @@ import CompanyTemplateDetail from '../views/company/CompanyTemplateDetail.vue'
 import CompanyApplicantDetail from '../views/company/CompanyApplicantDetail.vue'
 import CompanyModifyPostBasic from '../views/company/CompanyModifyPostBasic.vue'
 import CompanyModifyPostDetail from '../views/company/CompanyModifyPostDetail.vue'
+import CompanyInvite from '../views/company/CompanyInvite.vue'
+
+// oauth2
+import Oauth2Redirect from "../views/company/Oauth2Redirect.vue";
+import Oauth2Failure from "../views/company/Oauth2Failure.vue";
 
 // 지원자 로그인/회원가입
 import ApplicantShell from '../views/applicant/ApplicantShell.vue'
@@ -36,6 +46,7 @@ import ResumeSubmit from '../views/resume/ResumeSubmit.vue'
 
 
 
+
 const routes = [
   { path: '/', component: MainPage },
 
@@ -44,6 +55,15 @@ const routes = [
   { path: '/company/signup/choice', name: 'CompanySignupChoice', component: CompanySignupChoice },
   { path: '/company/signup/info', name: 'CompanySignupInfo', component: CompanySignupInfo },
   { path: '/company/signup/condition', name: 'CompanySignupCondition', component: CompanySignupCondition},
+
+  // 기업 초대
+  { path: '/signup/invite', name: 'CompanyInviteChoice', component: CompanyInviteChoice, props: route => ({ token: route.query.token })},
+  { path: '/signup/invite/info', name: 'CompanyInviteSignup', component: CompanyInviteSignup, props: route => ({ token: route.query.token })},
+  { path: '/signup/invite/condition', name: 'CompanyInviteSignupCondition', component: CompanyInviteSignupCondition, props: route => ({ token: route.query.token})},
+
+  // oauth2
+  { path: '/oauth2/redirect', name: 'Oauth2Redirect', component: Oauth2Redirect},
+  { path: '/oauth2/failure', name: 'Oauth2Failure', component: Oauth2Failure},
   
   // 기업 쉘
   { path: '/c/:companySlug',
@@ -59,7 +79,8 @@ const routes = [
       { path: 'post/:companyTemplateId/detail', name:'CompanyTemplateDetail', component:CompanyTemplateDetail, props: true },
       { path: 'post/:companyTemplateId/applicant/:resumeId', name: 'CompanyApplicantDetail', component:CompanyApplicantDetail, props: true },
       { path: 'modify/post/:companyTemplateId/edit/basic', name: 'CompanyModifyPostBasic', component: CompanyModifyPostBasic, props: true },
-      { path: 'modify/post/:companyTemplateId/edit/detail', name: 'CompanyModifyPostDetail', component: CompanyModifyPostDetail, props: true}
+      { path: 'modify/post/:companyTemplateId/edit/detail', name: 'CompanyModifyPostDetail', component: CompanyModifyPostDetail, props: true},
+      { path: 'invite', name: 'CompanyInvite', component: CompanyInvite, props: true }
     ],
   },
   

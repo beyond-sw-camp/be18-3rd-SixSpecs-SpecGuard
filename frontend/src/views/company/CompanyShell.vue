@@ -15,7 +15,7 @@
             <span class="text-[11px] leading-none text-slate-300 mb-1">이력 검증 시스템</span>
             </div>
             <div class="flex items-center gap-6">
-            <button class="rounded-md bg-amber-400 text-slate-900 px-4 py-1.5 text-sm font-semibold hover:bg-amber-300">초대 하기</button>
+            <RouterLink :to="{ name: 'CompanyInvite', params: { companySlug } }" class="rounded-md bg-amber-400 text-slate-900 px-4 py-1.5 text-sm font-semibold hover:bg-amber-300">초대하기</RouterLink>
             <button class="p-1 hover:text-amber-300" aria-label="알림">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1"/></svg>
             </button>
@@ -88,17 +88,22 @@
 
                 <hr class="border-slate-700/30 my-2">
 
-    <!--공고 관리 탭 누르면, 공고 관리 화면으로 돌아옴.-->
-    <RouterLink
-    :to="`/c/${companySlug}/dashboard`"
-    class="list-none flex items-center justify-between rounded-lg bg-slate-900/10 px-3 py-2 font-semibold"
-    >
-    <span>공고 관리</span>
-    <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/>
-    </svg>
-    </RouterLink>
 
+                <details open class="group">
+                <summary class="list-none flex items-center justify-between rounded-lg bg-slate-900/10 px-3 py-2 font-semibold">
+                    <span>공고 관리</span>
+                    <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/>
+                    </svg>
+                </summary>
+                <div class="mt-2 rounded-xl bg-white/80 p-3 shadow-sm">
+                    <ul class="list-disc pl-5 text-sm leading-8">
+                    <li><button class="hover:underline" @click="pageMove('CompanyDashboard')">채용공고 조회</button></li>
+                    <li><button class="hover:underline" @click="pageMove('CompanyCreatePostBasic')">채용공고 생성</button></li>
+                    </ul>
+                </div>
+                </details>
+              
                 <details class="group">
                 <summary class="list-none flex items-center justify-between rounded-lg bg-slate-900/10 px-3 py-2 font-semibold">
                     <span>지원자 관리</span>
@@ -134,7 +139,6 @@
                 <div class="mt-2 rounded-xl bg-white/80 p-3 shadow-sm">
                     <ul class="list-disc pl-5 text-sm leading-8">
                     <li><button class="hover:underline" @click="pageMove('CompanyEvaluationWeightList')">가중치</button></li>
-                    <li><button class="hover:underline" @click="pageMove('CompanyDeptSet')">부서/직무(미구현)</button></li>
                     </ul>
                 </div>
                 </details>
@@ -175,6 +179,7 @@ const router = useRouter()
 const route = useRoute()
 const companySlug = computed(() => authStore.companySlug)
 
+
 onMounted(async () => {
     try {
         const { data } = await api.get(`/company/${companySlug}/users/me`)
@@ -211,27 +216,4 @@ function toggleSidebar() { sidebarOpen.value = !sidebarOpen.value }
 // 사용자명
 const userName = ref('')
 
-
-// import { ref, provide } from 'vue'
-// import { useRoute, useRouter } from 'vue-router'
-
-// const route = useRoute()
-// const router = useRouter()
-// const companySlug = route.params.companySlug
-
-// const sidebarOpen = ref(true)
-// const toggleSidebar = () => (sidebarOpen.value = !sidebarOpen.value)
-// function sidebarGo(name, extraParams = {}, query) {
-//   router.push({ name, params: { companySlug, ...extraParams }, query })
-// }
-
-/* 자식에서 필요하면 주입받아 사용 가능 */
-// provide('companyShell', { sidebarOpen, toggleSidebar, companySlug, pageMove })
-
-
-
-// const props = defineProps({
-//     companySlug: { type: String, required: true }
-// })
-// const companySlug = props.companySlug
 </script>

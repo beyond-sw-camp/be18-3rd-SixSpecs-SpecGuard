@@ -10,7 +10,7 @@
             </h1>
 
             <!-- 상단 카드 -->
-            <div class="mt-4 grid grid-cols-12 gap-4">s
+            <div class="mt-4 grid grid-cols-12 gap-4">
             <div class="col-span-12 xl:col-span-7 rounded-xl border p-4">
                 <div class="flex items-start gap-4">
                 <img :src="resume?.avatarUrl || fallbackAvatar" class="w-20 h-20 rounded-xl object-cover ring-1 ring-slate-200" alt="">
@@ -106,11 +106,16 @@
             </div>
 
             <div class="rounded-xl border p-5">
-                <h3 class="font-bold">포트폴리오</h3>
-                <div class="mt-2 space-y-2">
-                <input class="w-full rounded-md border px-3 py-2" :value="resume?.links?.github || ''" readonly>
-                <input class="w-full rounded-md border px-3 py-2" :value="resume?.links?.notion || ''" readonly>
+            <h3 class="font-bold">포트폴리오</h3>
+
+            <div v-if="portfolioLinks.length" class="mt-2 space-y-2">
+                <div v-for="l in portfolioLinks" :key="l.key" class="flex items-center gap-2">
+                <span class="w-28 shrink-0 text-sm text-slate-500">{{ l.label }}</span>
+                <input class="w-full rounded-md border px-3 py-2" :value="l.url" readonly>
+                <a :href="l.url" target="_blank" rel="noopener" class="text-sm underline">열기</a>
                 </div>
+            </div>
+            <div v-else class="mt-2 text-sm text-slate-500">등록된 링크가 없습니다.</div>
             </div>
             </div>
 
@@ -217,7 +222,7 @@
                 <li v-for="a in filteredList" :key="a.id">
                 <button
                     class="w-full text-left px-3 py-2 hover:bg-slate-50"
-                    :class="a.id===applicantId ? 'bg-slate-200/60 rounded-md' : ''"
+                    :class="String(a.id)===resumeId ? 'bg-slate-200/60 rounded-md' : ''"
                     @click="goApplicant(a.id)"
                 >
                     {{ a.name }}
@@ -230,82 +235,222 @@
     </div>
     </template>
 
-    <script setup>
-    import { ref, computed, onMounted } from 'vue'
-    import { useRoute, useRouter } from 'vue-router'
+<!-- views/ApplicantDetail.vue -->
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import api from '@/api/axios'
 
-    /* Shell 로부터 companySlug 전달 가능 */
-    const props = defineProps({ companySlug: { type: String, required: false } })
+const props = defineProps({ companySlug: { type: String, required: false } })
+const route = useRoute()
+const router = useRouter()
 
-    const route = useRoute()
-    const router = useRouter()
+// route params
+const companySlug = props.companySlug || route.params.companySlug
+const companyTemplateId = route.params.companyTemplateId
+const resumeId = String(route.params.resumeId)
 
-    const jobId = route.params.jobId || route.params.job_id || route.params.jid
-    const applicantId = Number(route.params.id || route.params.applicantId)
+// state
+const job = ref(null)
+const resume = ref(null)
+const list = ref([])
+const filter = ref({ dept: '', role: '', careerType: '' })
+const comment = ref('')
+const fallbackAvatar = 'https://placehold.co/96x96/png'
 
-    const base = props.companySlug
-    ? `/api/v1/companies/${props.companySlug}`
-    : `/api/v1`
+// links 계산
+const portfolioLinks = computed(() => {
+  const rawArray = Array.isArray(resume.value?.linksList)
+    ? resume.value.linksList
+    : Array.isArray(resume.value?.links)
+      ? resume.value.links
+      : []
 
-    const job = ref(null)
-    const resume = ref(null)
-    const list = ref([])
-    const filter = ref({ dept: '', role: '', careerType: '' })
+  const arr = rawArray
+    .filter(x => x && x.url)
+    .map(x => ({
+      key: String(x.key || x.linkType || x.label || x.url).toLowerCase(),
+      label: x.label || x.linkType || 'LINK',
+      url: x.url
+    }))
 
-    const comment = ref('')
-    const fallbackAvatar = 'https://placehold.co/96x96/png'
+  if (arr.length) return arr
 
-    onMounted(async () => {
-    await Promise.all([fetchJob(), fetchResume(), fetchList()])
+  const l = resume.value?.links || {}
+  const labelMap = { github: 'GitHub', notion: 'Notion', velog: 'Velog', blog: 'Blog', website: 'Website' }
+
+  return Object.entries(l)
+    .filter(([, url]) => !!url)
+    .map(([k, url]) => ({
+      key: k.toLowerCase(),
+      label: labelMap[k] || k.toUpperCase(),
+      url: String(url)
+    }))
+})
+
+const headers = computed(() => ({ 'X-Company-Slug': companySlug, Accept: 'application/json' }))
+const hasAuth = computed(() =>
+  !!(api.defaults.headers?.common?.Authorization || api.defaults.headers?.Authorization)
+)
+
+onMounted(async () => {
+  await fetchResume()
+  await fetchList()
+})
+
+watch(() => route.params.resumeId, (nid, oid) => {
+  if (nid && nid !== oid) fetchResume(String(nid))
+})
+
+function normalizeFromSwagger(src = {}, extra = {}) {
+  const linksMap = (src.links || []).reduce((m, l) => {
+    m[(l.linkType || '').toUpperCase()] = l.url || ''
+    return m
+  }, {})
+
+  const eduList = Array.isArray(src.educations) ? src.educations : []
+  const high = eduList.find(e =>
+    (e.schoolType||'').toUpperCase()==='HIGH' ||
+    (e.degree||'').toUpperCase()==='HIGH_SCHOOL'
+  ) || {}
+  const college = eduList.find(e =>
+    (e.schoolType||'').toUpperCase()!=='HIGH' &&
+    (e.degree||'').toUpperCase()!=='HIGH_SCHOOL'
+  ) || {}
+
+  const fieldNameById = Object.fromEntries((src.fields||[]).map(f => [f.id, f.fieldName || f.title || '']))
+  const essays = (src.templateResponses || []).map(tr => ({
+    question: fieldNameById[tr.fieldId] || '',
+    answer: tr.answer || '',
+    tags: []
+  }))
+
+  return {
+    id: src.id,
+    name: src.name || '-',
+    email: src.email || '',
+    avatarUrl: src.basic?.profileImageUrl || null,
+    careerType: (src.experiences?.length ? '경력' : '신입'),
+    univ: college.schoolName || '-',
+    major: college.major || '',
+    gpa: typeof college.gpa === 'number' ? college.gpa : null,
+    gpaScale: typeof college.maxGpa === 'number' ? college.maxGpa : 4.5,
+    matchScore: extra.finalScore ?? null,
+    rankTop: extra.percentile != null ? (100 - extra.percentile) : null,
+    analyzedAt: null,
+    analysis: {},
+    scores: {},
+    details: {},
+    links: {
+      github: linksMap.GITHUB || '',
+      notion: linksMap.NOTION || '',
+      velog:  linksMap.VELOG  || ''
+    },
+    certs: (src.certificates||[]).map(c => ({
+      name: c.certificateName || '',
+      no: c.certificateNumber || ''
+    })),
+    edu: {
+      college: {
+        name: college.schoolName || '',
+        major: college.major || '',
+        period: (college.startDate && college.endDate) ? `${college.startDate} ~ ${college.endDate}` : ''
+      },
+      high: {
+        name: high.schoolName || '',
+        period: (high.startDate && high.endDate) ? `${high.startDate} ~ ${high.endDate}` : ''
+      }
+    },
+    essays,
+    essays2: [],
+    summary: null,
+    gitMeta: extra.gitMetadata || null
+  }
+}
+
+async function fetchResume(id = resumeId) {
+  const r = await api.get(`company/resumes/${id}`, {
+    headers: { 'X-Company-Slug': companySlug },
+    validateStatus: s => s < 500,
+  })
+  if (r.status !== 200) { resume.value = null; return }
+
+  const root = r.data?.resume ?? r.data?.data ?? r.data ?? {}
+  const gitMeta = r.data?.gitMetadata ?? null
+
+  let finalScore = null, percentile = null
+  if (hasAuth.value) {
+    try {
+      const [fs, pct] = await Promise.all([
+        api.get(`validation/${id}/final`, {
+          __skipAuthRedirect: true,
+          validateStatus: () => true
+        }),
+        api.get(`validation/percentile`, {
+          params: { resumeId: id },
+          __skipAuthRedirect: true,
+          validateStatus: () => true
+        })
+      ])
+      finalScore = fs.status===200
+        ? ((fs.data?.data ?? fs.data ?? {}).finalScore ?? (fs.data?.data ?? fs.data ?? {}).score ?? null)
+        : null
+      percentile = pct.status===200 ? (pct.data?.percentile ?? null) : null
+    } catch {}
+  }
+
+  resume.value = normalizeFromSwagger(root, { finalScore, percentile, gitMetadata: gitMeta })
+}
+
+async function fetchList() {
+  try {
+    const r = await api.get('company/resumes/list', {
+      headers: { 'X-Company-Slug': companySlug },
+      params: { page: 0, size: 30, sort: 'createdAt,desc' },
+      validateStatus: s => s < 500,
     })
 
-    async function fetchJob() {
-    const r = await fetch(`${base}/jobs/${jobId}`, { headers: { Accept: 'application/json' } })
-    if (r.ok) job.value = await r.json()
+    if (r.status === 200) {
+      const body = r.data ?? {}
+      const data = body.data ?? body
+      const rows = (Array.isArray(data) ? data :
+        data.contents ?? data.content ?? data.items ?? data.list ?? data.rows) ?? []
+      list.value = rows.map(x => ({
+        id: x.resumeId || x.id,
+        name: x.applicantName || x.name || '이름 없음',
+      }))
+    } else {
+      list.value = []
     }
+  } catch {
+    list.value = []
+  }
+}
 
-    async function fetchResume() {
-    // 1) 회사 네임스페이스 경로 우선
-    let r = await fetch(`${base}/jobs/${jobId}/applicants/${applicantId}/resume`, { headers: { Accept: 'application/json' } })
-    if (!r.ok) {
-        // 2) 일반 경로 폴백
-        r = await fetch(`/api/v1/applicants/${applicantId}/resume`, { headers: { Accept: 'application/json' } })
-    }
-    if (r.ok) resume.value = await r.json()
-    }
+async function saveComment() {
+  await api.post(
+    `company/resumes/${resumeId}/comments`,
+    { content: comment.value },
+    { headers: { ...headers.value, 'Content-Type': 'application/json' } }
+  )
+  comment.value = ''
+}
 
-    async function fetchList() {
-    // 동일 공고의 지원자 목록
-    const qs = new URLSearchParams()
-    if (filter.value.dept) qs.set('dept', filter.value.dept)
-    if (filter.value.role) qs.set('role', filter.value.role)
-    if (filter.value.careerType) qs.set('careerType', filter.value.careerType)
-    const r = await fetch(`${base}/jobs/${jobId}/applicants?${qs.toString()}`, { headers: { Accept: 'application/json' } })
-    if (r.ok) {
-        const data = await r.json()
-        list.value = Array.isArray(data.content) ? data.content : data
-    }
-    }
+// utils
+function fmtScore(s) { return s == null ? '-' : Number(s).toFixed(2) }
+function fmtDateTime(iso) { return iso ? new Date(iso).toLocaleString() : '-' }
 
-    const filteredList = computed(() => list.value)
+const filteredList = computed(() => list.value)
 
-    function goApplicant(id) {
-    router.push({ name: 'ApplicantDetail', params: { jobId, id } })
-    }
-
-    function fmtScore(s) { return s == null ? '-' : Number(s).toFixed(2) }
-    function fmtDateTime(iso) { return iso ? new Date(iso).toLocaleString() : '-' }
-
-    async function saveComment() {
-    await fetch(`${base}/jobs/${jobId}/applicants/${applicantId}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: comment.value })
-    })
-    comment.value = ''
-    }
+function goApplicant(id) {
+  router.push({
+    name: 'CompanyApplicantDetail',
+    params: { companySlug, companyTemplateId, resumeId: String(id) }
+  })
+}
 </script>
 
+
 <style scoped>
-/* 필요 시 섹션 간 미세 조정만 */
+
 </style>
