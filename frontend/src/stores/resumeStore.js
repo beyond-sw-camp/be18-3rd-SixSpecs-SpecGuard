@@ -26,7 +26,7 @@ export const useResumeStore = defineStore('resume', {
     },
 
     canAccess() {
-      return this.resume && this.resume.status !== 'PENDING'
+      return this.resume && this.resume.status === 'DRAFT'
     }
   }
 })
