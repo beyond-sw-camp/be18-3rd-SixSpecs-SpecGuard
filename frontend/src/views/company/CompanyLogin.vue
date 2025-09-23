@@ -6,7 +6,7 @@
         
     <!--메인 홈으로 돌아가~!-->
     <RouterLink 
-    :to="`/${companySlug}/dashboard`" 
+    :to="`/c/${companySlug}/dashboard`" 
     class="text-2xl font-extrabold tracking-tight hover:text-amber-400 transition-colors"
     >
     SPECGUARD
@@ -125,17 +125,24 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const auth = useAuthStore()
 
+const companySlug = computed(() => auth.companySlug)
 const email = ref('')
 const password = ref('')
 const submitting = ref(false)
 const errorMsg = ref('')
+
+onMounted(() => {
+  if (auth.isLoggedIn && companySlug.value) {
+    router.replace({ name: 'CompanyDashboard', params: { companySlug: companySlug.value } })
+  }
+})
 
 async function doLogin() {
     errorMsg.value = ''
