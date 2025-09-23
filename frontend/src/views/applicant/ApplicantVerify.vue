@@ -73,7 +73,7 @@
             <button
                 class="w-full h-16 rounded-xl text-white text-2xl font-extrabold"
                 :class="status==='VERIFIED' ? 'bg-emerald-600' : 'bg-[#4F8EF7]'"
-                type="button">
+                type="button" @click="handleCtaClick">
                 {{ status==='VERIFIED' ? '인증완료' : '인증 대기중' }}
             </button>
             </div>
@@ -177,6 +177,13 @@ watch(email, () => {
 
 function onEsc(e){ if (e.key === 'Escape') close() }
 function close(){ emit('close') }
+
+function handleCtaClick() {
+  if (status.value === 'VERIFIED') {
+    console.log("handleCtaClick.")
+    window.parent.postMessage({ type: 'EMAIL_VERIFIED' }, '*')
+  }
+}
 
 onMounted(() => {
     try {

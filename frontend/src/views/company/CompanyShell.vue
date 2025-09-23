@@ -4,7 +4,10 @@
         <div class="mx-auto max-w-10xl h-14 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <div class="flex items-end gap-3">
             
-        <RouterLink to="/" class="text-2xl font-extrabold tracking-tight hover:text-amber-400 transition-colors">
+        <RouterLink 
+        v-if="companySlug"
+        :to="`/c/${companySlug}/dashboard`"
+        class="text-2xl font-extrabold tracking-tight hover:text-amber-400 transition-colors">
         SPECGUARD
         </RouterLink>
 
@@ -21,6 +24,12 @@
             </button>
             <button class="p-1 hover:text-amber-300" aria-label="공유">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 12h6M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            </button>
+            <button class="p-1 hover:text-red-500" aria-label="로그아웃" @click="logout">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
+                </svg>
             </button>
             </div>
         </div>
@@ -160,41 +169,38 @@
 
 <script setup>
 
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter,} from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import api from '@/api/axios';
 
+const authStore = useAuthStore();
 const router = useRouter()
 const route = useRoute()
-const companySlug = route.params.companySlug
+const companySlug = computed(() => authStore.companySlug)
 
 
 onMounted(async () => {
-    userName.value =
-        sessionStorage.getItem('specguard.managerName') ||
-        sessionStorage.getItem('specguard.user.name') || '사용자'
-
-    if (!sessionStorage.getItem('specguard.managerName')) {
-        const token = sessionStorage.getItem('specguard.token')
-        if (token) {
-        try {
-            const { data } = await axios.get(
-            `${import.meta.env.VITE_API_URL}/api/v1/me`,
-            { headers: { Authorization: `Bearer ${token}` } }
-            )
-            const name = data?.company?.managerName ?? data?.user?.name
-            if (name) {
+    try {
+        const { data } = await api.get(`/company/${companySlug}/users/me`)
+        const name = data?.company?.managerName ?? data?.user?.name
+        if (name) {
             userName.value = name
             sessionStorage.setItem('specguard.managerName', name)
-            }
-        } catch (e) {
-            console.debug('[SG]/me fetch failed', e?.response?.status, e?.message)
         }
-        }
+    } catch (e) {
+        console.debug('[SG]/me fetch failed', e?.response?.status, e?.message)
     }
+
+    userName.value = authStore?.user?.name || '사용자'
 })
 
-    
+function logout() {
+    if (authStore.isLoggedIn) {
+        authStore.logout();
+        router.push({ name : 'CompanyLogin'})
+    }
+}
 
 function pageMove(name, extraParams = {}, query) {
     router.push({
@@ -208,5 +214,6 @@ const sidebarOpen = ref(true)
 function toggleSidebar() { sidebarOpen.value = !sidebarOpen.value }
 
 // 사용자명
-const userName = ref('OOO')
+const userName = ref('')
+
 </script>

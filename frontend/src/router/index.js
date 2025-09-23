@@ -30,22 +30,18 @@ import Oauth2Redirect from "../views/company/Oauth2Redirect.vue";
 import Oauth2Failure from "../views/company/Oauth2Failure.vue";
 
 // 지원자 로그인/회원가입
+import ApplicantShell from '../views/applicant/ApplicantShell.vue'
 import ApplicantLogin from '../views/applicant/ApplicantLogin.vue'
 import ApplicantSignup from '../views/applicant/ApplicantSignup.vue'
 import ApplicantVerify from '../views/applicant/ApplicantVerify.vue'
 
 // 지원자 쉘
-import ApplicantShell from '../views/applicant/ApplicantShell.vue'
+import ResumeShell from '@/views/resume/ResumeShell.vue'
 import ResumeBasicInfo from '../views/resume/ResumeBasicInfo.vue'
 import ResumeAcademicInfo from '../views/resume/ResumeAcademicInfo.vue'
 import ResumeCertificateInfo from '../views/resume/ResumeCertificateInfo.vue'
 import ResumeEssay from '../views/resume/ResumeEssay.vue'
 import ResumeSubmit from '../views/resume/ResumeSubmit.vue'
-import ResumeHeader from '@/views/resume/ResumeHeader.vue'
-
-import { name } from '@vue/eslint-config-prettier/skip-formatting'
-import { useResumeStore } from '@/stores/resumeStore'
-import axios from 'axios'
 
 
 
@@ -102,14 +98,22 @@ const routes = [
     }}) },
     { path: 'signup', name: 'ApplicantSignup', component: ApplicantSignup, props: true },
     { path: 'verify', name: 'ApplicantVerify', component: ApplicantVerify},
-      // 이력서 작성
-      { path: 'basic-info', name: 'ResumeBasicInfo', component: ResumeBasicInfo, props: true },
-      { path: 'academic-info', name: 'ResumeAcademicInfo', component: ResumeAcademicInfo, props: true },
-      { path: 'certificate-info', name: 'ResumeCertificateInfo', component: ResumeCertificateInfo, props: true },
-      { path: 'essay', name: 'ResumeEssay', component: ResumeEssay, props: true },
-      { path: 'submit', name: 'ResumeSubmit', component: ResumeSubmit, props: true }
     ]
   },
+
+  {
+  path:'/:companySlug/registerResume/:applicantSlug',
+  component: ResumeShell,
+  props: true,
+  children: [
+    { path: 'basic-info', name: 'ResumeBasicInfo', component: ResumeBasicInfo, props: true },
+    { path: 'academic-info', name: 'ResumeAcademicInfo', component: ResumeAcademicInfo, props: true },
+    { path: 'certificate-info', name: 'ResumeCertificateInfo', component: ResumeCertificateInfo, props: true },
+    { path: 'essay', name: 'ResumeEssay', component: ResumeEssay, props: true },
+    { path: 'submit', name: 'ResumeSubmit', component: ResumeSubmit, props: true }
+  ]
+},
+
   // 임시
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: MainPage }
 ]

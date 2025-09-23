@@ -6,7 +6,7 @@
         
     <!--메인 홈으로 돌아가~!-->
     <RouterLink 
-    :to="`/${companySlug}/dashboard`" 
+    :to="`/c/${companySlug}/dashboard`" 
     class="text-2xl font-extrabold tracking-tight hover:text-amber-400 transition-colors"
     >
     SPECGUARD
@@ -125,13 +125,16 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
+
+
+const companySlug = computed(() => auth.companySlug)
 
 const notice = computed(() =>
   route.query.msg === 'oauth_signup_ok' ? 'SNS 가입이 완료되었습니다. 로그인해 주세요.' : ''
@@ -142,9 +145,17 @@ const password = ref('')
 const submitting = ref(false)
 const errorMsg = ref('')
 
+
+onMounted(() => {
+  if (auth.isLoggedIn && companySlug.value) {
+    router.replace({ name: 'CompanyDashboard', params: { companySlug: companySlug.value } })
+  }
+})
+
 const goNaver = () => {
   window.location.href = "http://localhost:8080/oauth2/authorization/naver";
 };
+
 
 async function doLogin() {
     errorMsg.value = ''

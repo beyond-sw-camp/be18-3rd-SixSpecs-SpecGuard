@@ -2,8 +2,6 @@
 <template>
     <div class="min-h-screen bg-slate-100 text-slate-900">
         <!-- Top Title -->
-        <ResumeHeader/>
-
         <main class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 space-y-12">
         <!-- Panel: 기본정보 -->
         <section class="bg-white shadow-sm ring-1 ring-slate-200 p-6">
@@ -24,6 +22,7 @@
                 v-model.trim="form.korName"
                 class="col-span-12 sm:col-span-4 rounded-md border border-slate-300 px-3 py-2"
                 placeholder="성명"
+                readonly
                 />
                 <label class="col-span-12 sm:col-span-2 font-semibold">
                     <span class="text-red-500">* </span>
@@ -107,12 +106,15 @@
                 class="relative aspect-[4/5] w-full max-w-[200px] rounded-md border border-dashed border-slate-300 bg-slate-50 overflow-hidden"
                 >
                 <img
-                    v-if="photoUrl"
-                    :src="photoUrl"
+                    v-if="photoPreview"
+                    :src="photoPreview"
                     alt="증명사진 미리보기"
                     class="absolute inset-0 w-full h-full object-cover"
                 />
-                <span v-else class="absolute inset-0 flex items-center justify-center text-slate-500 text-sm">
+                <span 
+                v-else 
+                class="absolute inset-0 flex items-center justify-center text-slate-500 text-sm"
+                >
                     160×200<br />사진 업로드
                 </span>
                 </div>
@@ -167,14 +169,14 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useResumeStore } from '@/stores/resumeStore'
-import axios from 'axios'
 import ResumeHeader from './ResumeHeader.vue'
 import applicantApi from '@/api/applicantApi'
 
 const router = useRouter()
 const route = useRoute()
-const API = import.meta.env.VITE_API_URL
 const applicantSlug = route.params.applicantSlug
+
+const pageRef = ref(null)
 
 const resumeStore = useResumeStore();
 
@@ -193,7 +195,7 @@ const form = ref({
 
 // 사진 업로드
 const fileInput = ref(null)
-const photoUrl = ref('')
+const photoPreview = ref('')
 let objectUrl // revoke 용
 
 // ======================
@@ -209,6 +211,7 @@ onMounted(async () => {
     }
 
     const resume = resumeStore.resume
+    console.log("onMounted basic resume : ", resume)
     form.value.korName = resume?.name || ''
 
     if (resume?.basic) {
@@ -223,7 +226,9 @@ onMounted(async () => {
         specialty: resume.basic.specialty || '',
         position: resume.basic.position || '',
         })
-        photoUrl.value = resume.basic.profileImageUrl || ''
+        if (resume.basic.profileImageUrl) {
+            photoPreview.value = resume.basic.profileImageUrl;
+        }
     }
 })
     
@@ -250,16 +255,19 @@ function onFileChange(e) {
         e.target.value = ''
         return
     }
-    if (objectUrl) URL.revokeObjectURL(objectUrl)
-    objectUrl = URL.createObjectURL(f)
-    photoUrl.value = objectUrl
+    // if (objectUrl) URL.revokeObjectURL(objectUrl)
+    // objectUrl = URL.createObjectURL(f)
+    if (photoPreview.value) URL.revokeObjectURL(photoPreview.value)
+    photoPreview.value = URL.createObjectURL(f)
+
+    // photoUrl.value = objectUrl
+    // form.value.photoUrl = objectUrl // <- 폼에도 반영
 }
 
 function clearPhoto() {
-    if (objectUrl) URL.revokeObjectURL(objectUrl)
-    objectUrl = undefined
-    photoUrl.value = ''
-    if (fileInput.value) fileInput.value.value = ''
+    if (photoPreview.value) URL.revokeObjectURL(photoPreview.value)
+    photoPreview.value = ""
+    if (fileInput.value) fileInput.value = ""
 }
 
 onBeforeUnmount(() => {
@@ -287,7 +295,10 @@ function validateForm() {
     }
   }
 
-  if (!fileInput.value?.files?.length && !resumeStore.resume.basic?.profileImageUrl) {
+  const noPhoto =
+    (!photoPreview.value || photoPreview.value.trim() === "")
+
+  if (noPhoto) {
     alert('사진을 첨부해주세요.')
     return false
   }
@@ -298,8 +309,8 @@ function validateForm() {
 // ======================
 // 저장 & 다음 단계 이동
 // ======================
-async function goNext() {
-    if (!validateForm()) return
+async function save() {
+    if (!validateForm()) return false
 
     const formData = new FormData();
 
@@ -309,25 +320,50 @@ async function goNext() {
     // 파일 추가
     if (fileInput.value.files[0]) {
       formData.append("profileImage", fileInput.value.files[0]);
-    }
+    }   
 
     try {
         const res = await applicantApi.post(`/resumes/basic`, formData);
 
         console.log("Basic info saved:", res.data);
         // 저장된 기본정보를 store에 반영
-        resumeStore.resume.basic = res.data.basic;
+        resumeStore.resume.basic = {
+            englishName: res.data.englishName,
+            birthDate: res.data.birthDate,
+            gender: res.data.gender,
+            nationality: res.data.nationality,
+            address: res.data.address,
+            zip: res.data.zip,
+            hobbies: res.data.hobbies,
+            specialty: res.data.specialty,
+            position: res.data.position,
+            profileImageUrl: res.data.profileImageUrl,
+        }
 
         console.log("Resume store updated:", resumeStore.resume);
+        alert("저장 완료했습니다.")
+        return true
     }
     catch (error) {
         if (error.response) {
             console.error("에러 응답:", error.response.data);
             alert(error.response.data?.message || "기본 정보 저장 실패");
         }
+        return false
     }
-    router.push({ name: 'ResumeAcademicInfo', params: { applicantSlug } })
+}
+
+async function goNext() {
+    const success = await save()
+    if (success) {
+        router.push({ name: 'ResumeAcademicInfo', params: { applicantSlug } })
     }
+}
+
+
+defineExpose({ save })
+
 </script>
+
 
 <style scoped></style>

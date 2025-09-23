@@ -3,7 +3,11 @@
 import { computed, onMounted } from "vue"
 import { useRouter, useRoute } from "vue-router"
 import { useResumeStore } from "@/stores/resumeStore"
+import { defineProps, defineEmits } from "vue"
 
+const props = defineProps({ 
+  currentTab: String 
+})
 const router = useRouter()
 const route = useRoute()
 const resumeStore = useResumeStore()
@@ -15,6 +19,8 @@ onMounted(async () => {
 const template = computed(() => resumeStore.template)
 const applicantSlug = computed(() => route.params.applicantSlug)
 const companySlug = computed(() => route.params.companySlug)
+
+const emit = defineEmits(["tabClick"])
 
 // 탭 라우트 정의
 const tabs = computed(() => [
@@ -32,7 +38,7 @@ function isActive(to) {
 }
 
 function handleTabClick(to) {
-  router.push(to)
+  emit("tabClick", to)
 }
 </script>
 
