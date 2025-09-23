@@ -10,7 +10,7 @@
             <div>
                 <h2 class="text-2xl font-extrabold tracking-tight">계정 정보</h2>
 
-                <label class="mt-6 block text-sm font-semibold">아이디 *</label>
+                <label class="mt-6 block text-sm font-semibold">이름 *</label>
                 <input v-model.trim="form.username" required
                 class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
                 <p v-if="errors.username" class="mt-1 text-xs text-red-600">{{ errors.username }}</p>
@@ -168,7 +168,7 @@
     onMounted(() => { if (form.email) loadEmailStatus() })
 
     function validateAll() {
-    errors.username = form.username ? '' : '아이디를 입력하세요.'
+    errors.username = form.username ? '' : '이름를 입력하세요.'
     errors.password = form.password ? '' : '비밀번호를 입력하세요.'
     errors.phone = isPhone(form.phone) ? '' : '전화번호 형식이 올바르지 않습니다.'
     errors.email = isEmail(form.email) ? '' : '이메일 형식이 올바르지 않습니다.'
