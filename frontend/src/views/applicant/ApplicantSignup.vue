@@ -186,7 +186,7 @@
 
     // --- iframe 메시지 처리 ---
     function onMessage(e) {
-        if (e?.data?.type === 'applicant-email-verified') {
+        if (e?.data?.type === 'EMAIL_VERIFIED') {
             applicantEmailVerified.value = true
             closePhoneModal()
         }
