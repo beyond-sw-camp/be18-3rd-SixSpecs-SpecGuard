@@ -68,15 +68,15 @@ const route = useRoute();
 const router = useRouter();
 const token = route.query.token;
 
-// ✅ 에러 메시지 상태
+// 에러 메시지 상태
 const errorMessage = ref(route.query.message || null);
 
-// ✅ 초대 정보
+// 초대 정보
 const inviteInfo = ref(null);
 
 onMounted(async () => {
   try {
-    // ✅ 초대 토큰 검증 API 호출
+    // 초대 토큰 검증 API 호출
     const res = await api.get(`/auth/signup/invite/check?token=${token}`);
     console.log("🔍 checkInvite API 응답:", res.data);
     inviteInfo.value = res.data;
@@ -87,7 +87,7 @@ onMounted(async () => {
 });
 
 const goForm = () => {
-  router.push({ name: "InviteSignup", query: { token } });
+  router.push({ name: "CompanyInviteSignup", query: { token } });
 };
 
 const goGoogleLogin = () => {

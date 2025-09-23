@@ -6,7 +6,11 @@ import CompanyLogin from '../views/company/CompanyLogin.vue'
 import CompanySignupChoice from'../views/company/CompanySignupChoice.vue'
 import CompanySignupInfo from '../views/company/CompanySignupInfo.vue'
 import CompanySignupCondition from '../views/company/CompanySignupCondition.vue'
+
+// 기업 초대
 import CompanyInviteChoice from '../views/company/CompanyInviteChoice.vue'
+import CompanyInviteSignup from '../views/company/CompanyInviteSignup.vue'
+import CompanyInviteSignupCondition from '../views/company/CompanyInviteSignupCondition.vue'
 
 // 기업 쉘
 import CompanyShell from '../views/company/CompanyShell.vue'
@@ -51,7 +55,11 @@ const routes = [
   { path: '/company/signup/choice', name: 'CompanySignupChoice', component: CompanySignupChoice },
   { path: '/company/signup/info', name: 'CompanySignupInfo', component: CompanySignupInfo },
   { path: '/company/signup/condition', name: 'CompanySignupCondition', component: CompanySignupCondition},
-  { path: '/signup/invite', name: 'CompanyInviteChoice', component: CompanyInviteChoice},
+
+  // 기업 초대
+  { path: '/signup/invite', name: 'CompanyInviteChoice', component: CompanyInviteChoice, props: route => ({ token: route.query.token })},
+  { path: '/signup/invite/info', name: 'CompanyInviteSignup', component: CompanyInviteSignup, props: route => ({ token: route.query.token })},
+  { path: '/signup/invite/condition', name: 'CompanyInviteSignupCondition', component: CompanyInviteSignupCondition, props: route => ({ token: route.query.token})},
   
   // 기업 쉘
   { path: '/c/:companySlug',
