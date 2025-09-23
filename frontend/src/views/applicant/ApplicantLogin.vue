@@ -88,16 +88,26 @@
                 class="w-full h-12 rounded-md border border-slate-300 px-4 placeholder-slate-400"
                 @keyup.enter="onSearch"
                 />
-                <button
-                class="shrink-0 h-12 px-4 rounded-md bg-white border border-slate-300 hover:bg-slate-50"
-                @click="onSearch"
-                type="button"
+                <div
+                    class="flex items-center justify-center h-12 px-4 rounded-r-md border border-slate-300 bg-slate-50 text-slate-400"
                 >
-                검색
-                </button>
+                    <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    class="w-5 h-5"
+                    >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1110.5 3a7.5 7.5 0 016.15 13.65z"
+                    />
+                    </svg>
+                </div>
             </div>
 
-            <!-- 채용 공고 리스트 (더미) -->
             <ul class="mt-6 space-y-6">
                 <li v-for="job in filteredTemplates" :key="job.id" @click="selectedTemplateId = job.id" class="cursor-pointer">
                 <div 
@@ -118,94 +128,90 @@
     </div>
     </template>
 
-    <script setup>
-    import { ref, computed, onMounted } from 'vue'
-    import { useRouter, RouterLink, useRoute } from 'vue-router'
-    import { useResumeStore } from '@/stores/resumeStore'
-    import axios from 'axios'
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, RouterLink, useRoute } from 'vue-router'
+import { useResumeStore } from '@/stores/resumeStore'
+import axios from 'axios'
 
-    const resumeStore = useResumeStore();
-    const router = useRouter()
-    const route = useRoute()
-    const API = import.meta.env.VITE_API_URL;
+const resumeStore = useResumeStore();
+const router = useRouter()
+const route = useRoute()
+const API = import.meta.env.VITE_API_URL;
 
-    // 로그인 폼
-    const userId = ref('')
-    const password = ref('')
+// 로그인 폼
+const userId = ref('')
+const password = ref('')
 
-    // 검색어
-    const q = ref('')
+// 검색어
+const q = ref('')
 
-    const templates = ref([])
-    const selectedTemplateId =ref(null);
+const templates = ref([])
+const selectedTemplateId =ref(null);
 
-    const filteredTemplates = computed(() => {
-        if (!q.value) return templates.value
-        const term = q.value.toLowerCase()
-        return templates.value.filter(j => j.title.toLowerCase().includes(term))
-    })
+const filteredTemplates = computed(() => {
+    if (!q.value) return templates.value
+    const term = q.value.toLowerCase()
+    return templates.value.filter(j => j.name.includes(term))
+})
 
-    const companySlug = route.params.companySlug;
+const companySlug = route.params.companySlug;
 
-    console.log("companySlug:", companySlug);
+console.log("companySlug:", companySlug);
 
-    onMounted(async () => {
-        try {
-            const response = await axios.get(`${API}/api/v1/resumes/companies/${companySlug}/templates`);
-            templates.value = templates.value = (response.data.templates || []).map(t => t.basic);
-            console.log("Fetched templates:", templates.value)
-        } catch (error) {
-            console.error("Error fetching templates:", error)
-            alert("템플릿 목록을 불러오지 못했습니다.")
-        }
-    });
+onMounted(async () => {
+    try {
+        const response = await axios.get(`${API}/api/v1/resumes/companies/${companySlug}/templates`);
+        templates.value = (response.data.templates || []).map(t => t.basic);
+        console.log("Fetched templates:", templates.value)
+    } catch (error) {
+        console.error("Error fetching templates:", error)
+        alert("템플릿 목록을 불러오지 못했습니다.")
+    }
+});
 
 
-    async function onSubmit() {
-        if (!selectedTemplateId.value) {
-            alert("템플릿을 선택해주세요.");
-            return;
+async function onSubmit() {
+    if (!selectedTemplateId.value) {
+        alert("템플릿을 선택해주세요.");
+        return;
+    }
+    
+    try {
+        const res = await axios.post(`${API}/api/v1/resumes/login`, {
+            email: userId.value,
+            password: password.value,
+            templateId: selectedTemplateId.value
+        }, {
+            withCredentials: true
+        });
+        
+        const selectedTemplate = templates.value.find(job => job.id === selectedTemplateId.value);
+        if (!selectedTemplate) throw new Error("템플릿 선택이 잘못되었습니다.")
+
+        // Store 업데이트
+        resumeStore.template = selectedTemplate
+        resumeStore.resume = res.data.resume
+
+        console.log("Login successful, store updated:", resumeStore.template, resumeStore.resume)
+
+        if (!resumeStore.canAccess()) {
+            alert('제출 완료 했습니다.')
+            router.push({ name: 'ApplicantLogin', params: { companySlug: route.params.companySlug }})
+            return
         }
         
-        try {
-            const res = await axios.post(`${API}/api/v1/resumes/login`, {
-                email: userId.value,
-                password: password.value,
-                templateId: selectedTemplateId.value
-            }, {
-                withCredentials: true
-            });
-            
-            const selectedTemplate = templates.value.find(job => job.id === selectedTemplateId.value);
-            if (!selectedTemplate) throw new Error("템플릿 선택이 잘못되었습니다.")
+        router.push({
+            name: 'ResumeBasicInfo',
+            params: { companySlug, applicantSlug: selectedTemplateId.value }
+        })
 
-            // Store 업데이트
-            resumeStore.template = selectedTemplate
-            resumeStore.resume = res.data.resume
-
-            console.log("Login successful, store updated:", resumeStore.template, resumeStore.resume)
-
-            if (!resumeStore.canAccess()) {
-                alert('제출 완료 했습니다.')
-                router.push({ name: 'ApplicantLogin', params: { companySlug: route.params.companySlug }})
-                return
-            }
-            
-            router.push({
-                name: 'ResumeBasicInfo',
-                params: { companySlug, applicantSlug: selectedTemplateId.value }
-            })
-
-        } catch (error) {
-            console.error("Login error:", error);
-            alert(error.response?.data?.message || "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.")
-        }
+    } catch (error) {
+        console.error("Login error:", error);
+        alert(error.response?.data?.message || "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.")
+    }
 }
 
-function onSearch() {
-  // 현재는 클라이언트 필터만 수행
-  // 서버 검색 필요하면 API 연동
-}
 </script>
 
 <!-- Tailwind은 프로젝트에 설정되어 있다고 가정. 개별 스타일 불필요 -->
