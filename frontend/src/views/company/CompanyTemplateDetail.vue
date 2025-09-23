@@ -55,15 +55,7 @@
 
                 <!-- right -->
                 <div class="col-span-12 md:col-span-7">
-                <div class="h-full rounded-xl border border-slate-200 p-4">
-                    <h4 class="font-bold">검토자</h4>
-                    <ul class="mt-2 text-slate-700 text-sm space-y-1">
-                    <li v-for="r in a.reviewers" :key="r.id" class="flex items-center justify-between">
-                        <span>{{ r.dept }} {{ r.name }} {{ r.title }}</span>
-                        <button class="text-xs rounded-full border px-2 py-1" @click="ping(a.id, r.id)">연락하기</button>
-                    </li>
-                    </ul>
-                </div>
+                <!--검토자 부분 삭제-->
                 </div>
             </div>
             </article>

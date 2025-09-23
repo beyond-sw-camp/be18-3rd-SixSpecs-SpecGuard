@@ -3,7 +3,12 @@
         <header class="sticky top-0 z-30 bg-slate-800 text-white">
         <div class="mx-auto max-w-10xl h-14 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <div class="flex items-end gap-3">
-            <span class="text-2xl font-extrabold tracking-tight">SPECGUARD</span>
+            
+        <RouterLink to="/" class="text-2xl font-extrabold tracking-tight hover:text-amber-400 transition-colors">
+        SPECGUARD
+        </RouterLink>
+
+
             <span class="text-[11px] leading-none text-slate-300 mb-1">이력 검증 시스템</span>
             </div>
             <div class="flex items-center gap-6">
@@ -57,32 +62,33 @@
                     </svg>
                     검색
                 </div>
+
                 <div class="flex items-center gap-2 text-slate-800">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5"/>
-                    </svg>
+                <svg xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    class="w-6 h-6 shrink-0">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M14.25 18.75h-4.5m9-5.25V11a6.75 6.75 0 10-13.5 0v2.5c0 .71-.21 1.39-.6 1.95l-1.2 1.7h17.1l-1.2-1.7a3.25 3.25 0 01-.6-1.95z" />
+                </svg>
                     알림
                 </div>
                 </div>
 
                 <hr class="border-slate-700/30 my-2">
 
-                <details open class="group">
-                <summary class="list-none flex items-center justify-between rounded-lg bg-slate-900/10 px-3 py-2 font-semibold">
-                    <span>공고 관리</span>
-                    <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/>
-                    </svg>
-                </summary>
-                <div class="mt-2 rounded-xl bg-white/80 p-3 shadow-sm">
-                    <ul class="list-disc pl-5 text-sm leading-8">
-                    <li><button class="hover:underline" @click="pageMove('CompanyDashboard')">채용공고 조회</button></li>
-                    <li><button class="hover:underline" @click="pageMove('CompanyCreatePostBasic')">채용공고 생성</button></li>
-                    <li><button class="hover:underline" @click="onReport('dashboard')">채용공고 수정</button></li>
-                    </ul>
-                </div>
-                </details>
+    <!--공고 관리 탭 누르면, 공고 관리 화면으로 돌아옴.-->
+    <RouterLink
+    :to="`/c/${companySlug}/dashboard`"
+    class="list-none flex items-center justify-between rounded-lg bg-slate-900/10 px-3 py-2 font-semibold"
+    >
+    <span>공고 관리</span>
+    <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/>
+    </svg>
+    </RouterLink>
 
                 <details class="group">
                 <summary class="list-none flex items-center justify-between rounded-lg bg-slate-900/10 px-3 py-2 font-semibold">
