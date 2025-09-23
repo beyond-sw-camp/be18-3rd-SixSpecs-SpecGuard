@@ -42,11 +42,19 @@
                         {{ statusChip(a.verifyStatus).label }}
                     </span>
                     </div>
-                    <p class="mt-1 text-slate-700">검증 상태: <span class="font-semibold">완료(미구현)</span>
+                    <p class="mt-1 text-slate-700">
+                    검증 상태:
+                    <span
+                        class="inline-flex items-center text-xs px-2 py-0.5 rounded-full border"
+                        :class="validationState(a).cls"
+                    >
+                        {{ validationState(a).label }}
+                    </span>
                     <span v-if="a.percentile != null" class="ml-2 text-sm text-slate-500">
                         상위 {{ 100 - a.percentile }}%
                     </span>
                     </p>
+
                     <p class="mt-1 text-slate-700">
                     정합성 점수: <span class="font-extrabold">{{ fmtScore(a.finalScore) }}</span>
                     </p>
@@ -59,8 +67,9 @@
                     <button class="rounded-md border bg-white px-3 py-1 hover:bg-slate-50"
                             :disabled="calcRunning"
                             @click="verify(a.id)">
-                    {{ calcRunning ? '계산 중' : '정합성 검증하기' }}
+                    {{ calcRunning ? '계산 중' : (a.finalScore != null ? '다시 검증' : '정합성 검증하기') }}
                     </button>
+
                     </div>
                 </div>
                 </div>
@@ -194,11 +203,12 @@ const hasQuestions = computed(() =>
 )
 
 const fallbackAvatar = 'https://placehold.co/96x96/png'
-// const fallbackAvatar =
-//   'data:image/svg+xml;utf8,' +
-//   encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96">
-//   <rect width="100%" height="100%" fill="#e5e7eb"/><text x="50%" y="54%" text-anchor="middle"
-//   font-size="24" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">IMG</text></svg>`);
+
+function validationState(a){
+    return a?.finalScore != null
+    ? { label:'완료', cls:'bg-emerald-100 text-emerald-700 border-emerald-200' }
+    : { label:'미완료', cls:'bg-slate-100 text-slate-600 border-slate-200' }
+}
 
 // ---- API
 async function fetchTemplateDetail(id) {
