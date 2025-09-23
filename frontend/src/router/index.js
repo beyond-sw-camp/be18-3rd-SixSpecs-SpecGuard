@@ -6,6 +6,7 @@ import CompanyLogin from '../views/company/CompanyLogin.vue'
 import CompanySignupChoice from'../views/company/CompanySignupChoice.vue'
 import CompanySignupInfo from '../views/company/CompanySignupInfo.vue'
 import CompanySignupCondition from '../views/company/CompanySignupCondition.vue'
+import CompanyInviteChoice from '../views/company/CompanyInviteChoice.vue'
 
 // 기업 쉘
 import CompanyShell from '../views/company/CompanyShell.vue'
@@ -41,6 +42,7 @@ import axios from 'axios'
 
 
 
+
 const routes = [
   { path: '/', component: MainPage },
 
@@ -49,6 +51,7 @@ const routes = [
   { path: '/company/signup/choice', name: 'CompanySignupChoice', component: CompanySignupChoice },
   { path: '/company/signup/info', name: 'CompanySignupInfo', component: CompanySignupInfo },
   { path: '/company/signup/condition', name: 'CompanySignupCondition', component: CompanySignupCondition},
+  { path: '/signup/invite', name: 'CompanyInviteChoice', component: CompanyInviteChoice},
   
   // 기업 쉘
   { path: '/c/:companySlug',

@@ -32,11 +32,20 @@
             <div>
                 <h2 class="text-2xl font-extrabold tracking-tight">계정 권한 정보</h2>
                 <br><br>
-                <h3 class="text-1xl font-extrabold tracking-tight"> - OWNER</h3>
+                <h3 class="text-1xl font-extrabold tracking-tight">
+                    - OWNER <br>
+                    MANAGER의 권한을 포함하고 ... 가능
+                </h3>
                 <br>
-                <h4 class="text-1xl font-extrabold tracking-tight"> - MANABER</h4>
+                <h3 class="text-1xl font-extrabold tracking-tight"> 
+                    - MANABER <br> 
+                    VIEWR의 권한을 포함하고 ... 가능
+                </h3>
                 <br>
-                <h4 class="text-1xl font-extrabold tracking-tight"> - VIEWER</h4>
+                <h3 class="text-1xl font-extrabold tracking-tight">
+                    - VIEWER <br>
+                    ... 가능한 권한이다.
+                </h3>
 
             </div>
 
@@ -58,13 +67,21 @@
 </template>
 
 <script setup>
+
 import { reactive, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import api from "@/api/axios";
+import { onMounted, ref } from "vue";
+import { sendInvite } from "@/api/invite";
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore();
+const user = ref(authStore.user);
+const companyName = ref("");
 
 const router = useRouter()
 const route = useRoute()
-
-const companySlug = route.params.companySlug
+const companySlug = route.params.companySlug ?? authStore.companySlug ?? ''
 
 const form = reactive({
   role: '',
@@ -78,17 +95,53 @@ const errors = reactive({
 
 const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 
+const isValid = computed(() => validateAll())
+
 function validateAll() {
   errors.role = form.role ? '' : '권한을 선택하세요.'
   errors.email = isEmail(form.email) ? '' : '이메일 형식이 올바르지 않습니다.'
   return !errors.role && !errors.email
 }
 
-const isValid = computed(() => validateAll())
 
 async function nextStep() {
-  if (!validateAll()) return
-  sessionStorage.setItem('specguard.signup.form', JSON.stringify({ ...form }))
-  router.push({ name: 'CompanyDashboard', params: { companySlug } })
+if (!validateAll()) return
+
+try {
+    // 초대 발송
+    const email = (form.email ?? '').trim()
+    const role  = form.role || 'VIEWER' // 미선택 시 기본값
+
+    await sendInvite(companySlug, { email, role })
+    alert('초대가 성공적으로 발송되었습니다!')
+    } catch (err) {
+    console.error('초대 실패:', err)
+    alert('초대 중 오류가 발생했습니다.')
+    return // 실패 시 저장·이동 중단
+    }
+
+    // 상태 저장 후 라우팅
+    sessionStorage.setItem('specguard.signup.form', JSON.stringify({ ...form }))
+    router.push({ name: 'CompanyDashboard', params: { companySlug } })
 }
+
+onMounted(async () => {
+  if (!user.value && authStore.companySlug) {
+    try {
+      const res = await api.get(`/company/${authStore.companySlug}/users/me`, {
+        headers: { Authorization: `Bearer ${authStore.accessToken}` },
+      });
+      user.value = res.data;
+      authStore.user = res.data;
+      localStorage.setItem("user", JSON.stringify(res.data));
+
+      companyName.value = res.data.company?.name || "";
+    } catch (err) {
+      console.error("유저 정보 불러오기 실패", err);
+    }
+  } else if (user.value) {
+    companyName.value = user.value.company?.name || "";
+  }
+});
+
 </script>
