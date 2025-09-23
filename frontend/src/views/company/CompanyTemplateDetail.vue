@@ -177,7 +177,7 @@ headers: { 'X-Company-Slug': companySlug.value },
 validateStatus: s => s < 500
 })
 if (r.status !== 200) return null
-const root = r.data?.resume ?? r.data?.data ?? r.data ?? {}
+const root = r.data?.data?.resume ?? {}
 return root.basic?.profileImageUrl || root.profileImageUrl || null
 }
 

@@ -31,7 +31,7 @@
                 </div>
             </div>
 
-            <div class="col-span-12 xl:col-span-5 rounded-xl border p-4">
+            <!-- <div class="col-span-12 xl:col-span-5 rounded-xl border p-4">
                 <ul class="grid grid-cols-2 gap-y-1 text-sm">
                 <li class="col-span-1">GITHUB :</li><li class="col-span-1 text-right">{{ resume?.scores?.github ?? '-' }}</li>
                 <li class="col-span-1">NOTION :</li><li class="col-span-1 text-right">{{ resume?.scores?.notion ?? '-' }}</li>
@@ -39,16 +39,15 @@
                 <li class="col-span-1">CAREER_MATCH :</li><li class="col-span-1 text-right">{{ resume?.scores?.career ?? '-' }}</li>
                 <li class="col-span-1">CERTIFICATE_MATCH :</li><li class="col-span-1 text-right">{{ resume?.scores?.cert ?? '-' }}</li>
                 </ul>
-            </div>
+            </div> -->
             </div>
 
-            <!-- 그래프 2개 자리는 보더 박스만 (실제 차트는 추후 교체) -->
             <div class="mt-4 grid grid-cols-12 gap-4">
-            <div class="col-span-12 lg:col-span-5 xl:col-span-4 rounded-xl border p-4">
+            <!-- <div class="col-span-12 lg:col-span-5 xl:col-span-4 rounded-xl border p-4">
                 <h3 class="font-bold mb-2">정합성 결과</h3>
                 <div class="h-40 rounded-md bg-slate-50 border border-dashed"></div>
-            </div>
-            <div class="col-span-12 lg:col-span-7 xl:col-span-8 rounded-xl border p-4">
+            </div> -->
+            <div class="col-span-12 xl:col-span-7 rounded-xl border p-4">
                 <h3 class="font-bold mb-2">프로젝트 언어분석</h3>
                 <div class="h-40 rounded-md bg-slate-50 border p-3 flex items-center justify-center">
                   <div v-if="langSlices.length" class="flex items-center gap-6">
@@ -76,20 +75,19 @@
 
             <!-- AI 분석 요약 박스 -->
             <div class="mt-4 rounded-xl border p-4">
-            <h3 class="font-bold mb-2">지원자 AI분석</h3>
-            <div class="grid grid-cols-12 gap-4 text-sm leading-6">
-                <div class="col-span-12 md:col-span-6">
-                <ol class="list-decimal pl-5 space-y-1">
-                    <li>정합성 분석: {{ resume?.analysis?.integrity || '요약 준비중' }}</li>
-                    <li>인사이트: {{ resume?.analysis?.insight || '요약 준비중' }}</li>
-                </ol>
+              <h3 class="font-bold mb-2">자기소개서 AI 요약본</h3>
+
+              <div v-if="summaries.length" class="space-y-3 text-slate-700 text-sm leading-6">
+                <div
+                  v-for="(s, i) in summaries"
+                  :key="i"
+                  class="rounded-xl border px-4 py-3 whitespace-pre-line"
+                >
+                  {{ s }}
                 </div>
-                <div class="col-span-12 md:col-span-6">
-                <div class="rounded-md border p-3 bg-slate-50">
-                    종합 평가: {{ resume?.analysis?.overall || '요약 준비중' }}
-                </div>
-                </div>
-            </div>
+              </div>
+
+              <div v-else class="text-sm text-slate-500">요약 준비중</div>
             </div>
         </header>
 
@@ -181,34 +179,6 @@
                 <div v-if="!resume?.essays?.length" class="text-sm text-slate-500">등록된 자기소개서가 없습니다.</div>
             </div>
             </div>
-
-            <aside class="col-span-12 xl:col-span-4">
-            <div class="rounded-2xl bg-white border p-6 sticky top-20">
-                <h4 class="text-xl font-extrabold mb-3">정합성 결과</h4>
-                <p class="text-5xl font-extrabold">{{ fmtScore(resume?.matchScore) }}</p>
-                <p class="mt-3 text-sm text-slate-700">{{ resume?.summary || '요약 준비중' }}</p>
-            </div>
-            </aside>
-        </section>
-
-        <!-- 4) AI 자기소개서 요약 패널 -->
-        <section class="grid grid-cols-12 gap-4">
-            <div class="col-span-12 xl:col-span-8">
-            <div class="rounded-xl border p-5">
-                <h3 class="text-2xl font-extrabold">자기소개서</h3>
-                <!-- 동일한 본문이 이어짐. 필요 시 더 로드 -->
-                <div v-for="(q, idx) in resume?.essays2 || []" :key="'e2-'+idx" class="rounded-lg border p-4 mt-4">
-                <div class="font-semibold mb-1">{{ idx + 1 }}번 문항</div>
-                <p class="whitespace-pre-line">{{ q.answer }}</p>
-                </div>
-            </div>
-            </div>
-            <aside class="col-span-12 xl:col-span-4 pr-4"><!-- 우측 살짝 여백 -->
-            <div class="rounded-2xl bg-white border p-6 sticky top-20">
-                <h4 class="text-xl font-extrabold mb-3">AI 자기소개서 요약</h4>
-                <div class="h-64 rounded-md bg-slate-50 border border-dashed"></div>
-            </div>
-            </aside>
         </section>
         </section>
 
@@ -280,6 +250,8 @@ const list = ref([])
 const filter = ref({ dept: '', role: '', careerType: '' })
 const comment = ref('')
 const fallbackAvatar = 'https://placehold.co/96x96/png'
+
+const summaries = ref([])
 
 // links 계산
 const portfolioLinks = computed(() => {
@@ -398,12 +370,9 @@ async function fetchResume(id = resumeId) {
   })
   if (r.status !== 200) { resume.value = null; return }
 
-  const root = r.data?.resume ?? r.data?.data ?? r.data ?? {}
-  const gitMeta =
-  r.data?.gitMetadata ??
-  r.data?.data?.gitMetadata ??
-  r.data?.resume?.gitMetadata ??
-  null
+  const root = r.data?.data?.resume ?? r.data?.resume ?? r.data ?? {}
+  const gitMeta = r.data?.data?.gitMetadata ?? null
+  const summariesArr = Array.isArray(r.data?.data?.summaries) ? r.data.data.summaries : []
 
 let finalScore = null, percentile = null, analyzedAt = null, details = {}
   try {
@@ -422,8 +391,8 @@ let finalScore = null, percentile = null, analyzedAt = null, details = {}
       finalScore = fd.finalScore ?? fd.score ?? null
       details = {
         ...details,
-        keywords: splitComma(fd.matchKeyword),      // "spring boot, ..." → ['spring boot', ...]
-        mismatch: splitComma(fd.mismatchKeyword),   // "kafka, ..."      → ['kafka', ...]
+        keywords: splitComma(fd.matchKeyword),
+        mismatch: splitComma(fd.mismatchKeyword),
         comment: fd.descriptionComment ?? null,
       };
       analyzedAt = fd.resultAt ?? fd.calculatedAt ?? null
@@ -440,6 +409,10 @@ let finalScore = null, percentile = null, analyzedAt = null, details = {}
   normalized.analyzedAt = analyzedAt
   normalized.details = { ...(normalized.details || {}), ...details }
   normalized.matchScore = finalScore;
+  if (!normalized.summary && summariesArr.length) {
+  normalized.summary = summariesArr.join('\n').trim()
+}
+  summaries.value = summariesArr
   resume.value = normalized
 
 
@@ -479,12 +452,12 @@ async function saveComment() {
   comment.value = ''
 }
 
-// 언어 집계: resume.gitMeta 의 다양한 형태를 허용
+// 언어 집계
 function aggregateLang(meta) {
   if (!meta) return {};
   const out = {};
 
-  // 1) GitHub style: { languagePercentages: { JavaScript: 12.3, ... } }
+  // 1) GitHub style: { languagePercentages: 
   const lp = meta.languagePercentages || meta.language_percentages;
   if (lp && typeof lp === 'object' && !Array.isArray(lp)) {
     for (const [k, v] of Object.entries(lp)) out[k] = Number(v || 0);
