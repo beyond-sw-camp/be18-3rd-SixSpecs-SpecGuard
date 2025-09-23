@@ -79,7 +79,6 @@
                     <ul class="list-disc pl-5 text-sm leading-8">
                     <li><button class="hover:underline" @click="pageMove('CompanyDashboard')">채용공고 조회</button></li>
                     <li><button class="hover:underline" @click="pageMove('CompanyCreatePostBasic')">채용공고 생성</button></li>
-                    <li><button class="hover:underline" @click="onReport('dashboard')">채용공고 수정</button></li>
                     </ul>
                 </div>
                 </details>
@@ -119,7 +118,6 @@
                 <div class="mt-2 rounded-xl bg-white/80 p-3 shadow-sm">
                     <ul class="list-disc pl-5 text-sm leading-8">
                     <li><button class="hover:underline" @click="pageMove('CompanyEvaluationWeightList')">가중치</button></li>
-                    <li><button class="hover:underline" @click="pageMove('CompanyDeptSet')">부서/직무(미구현)</button></li>
                     </ul>
                 </div>
                 </details>
