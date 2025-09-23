@@ -13,7 +13,6 @@
                 <select v-model="form.role" required
                         class="flex-1 rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none">
                     <option disabled value="">권한을 선택하세요</option>
-                    <option value="OWNER">OWNER</option>
                     <option value="MANAGER">MANAGER</option>
                     <option value="VIEWER">VIEWER</option>
                 </select>
@@ -32,11 +31,6 @@
             <div>
                 <h2 class="text-2xl font-extrabold tracking-tight">계정 권한 정보</h2>
                 <br><br>
-                <h3 class="text-1xl font-extrabold tracking-tight">
-                    - OWNER <br>
-                    MANAGER의 권한을 포함하고 ... 가능
-                </h3>
-                <br>
                 <h3 class="text-1xl font-extrabold tracking-tight"> 
                     - MANABER <br> 
                     VIEWR의 권한을 포함하고 ... 가능
