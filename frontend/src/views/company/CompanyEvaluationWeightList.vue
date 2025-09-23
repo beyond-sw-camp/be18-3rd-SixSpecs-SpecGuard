@@ -1,4 +1,3 @@
-<!-- EvaluationWeightList.vue -->
 <template>
   <div class="w-full grid grid-cols-12 gap-6">
     <!-- Main -->
