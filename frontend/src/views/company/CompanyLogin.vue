@@ -36,10 +36,10 @@
                     <img alt="Google" class="h-4 w-4" src="https://www.svgrepo.com/show/475656/google-color.svg" />
                     Continue with Google
                 </button>
-                <button type="button" class="inline-flex items-center justify-center gap-2 rounded-md bg-[#03C75A] px-3 py-2 text-sm font-medium text-white shadow-sm">
-                    <img alt="Naver" class="h-4 w-4" src="https://static.nid.naver.com/oauth/small_g_invert.png" />
+                <RouterLink to="/company/signup/naver" class="inline-flex items-center justify-center gap-2 rounded-md bg-[#03C75A] px-3 py-2 text-sm font-medium text-white shadow-sm">
+                    <img alt="Naver" class="h-4 w-4" src="https://static.nid.naver.com/oauth/small_g_invert.png" /> 
                     Continue with Naver
-                </button>
+                </RouterLink>
                 </div>
 
                 <div class="mt-6 grid grid-cols-3 text-center text-sm text-slate-800/90">
