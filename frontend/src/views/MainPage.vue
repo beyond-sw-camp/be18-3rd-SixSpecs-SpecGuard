@@ -20,16 +20,35 @@
         </div>
         <div class="flex items-center gap-4">
           <!-- 라우팅 사용할 거면 RouterLink로 교체 -->
-          <RouterLink to="/company/login" class="rounded-xl px-6 py-3 font-semibold bg-amber-400 hover:bg-amber-300">무료로 시작하기</RouterLink>
+          <RouterLink
+              v-if="!authStore.isLoggedIn"
+              to="/company/login"
+              class="rounded-xl px-6 py-3 font-semibold bg-amber-400 hover:bg-amber-300"
+            >
+              무료로 시작하기
+            </RouterLink>
+
+            <!-- 로그인 되어 있으면 대시보드로 -->
+            <RouterLink
+              v-else
+              :to="`/c/${authStore.companySlug}/dashboard`"
+              class="rounded-xl px-6 py-3 font-semibold bg-amber-400 hover:bg-amber-300"
+            >
+              대시보드
+            </RouterLink>
           <div class="flex items-center gap-4 text-slate-300">
             <button aria-label="알림" class="p-1 hover:text-white">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6 6 0 1 0-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9"/></svg>
             </button>
-            <button aria-label="계정" class="p-1 hover:text-gray-300">
+            <button v-if="authStore.isLoggedIn" aria-label="계정" class="p-1 hover:text-gray-300">
               <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
             </button>
-            <button aria-label="로그아웃" class="p-1 hover:text-white">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 3h7m0 0v7m0-7L10 14"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10v11h11"/></svg>
+            <button v-if="authStore.isLoggedIn" aria-label="로그아웃" class="p-1 hover:text-white" @click="authStore.logout()">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M14 3h7m0 0v7m0-7L10 14"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10v11h11"/>
+              </svg>
             </button>
           </div>
         </div>
@@ -79,6 +98,10 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '@/stores/auth';
+
+const authStore = useAuthStore();
+
 const year = new Date().getFullYear()
 </script>
 

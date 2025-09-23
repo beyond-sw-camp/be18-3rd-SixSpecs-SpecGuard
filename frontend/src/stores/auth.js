@@ -15,6 +15,10 @@ export const useAuthStore = defineStore("auth", {
         user: JSON.parse(localStorage.getItem("user") || "null"),
         companySlug: localStorage.getItem("companySlug") || null,
     }),
+    getters: {
+        // 로그인 상태
+        isLoggedIn: (state) => !!state.accessToken && !!state.user
+    },
     actions: {
         async login(email, password) {
         const res = await loginApi(email, password);
