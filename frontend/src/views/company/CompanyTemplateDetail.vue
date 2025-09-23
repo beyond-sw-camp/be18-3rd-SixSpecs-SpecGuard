@@ -129,7 +129,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/api/axios'
 
@@ -147,9 +147,30 @@ const companyTemplateId = ref(route.params.companyTemplateId || route.query.comp
 
 // ---- Resume
 const resumeLoading = ref(false)
-const resumeErr = ref('')         // { [resumeId]: objectURL }
-const photoCache = ref({})
-function displayAvatar(a){ return photoCache.value[a.id] || a.avatarUrl || fallbackAvatar }
+const resumeErr = ref('')
+
+// image helper
+function backendOrigin() {
+const b = api.defaults.baseURL || '';
+try { return new URL(b).origin } catch { return b.replace(/\/api\/.*/,'') }
+}
+function absoluteUrl(path) {
+if (!path) return null
+if (/^https?:\/\//i.test(path)) return path
+const origin = backendOrigin().replace(/\/+$/,'')
+return origin + (path.startsWith('/') ? path : '/' + path)
+}
+function displayAvatar(a){ return a?.avatarUrl ? absoluteUrl(a.avatarUrl) : fallbackAvatar }
+
+async function fetchAvatarUrl(resumeId){
+const r = await api.get(`company/resumes/${resumeId}`, {
+headers: { 'X-Company-Slug': companySlug.value },
+validateStatus: s => s < 500
+})
+if (r.status !== 200) return null
+const root = r.data?.resume ?? r.data?.data ?? r.data ?? {}
+return root.basic?.profileImageUrl || root.profileImageUrl || null
+}
 
 // ---- State
 const template = ref(null)
@@ -173,41 +194,11 @@ const hasQuestions = computed(() =>
 )
 
 const fallbackAvatar = 'https://placehold.co/96x96/png'
-
-async function fetchPhotoBlob(resumeId){
-  const headers = { 'X-Company-Slug': companySlug.value }
-  const r = await api.get(`company/resumes/${resumeId}/photo`, {
-    headers, responseType: 'blob', validateStatus: s => s < 500
-  })
-  if (r.status === 200) return r.data
-  throw new Error('no-photo')
-}
-
-function putPhotoURL(resumeId, blob){
-  const next = URL.createObjectURL(blob)
-  const prev = photoCache.value[resumeId]
-  if (prev) URL.revokeObjectURL(prev)
-  photoCache.value = { ...photoCache.value, [resumeId]: next }
-}
-
-function prunePhotoCache(validIds){
-  const set = new Set(validIds)
-  for (const [id, url] of Object.entries(photoCache.value)){
-    if (!set.has(id)) { URL.revokeObjectURL(url); delete photoCache.value[id] }
-  }
-}
-
-async function hydratePhotos(candidates){
-  const targets = candidates.filter(a => !a.avatarUrl && !photoCache.value[a.id])
-  for (const a of targets){
-    try { putPhotoURL(a.id, await fetchPhotoBlob(a.id)) }
-    catch { /* 사진 없으면 건너뜀 */ }
-  }
-}
-
-onBeforeUnmount(() => {
-  for (const url of Object.values(photoCache.value)) URL.revokeObjectURL(url)
-})
+// const fallbackAvatar =
+//   'data:image/svg+xml;utf8,' +
+//   encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96">
+//   <rect width="100%" height="100%" fill="#e5e7eb"/><text x="50%" y="54%" text-anchor="middle"
+//   font-size="24" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">IMG</text></svg>`);
 
 // ---- API
 async function fetchTemplateDetail(id) {
@@ -384,10 +375,12 @@ async function fetchPercentile(resumeId){
         phoneMasked: x.phone || x.mobile || '010-XXXX-XXXX',
         score: x.score ?? x.consistencyScore ?? x.accuracyScore,
         verifyStatus: x.verifyStatus || x.status || 'COMPLETE',
-        avatarUrl: x.avatarUrl || x.profileImageUrl || null,
+        avatarUrl: x.profileImageUrl || x.avatarUrl || x.basic?.profileImageUrl || x.photoUrl || null,
         reviewers: x.reviewers || x.reviewersInfo || [],
         }));
     
+
+        console.log('profileImageUrl sample:', rows[0]?.profileImageUrl);
 
         applicants.value = reset ? mapped : applicants.value.concat(mapped)
         totalApplicants.value = totalFromServer
@@ -398,9 +391,10 @@ async function fetchPercentile(resumeId){
         a.percentile = p
         const fs = await fetchFinalScore(a.id)
         a.finalScore = fs
+        if (!a.avatarUrl) {
+            a.avatarUrl = await fetchAvatarUrl(a.id)
+            }
         }
-        prunePhotoCache(applicants.value.map(a => a.id))
-        hydratePhotos(mapped).catch(()=>{})
     } catch (e) {
         console.error('resumes/list error', {
         url: e?.config?.url, params: e?.config?.params, status: e?.response?.status, data: e?.response?.data
