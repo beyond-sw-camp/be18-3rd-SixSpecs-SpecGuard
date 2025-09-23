@@ -76,7 +76,7 @@ const routes = [
       { path: 'create/post/basic', name: 'CompanyCreatePostBasic', component: CompanyCreatePostBasic, props: true },
       { path: 'create/post/detail/:templateId', name: 'CompanyCreatePostDetail', component: CompanyCreatePostDetail, props: true },
       { path: 'evaluation/list', name: 'CompanyEvaluationWeightList', component: CompanyEvaluationWeightList, props: true },
-      { path: 'evaluation/list', name: 'CompanyEvaluationWeightUpdate', component: CompanyEvaluationWeightUpdate, propa: true},
+      { path: 'evaluation/update', name: 'CompanyEvaluationWeightUpdate', component: CompanyEvaluationWeightUpdate, props: true },
       { path: 'post/:companyTemplateId/weight', name: 'CompanySetEvaluationWeight', component: CompanySetEvaluationWeight, props: true },
       { path: 'post/:companyTemplateId/detail', name:'CompanyTemplateDetail', component:CompanyTemplateDetail, props: true },
       { path: 'post/:companyTemplateId/applicant/:resumeId', name: 'CompanyApplicantDetail', component:CompanyApplicantDetail, props: true },

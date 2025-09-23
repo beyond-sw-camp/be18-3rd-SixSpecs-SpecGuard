@@ -206,7 +206,7 @@ function logout() {
 function pageMove(name, extraParams = {}, query) {
     router.push({
         name,
-        params: { companySlug, ...extraParams },
+        params: { companySlug: companySlug.value, ...extraParams },
         query,
     })
 }
