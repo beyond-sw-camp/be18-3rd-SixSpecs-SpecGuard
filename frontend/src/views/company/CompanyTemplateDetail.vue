@@ -147,11 +147,9 @@ const companyTemplateId = ref(route.params.companyTemplateId || route.query.comp
 
 // ---- Resume
 const resumeLoading = ref(false)
-const resumeErr = ref('')
-const photoCache = ref({})            // { [resumeId]: objectURL }
-function displayAvatar(a){
-    return photoCache.value[a.id] || a.avatarUrl || fallbackAvatar
-}
+const resumeErr = ref('')         // { [resumeId]: objectURL }
+const photoCache = ref({})
+function displayAvatar(a){ return photoCache.value[a.id] || a.avatarUrl || fallbackAvatar }
 
 // ---- State
 const template = ref(null)
@@ -175,6 +173,41 @@ const hasQuestions = computed(() =>
 )
 
 const fallbackAvatar = 'https://placehold.co/96x96/png'
+
+async function fetchPhotoBlob(resumeId){
+  const headers = { 'X-Company-Slug': companySlug.value }
+  const r = await api.get(`company/resumes/${resumeId}/photo`, {
+    headers, responseType: 'blob', validateStatus: s => s < 500
+  })
+  if (r.status === 200) return r.data
+  throw new Error('no-photo')
+}
+
+function putPhotoURL(resumeId, blob){
+  const next = URL.createObjectURL(blob)
+  const prev = photoCache.value[resumeId]
+  if (prev) URL.revokeObjectURL(prev)
+  photoCache.value = { ...photoCache.value, [resumeId]: next }
+}
+
+function prunePhotoCache(validIds){
+  const set = new Set(validIds)
+  for (const [id, url] of Object.entries(photoCache.value)){
+    if (!set.has(id)) { URL.revokeObjectURL(url); delete photoCache.value[id] }
+  }
+}
+
+async function hydratePhotos(candidates){
+  const targets = candidates.filter(a => !a.avatarUrl && !photoCache.value[a.id])
+  for (const a of targets){
+    try { putPhotoURL(a.id, await fetchPhotoBlob(a.id)) }
+    catch { /* 사진 없으면 건너뜀 */ }
+  }
+}
+
+onBeforeUnmount(() => {
+  for (const url of Object.values(photoCache.value)) URL.revokeObjectURL(url)
+})
 
 // ---- API
 async function fetchTemplateDetail(id) {
@@ -203,62 +236,23 @@ async function fetchTemplateDetail(id) {
     }
     }
 
-    async function fetchPercentile(resumeId){
-    try {
-        const r = await api.get('validation/percentile', {
-        headers: { 'X-Company-Slug': companySlug.value },
-        params: { resumeId }
-        })
-        return r.data?.percentile ?? null     // 숫자 반환
-    } catch { return null }
-    }
-
-    async function fetchPhotoBlob(resumeId){
-    const headers = { 'X-Company-Slug': companySlug.value }
-    try {
-        const r = await api.get(`company/resumes/${resumeId}/photo`, { headers, responseType: 'blob', validateStatus:s=>s<500 })
-        if (r.status === 200) return r.data
-    } catch {}
-    const r2 = await api.get(`company/resumes/${resumeId}/photo`, { headers, responseType: 'blob', validateStatus:s=>s<500 })
-    if (r2.status === 200) return r2.data
-    throw new Error('no-photo')
-    }
-
-
-    function prunePhotoCache(validIds){
-    const set = new Set(validIds)
-    for (const [id, url] of Object.entries(photoCache.value)){
-        if (!set.has(id)) { URL.revokeObjectURL(url); delete photoCache.value[id] }
-    }
-    }
-
-    function putPhotoURL(resumeId, blob){
-    const next = URL.createObjectURL(blob)
-    const prev = photoCache.value[resumeId]
-    if (prev) URL.revokeObjectURL(prev)
-    photoCache.value = { ...photoCache.value, [resumeId]: next }
-    }
-
-    async function hydratePhotos(candidates){
-    const targets = candidates.filter(a => !a.avatarUrl && !photoCache.value[a.id])
-    for (const a of targets){
-        try {
-        const blob = await fetchPhotoBlob(a.id)
-        putPhotoURL(a.id, blob)
-        } catch (e) {
-        // 사진 없으면 무시. 필요시 로그
-        console.debug('photo miss', a.id, e?.response?.status)
-        }
-    }
-    }
-
-    function toggleQuestion(i) {
-        openIdx.value = openIdx.value === i ? null : i
-    }
-
-    async function fetchApplicants(reset = false) {
-    return fetchResumes({ reset })
-    }
+async function fetchPercentile(resumeId){
+  try {
+    const r = await api.post(
+      'validation/percentile',
+      { templateId: companyTemplateId.value, resumeId },
+      {
+        headers: { 'X-Company-Slug': companySlug.value, 'Content-Type': 'application/json' },
+        validateStatus: s => s < 500,  // 4xx도 예외로 던지지 않음
+      }
+    )
+    // 응답 래핑 형태 대응
+    const d = r.data?.data ?? r.data ?? {}
+    return d.percentile ?? null
+  } catch {
+    return null
+  }
+}
 
     
 
@@ -289,14 +283,14 @@ async function fetchTemplateDetail(id) {
     if (!isUuid) { error.value = '잘못된 이력서 ID'; return }
 
     const url = 'validation/calculate'  // 상대경로
-    const body = { resumeIds: [id] }
+    const body = { resumeId: id }
     const headers = { 'X-Company-Slug': companySlug.value, 'Content-Type': 'application/json' }
 
     calcRunning.value = true
     try {
         console.debug('POST', url, body, headers)
         await api.post(url, body, { headers, validateStatus:s=>s<500 })
-        await fetchApplicants(true)
+        await fetchResumes({ reset:true })
     } catch (e) {
         console.error('calculate error', e?.response?.data || e)
         error.value = e?.response?.data?.message || e?.message || '정합성 계산 실패'
@@ -342,11 +336,6 @@ async function fetchTemplateDetail(id) {
     }
     }
 
-
-
-
-
-    function ping() {}
     function dday(endIso){ if(!endIso) return '-'; const e=new Date(endIso), t=new Date(); const ms=e.setHours(0,0,0,0)-t.setHours(0,0,0,0); const d=Math.ceil(ms/86400000); return d>0?d:0 }
     function fmtDateTime(iso){ return iso?new Date(iso).toLocaleString():'-' }
     function fmtScore(s){ return s==null?'-':Number(s).toFixed(2) }
@@ -366,7 +355,7 @@ async function fetchTemplateDetail(id) {
         if (reset) { page.value = 0; applicants.value = [] }
 
         const res = await api.get('company/resumes/list', {
-        headers: { Accept: 'application/json' },
+        headers: { Accept: 'application/json', 'X-Company-Slug': companySlug.value },
         params: { templateId: companyTemplateId.value, page: page.value, size: pageSize, sort: 'createdAt,desc' },
         paramsSerializer: { indexes: null },
         });
@@ -423,19 +412,11 @@ async function fetchTemplateDetail(id) {
     
 }
 
-onBeforeUnmount(() => {
-  // 객체 URL 해제
-  for (const k of Object.keys(photoCache.value)){
-    URL.revokeObjectURL(photoCache.value[k])
-  }
-})
-
 onMounted(async () => {
     try {
         if (!companyTemplateId.value) throw new Error('찾을 수 없는 채용공고 입니다.')
         template.value = await fetchTemplateDetail(companyTemplateId.value)
             await fetchResumes({ reset:true })
-            prunePhotoCache(applicants.value.map(a => a.id))
         console.debug('questions length =', (template.value.essayQuestions||[]).length, template.value.essayQuestions)
     } catch (e) {
         error.value = e?.response?.data?.message || e.message || '조회 실패'
@@ -451,6 +432,5 @@ watch(() => route.fullPath, async () => {
     companyTemplateId.value = next
     template.value = await fetchTemplateDetail(companyTemplateId.value)
     await fetchResumes({ reset:true })
-    prunePhotoCache(applicants.value.map(a => a.id))
 })
 </script>

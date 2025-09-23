@@ -378,26 +378,25 @@ async function fetchResume(id = resumeId) {
   const root = r.data?.resume ?? r.data?.data ?? r.data ?? {}
   const gitMeta = r.data?.gitMetadata ?? null
 
-  let finalScore = null, percentile = null
-  if (hasAuth.value) {
-    try {
-      const [fs, pct] = await Promise.all([
-        api.get(`validation/${id}/final`, {
-          __skipAuthRedirect: true,
-          validateStatus: () => true
-        }),
-        api.get(`validation/percentile`, {
-          params: { resumeId: id },
-          __skipAuthRedirect: true,
-          validateStatus: () => true
-        })
-      ])
-      finalScore = fs.status===200
-        ? ((fs.data?.data ?? fs.data ?? {}).finalScore ?? (fs.data?.data ?? fs.data ?? {}).score ?? null)
-        : null
-      percentile = pct.status===200 ? (pct.data?.percentile ?? null) : null
-    } catch {}
-  }
+let finalScore = null, percentile = null
+if (hasAuth.value) {
+  try {
+    const [fs, pct] = await Promise.all([
+      api.get(`validation/${id}/final`, {
+        __skipAuthRedirect: true,
+        validateStatus: () => true
+      }),
+      api.post('validation/percentile',
+        { templateId: companyTemplateId, resumeId: id },
+        { __skipAuthRedirect: true, headers: { 'Content-Type': 'application/json' }, validateStatus: () => true }
+      )
+    ])
+    finalScore = fs.status===200
+      ? ((fs.data?.data ?? fs.data ?? {}).finalScore ?? (fs.data?.data ?? fs.data ?? {}).score ?? null)
+      : null
+    percentile = pct.status===200 ? ((pct.data?.data ?? pct.data ?? {}).percentile ?? null) : null
+  } catch {}
+}
 
   resume.value = normalizeFromSwagger(root, { finalScore, percentile, gitMetadata: gitMeta })
 }

@@ -96,7 +96,7 @@ const goNaverLogin = () => {
     window.location.href = `${API_URL}/oauth2/authorization/naver?inviteToken=${token}`;
 };
 const goGoogleLogin = () => {
-  window.location.href = `${API_URL}/oauth2/authorization/google?inviteToken=${token}`;
+    window.location.href = `${API_URL}/oauth2/authorization/google?inviteToken=${token}`;
 };
 </script>
 
