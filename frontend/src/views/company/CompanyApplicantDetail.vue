@@ -235,6 +235,7 @@
     </div>
     </template>
 
+<!-- views/ApplicantDetail.vue -->
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -257,8 +258,8 @@ const filter = ref({ dept: '', role: '', careerType: '' })
 const comment = ref('')
 const fallbackAvatar = 'https://placehold.co/96x96/png'
 
+// links 계산
 const portfolioLinks = computed(() => {
-  // 1) 백엔드가 배열로 주는 경우 우선 사용 (예: [{ linkType, url, label? }])
   const rawArray = Array.isArray(resume.value?.linksList)
     ? resume.value.linksList
     : Array.isArray(resume.value?.links)
@@ -275,7 +276,6 @@ const portfolioLinks = computed(() => {
 
   if (arr.length) return arr
 
-  // 2) 객체 형태(github/notion/velog/website 등)에서 비어있지 않은 것만
   const l = resume.value?.links || {}
   const labelMap = { github: 'GitHub', notion: 'Notion', velog: 'Velog', blog: 'Blog', website: 'Website' }
 
@@ -289,8 +289,6 @@ const portfolioLinks = computed(() => {
 })
 
 const headers = computed(() => ({ 'X-Company-Slug': companySlug, Accept: 'application/json' }))
-const noCompanyHeaders = { Accept: 'application/json' }
-// 전역 토큰 존재 여부
 const hasAuth = computed(() =>
   !!(api.defaults.headers?.common?.Authorization || api.defaults.headers?.Authorization)
 )
@@ -310,12 +308,16 @@ function normalizeFromSwagger(src = {}, extra = {}) {
     return m
   }, {})
 
-  // 학력 분해
   const eduList = Array.isArray(src.educations) ? src.educations : []
-  const high = eduList.find(e => (e.schoolType||'').toUpperCase()==='HIGH' || (e.degree||'').toUpperCase()==='HIGH_SCHOOL') || {}
-  const college = eduList.find(e => (e.schoolType||'').toUpperCase()!=='HIGH' && (e.degree||'').toUpperCase()!=='HIGH_SCHOOL') || {}
+  const high = eduList.find(e =>
+    (e.schoolType||'').toUpperCase()==='HIGH' ||
+    (e.degree||'').toUpperCase()==='HIGH_SCHOOL'
+  ) || {}
+  const college = eduList.find(e =>
+    (e.schoolType||'').toUpperCase()!=='HIGH' &&
+    (e.degree||'').toUpperCase()!=='HIGH_SCHOOL'
+  ) || {}
 
-  // 자소서: fields(id, fieldName) ↔ templateResponses(fieldId, answer)
   const fieldNameById = Object.fromEntries((src.fields||[]).map(f => [f.id, f.fieldName || f.title || '']))
   const essays = (src.templateResponses || []).map(tr => ({
     question: fieldNameById[tr.fieldId] || '',
@@ -362,35 +364,42 @@ function normalizeFromSwagger(src = {}, extra = {}) {
     essays,
     essays2: [],
     summary: null,
+    gitMeta: extra.gitMetadata || null
   }
 }
 
 async function fetchResume(id = resumeId) {
-  const r = await api.get(`company/resumes/${id}`)
+  const r = await api.get(`company/resumes/${id}`, {
+    headers: { 'X-Company-Slug': companySlug },
+    validateStatus: s => s < 500,
+  })
   if (r.status !== 200) { resume.value = null; return }
 
-  const root = r.data?.data ?? r.data ?? {}
+  const root = r.data?.resume ?? r.data?.data ?? r.data ?? {}
+  const gitMeta = r.data?.gitMetadata ?? null
 
   let finalScore = null, percentile = null
- if (hasAuth.value) {
-   try {
-     const [fs, pct] = await Promise.all([
-       api.get(`validation/${id}/final`, {
-        __skipAuthRedirect: true,
-        validateStatus: () => true
-      }),
-      api.get(`validation/percentile`, {
-        params: { resumeId: id },
-        __skipAuthRedirect: true,
-        validateStatus: () => true
-      })
-     ])
-     finalScore = fs.status===200 ? ((fs.data?.data ?? fs.data ?? {}).finalScore ?? (fs.data?.data ?? fs.data ?? {}).score ?? null) : null
-     percentile = pct.status===200 ? (pct.data?.percentile ?? null) : null
-   } catch (e) { /* 401 등은 조용히 무시 */ }
- }
+  if (hasAuth.value) {
+    try {
+      const [fs, pct] = await Promise.all([
+        api.get(`validation/${id}/final`, {
+          __skipAuthRedirect: true,
+          validateStatus: () => true
+        }),
+        api.get(`validation/percentile`, {
+          params: { resumeId: id },
+          __skipAuthRedirect: true,
+          validateStatus: () => true
+        })
+      ])
+      finalScore = fs.status===200
+        ? ((fs.data?.data ?? fs.data ?? {}).finalScore ?? (fs.data?.data ?? fs.data ?? {}).score ?? null)
+        : null
+      percentile = pct.status===200 ? (pct.data?.percentile ?? null) : null
+    } catch {}
+  }
 
-  resume.value = normalizeFromSwagger(root, { finalScore, percentile })
+  resume.value = normalizeFromSwagger(root, { finalScore, percentile, gitMetadata: gitMeta })
 }
 
 async function fetchList() {
@@ -427,53 +436,10 @@ async function saveComment() {
   comment.value = ''
 }
 
-// basic/detail 병합
-function normalizeResume(basic = {}, detail = {}, extra = {}) {
-  const b = basic, d = detail
-  return {
-    id: b.id || d.id,
-    name: b.name || d.name || '-',
-    avatarUrl: b.avatarUrl || d.avatarUrl || null,
-    careerType: (b.yearsOfExperience ?? d.yearsOfExperience ?? 0) > 0 ? '경력' : '신입',
-    univ: d.universityName || b.universityName || b.univ || '-',
-    major: d.major || b.major || '',
-    gpa: d.gpa ?? b.gpa ?? null,
-    gpaScale: d.gpaScale ?? b.gpaScale ?? 4.5,
-    matchScore: extra?.finalScore ?? d.finalScore ?? b.finalScore ?? null,
-    rankTop: extra?.percentile != null ? (100 - extra.percentile) : null,
-    analyzedAt: d.analyzedAt || b.analyzedAt || null,
-    analysis: {
-      integrity: d.analysis?.integrity || b.analysis?.integrity || null,
-      insight:   d.analysis?.insight   || b.analysis?.insight   || null,
-      overall:   d.analysis?.overall   || b.analysis?.overall   || null,
-    },
-    scores: d.scores || b.scores || {},
-    details: d.details || {},
-    links: {
-      github: d.github || b.github || '',
-      notion: d.notion || b.notion || '',
-      velog:  d.velog  || b.velog  || ''
-    },
-    certs: (d.certificates || b.certs || []).map(c => ({ name: c.name || c.title || '', no: c.number || c.no || '' })),
-    edu: {
-      college: {
-        name: d.universityName || b.universityName || b.univ || '',
-        major: d.major || b.major || '',
-        period: (d.univStart && d.univEnd) ? `${d.univStart} ~ ${d.univEnd}` : ''
-      },
-      high: {
-        name: d.highSchoolName || '',
-        period: (d.highStart && d.highEnd) ? `${d.highStart} ~ ${d.highEnd}` : ''
-      }
-    },
-    essays: d.essays || b.essays || [],
-    essays2: d.essays2 || b.essays2 || [],
-    summary: d.summary || b.summary || null,
-  }
-}
+// utils
+function fmtScore(s) { return s == null ? '-' : Number(s).toFixed(2) }
+function fmtDateTime(iso) { return iso ? new Date(iso).toLocaleString() : '-' }
 
-
-// 우측 패널
 const filteredList = computed(() => list.value)
 
 function goApplicant(id) {
@@ -482,12 +448,8 @@ function goApplicant(id) {
     params: { companySlug, companyTemplateId, resumeId: String(id) }
   })
 }
-
-// utils
-function fmtScore(s) { return s == null ? '-' : Number(s).toFixed(2) }
-function fmtDateTime(iso) { return iso ? new Date(iso).toLocaleString() : '-' }
-
 </script>
+
 
 <style scoped>
 
