@@ -175,8 +175,7 @@ const isOwner      = computed(() => authStore.role === 'OWNER' || authStore.isOw
 
 onMounted(async () => {
    // 1) 기본값: 캐시 → authStore
-   const cached = sessionStorage.getItem('specguard.managerName')
-   userName.value = cached || authStore?.user?.name || '사용자'
+   userName.value = authStore?.user?.name || '사용자'
 
    // 2) 유효한 slug 확보
    const slug = companySlug.value || route.params.companySlug
@@ -185,17 +184,12 @@ onMounted(async () => {
    // 3) 새 응답 스키마 대응
    try {
      const { data } = await api.get(`/company/${slug}/users/me`)
-     const { company, user, employees } = data ?? {}
-     const empSelf = employees?.find(e => user?.id && e.id === user.id)
-     const name =
-       (isOwner.value ? company?.managerName : user?.name) ||
-       empSelf?.name ||
-       company?.managerName ||
-       user?.name
+    const { user } = data ?? {}
+    const name = user?.name || authStore?.user?.name
 
      if (name) {
        userName.value = name
-       sessionStorage.setItem('specguard.managerName', name)
+       sessionStorage.setItem('specguard.ownerName', name)
      }
    } catch (e) {
      console.debug('[SG]/me fetch failed', e?.response?.status, e?.message)

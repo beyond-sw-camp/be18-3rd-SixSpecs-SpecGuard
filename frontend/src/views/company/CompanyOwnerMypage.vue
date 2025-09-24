@@ -63,7 +63,7 @@
                 <h3 class="mt-6 text-xl font-extrabold">담당자 정보</h3>
 
                 <label class="mt-4 block text-sm font-semibold">담당자 명 *</label>
-                <input v-model.trim="form.managerName" required
+                <input v-model.trim="form.managerName" required :readonly="true"
                         class="mt-2 w-full max-w-md rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
 
                 <label class="mt-5 block text-sm font-semibold">대표 연락처 *</label>
@@ -256,13 +256,12 @@ function onCancel() {
 
 async function nextStep() {
   if (!isValid.value || !companySlug.value) return;
-
-const userPayload = { name: sanitize(form.username) }
 const companyPayload = {
-name:          sanitize(form.companyName),
+name:          sanitize(form.username),
 managerName:   sanitize(form.managerName),
 contactEmail:  sanitize(form.managerEmail),
 contactMobile: sanitize(form.managerPhone),
+managerPostion: sanitize(form.managerPosition)
 }
 // 빈 문자열 제거
 Object.keys(companyPayload).forEach(k => {
@@ -271,8 +270,8 @@ if (!companyPayload[k]) delete companyPayload[k]
 
 try {
 // 1) 유저 이름 먼저
-const uRes = await api.patch(`/company/${companySlug.value}/users/me`, userPayload)
-form.username = uRes.data?.name ?? userPayload.name ?? form.username
+const uRes = await api.patch(`/company/${companySlug.value}`, companyPayload)
+form.username = uRes.data?.name ?? companyPayload.name ?? form.username
 } catch (e) {
 console.error('USER PATCH 실패', e?.response?.status, e?.response?.data || e?.message);
 alert('사용자 정보 수정 실패');
@@ -287,6 +286,7 @@ form.companyName  = body.name         ?? companyPayload.name         ?? form.com
 form.managerName  = body.managerName  ?? companyPayload.managerName  ?? form.managerName
 form.managerEmail = body.contactEmail ?? companyPayload.contactEmail ?? form.managerEmail
 form.managerPhone = body.contactMobile?? companyPayload.contactMobile?? form.managerPhone
+form.managerPosition = body.managerPosition?? companyPayload.managerPosition?? form.managerPosition
 alert('수정되었습니다.');
 } catch (e) {
 console.error('COMPANY PATCH 실패', e?.response?.status, e?.response?.data || e?.message);
