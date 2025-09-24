@@ -249,13 +249,6 @@ const canProceed = computed(() => isValid.value && emailVerified.value)
         } finally { ui.confirming=false }
     }
 
-    async function loadEmailStatus() {
-        if (!isEmail(form.email)) { emailVerified.value = false; return }
-            try {
-                const r = await fetch(`${API}/verify/company/status?email=${encodeURIComponent(form.email)}`)
-                emailVerified.value = r.ok && (await r.json()).verified === true
-            } catch { emailVerified.value = false }
-    }
 
 watch(() => form.email, () => { emailVerified.value = false; form.code=''; })
 
