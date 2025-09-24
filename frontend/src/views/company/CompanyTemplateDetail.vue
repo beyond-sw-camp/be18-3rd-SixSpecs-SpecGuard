@@ -118,7 +118,7 @@
             <h4 class="text-xl font-extrabold mb-3">자소서 문항</h4>
             <div v-if="hasQuestions" class="space-y-2">
                 <div v-for="(q, idx) in (template.essayQuestions || [])" :key="q.id || idx" class="rounded-lg border">
-                <button class="w-full px-4 py-2 text-left font-semibold flex items-center justify-between"
+                <button type="button" class="w-full px-4 py-2 text-left font-semibold flex items-center justify-between"
                         @click="toggleQuestion(idx)">
                     <span>{{ idx + 1 }}번 문항</span>
                     <span class="text-sm text-slate-500">{{ openIdx === idx ? '닫기' : '보기' }}</span>
@@ -196,11 +196,18 @@ const hasMore = ref(false)
 const error = ref('')
 const loading = ref(true)
 
+// const openIdx = ref(null)
 const openIdx = ref(null)
+
+function toggleQuestion(idx) {
+    openIdx.value = openIdx.value === idx ? null : idx
+}
 const hasQuestions = computed(() =>
     Array.isArray(template.value?.essayQuestions) &&
     template.value.essayQuestions.length > 0
 )
+
+
 
 const fallbackAvatar = 'https://placehold.co/96x96/png'
 
