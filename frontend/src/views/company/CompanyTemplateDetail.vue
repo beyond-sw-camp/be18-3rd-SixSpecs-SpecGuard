@@ -13,8 +13,14 @@
                 지원자 수 : <span class="font-semibold">{{ totalApplicants }}</span>
                 </p>
             </div>
-            <div v-if="template" class="text-2xl font-extrabold pr-2 pt-1">D-{{ dday(template.endAt) }}</div>
+            <!--<div v-if="template" class="text-2xl font-extrabold pr-2 pt-1">D-{{ dday(template.endAt) }}</div>-->
+            <!--D-X 줄바꿈된 거, 이어주기.-->
+            <div v-if="template" 
+            class="text-2xl font-extrabold pr-2 pt-1 whitespace-nowrap">
+            D-{{ dday(template.endAt) }}
             </div>
+        
+        </div>
         </header>
 
         <!-- Applicants -->
@@ -36,7 +42,7 @@
                     class="w-24 h-24 rounded-2xl object-cover ring-1 ring-slate-200" />
                 <div class="flex-1">
                     <div class="flex items-center gap-2">
-                    <h3 class="text-2xl font-extrabold">{{ a.name }}</h3>
+                    <h3 class="text-2xl font-extrabold whitespace-nowrap">{{ a.name }}</h3>
                     <span class="inline-flex items-center text-xs px-2 py-0.5 rounded-full border"
                             :class="statusChip(a.verifyStatus).cls">
                         {{ statusChip(a.verifyStatus).label }}
@@ -58,10 +64,20 @@
                     <p class="mt-1 text-slate-700">
                     정합성 점수: <span class="font-extrabold">{{ fmtScore(a.finalScore) }}</span>
                     </p>
-                    <p class="mt-1 text-slate-700">
+                    
+                    <!--<p class="mt-1 text-slate-700">
                     이메일: <span class="font-mono">{{ a.email }}</span>
                     <span class="ml-3">연락처: {{ a.phoneMasked || '010-XXXX-XXXX' }}</span>
+                    </p>-->
+
+                    <!--이메일과 연락처 줄 바꿈 했어영-->
+                    <p class="mt-1 text-slate-700">
+                    이메일: <span class="font-mono">{{ a.email }}</span><br>
+                    연락처: <span>{{ a.phoneMasked || '010-XXXX-XXXX' }}</span>
                     </p>
+
+
+
                     <div class="mt-3 flex flex-wrap gap-2">
                     <button class="rounded-md border bg-white px-3 py-1 hover:bg-slate-50" @click="openApplicant(a.id)">상세 보기</button>
                     <button class="rounded-md border bg-white px-3 py-1 hover:bg-slate-50"
