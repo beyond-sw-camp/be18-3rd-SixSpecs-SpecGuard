@@ -10,16 +10,20 @@
                 <!-- 계정 정보 -->
                 <h2 class="text-2xl font-extrabold tracking-tight">계정 정보</h2>
 
-                <label class="mt-6 block text-sm font-semibold">이름 *</label>
-                <input v-model.trim="form.username" required
-                        class="mt-2 w-full max-w-md rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
-                <p v-if="errors.username" class="mt-1 text-xs text-red-600">{{ errors.username }}</p>
+                <div class="space-y-2">
+                <label class="block text-sm font-semibold">이름 *</label>
+                <input class="w-full max-w-md rounded-md border bg-slate-100 px-4 py-2 outline-none" v-model.trim="form.username" required />
+                <p v-if="errors.username" class="text-xs text-red-600">{{ errors.username }}</p>
+                </div>
 
-                <label class="mt-5 block text-sm font-semibold">전화번호 *</label>
-                <input v-model.trim="form.phone" inputmode="tel" required :readonly="true"
-                        class="mt-2 w-full max-w-md rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
-                <p v-if="errors.phone" class="mt-1 text-xs text-red-600">{{ errors.phone }}</p>
+                <div class="space-y-2">
+                <label class="block text-sm font-semibold">전화번호 *</label>
+                <input class="w-full max-w-md rounded-md border bg-slate-100 px-4 py-2 outline-none"
+                        v-model.trim="form.phone" inputmode="tel" required :readonly="true" />
+                        <p v-if="errors.phone" class="mt-1 text-xs text-red-600">{{ errors.phone }}</p>
+                </div>
 
+                <div class="space-y-2">
                 <label class="mt-5 block text-sm font-semibold">이메일 *</label>
                 <div class="mt-2 flex gap-3 max-w-md">
                     <input v-model.trim="form.email" type="email" required :readonly="true"
@@ -29,9 +33,11 @@
                     {{ ui.sending ? '요청 중' : '인증 번호 요청' }}
                     </button>
                 </div>
+                </div>
                 <p v-if="errors.email" class="mt-1 text-xs text-red-600">{{ errors.email }}</p>
 
                 <!-- 인증번호 -->
+                <div class="space-y-2">
                 <label class="mt-5 block text-sm font-semibold">인증번호</label>
                 <div class="mt-2 grid grid-cols-[1fr_auto] items-center gap-3 max-w-md">
                 <input
@@ -63,6 +69,7 @@
                 </div>
                 </div>
                 </div>
+                </div>
                 <!-- 모달은 루트로 텔레포트 -->
                 <teleport to="body">
                 <div v-if="showPwdModal" class="fixed inset-0 z-50 flex items-center justify-center">
@@ -90,6 +97,7 @@
 
                 <!-- 기업/담당자 정보 -->
                 <div>
+                    <br>
                 <h2 class="text-2xl font-extrabold tracking-tight">기업 정보</h2>
 
                 <label class="mt-6 block text-sm font-semibold">기업명 *</label>
@@ -115,6 +123,7 @@
                         class="mt-2 w-full max-w-md rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
                 </div>
 
+                <br>
                 <!-- 버튼 영역 -->
                 <div class="md:col-span-2 flex items-center justify-between">
                 <button type="button"
@@ -382,6 +391,23 @@ async function changePassword() {
   }
 }
 
+async function onDelete() {
+    if (!emailVerified.value) { alert('이메일 인증을 먼저 완료해주세요.'); return }
+    if (!companySlug.value)   { alert('회사 식별자가 없습니다.'); return }
+    if (!confirm('회사를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return
+
+    try {
+        await api.delete(`/company/${companySlug.value}`)
+        alert('회사가 성공적으로 삭제되었습니다.')
+        try { auth.logout?.() } catch {}
+        router.push({ name: 'CompanyLogin' })
+    } catch (e) {
+        const status = e?.response?.status
+        const msg = e?.response?.data?.message || '삭제 실패'
+        if (status === 403) alert('권한이 없습니다. OWNER만 삭제할 수 있습니다.')
+        else alert(msg)
+    }
+}
 
 console.log('API=', API)
 </script>
