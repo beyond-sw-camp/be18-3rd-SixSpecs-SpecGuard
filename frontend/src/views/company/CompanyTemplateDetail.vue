@@ -42,11 +42,19 @@
                         {{ statusChip(a.verifyStatus).label }}
                     </span>
                     </div>
-                    <p class="mt-1 text-slate-700">검증 상태: <span class="font-semibold">완료(미구현)</span>
+                    <p class="mt-1 text-slate-700">
+                    검증 상태:
+                    <span
+                        class="inline-flex items-center text-xs px-2 py-0.5 rounded-full border"
+                        :class="validationState(a).cls"
+                    >
+                        {{ validationState(a).label }}
+                    </span>
                     <span v-if="a.percentile != null" class="ml-2 text-sm text-slate-500">
                         상위 {{ 100 - a.percentile }}%
                     </span>
                     </p>
+
                     <p class="mt-1 text-slate-700">
                     정합성 점수: <span class="font-extrabold">{{ fmtScore(a.finalScore) }}</span>
                     </p>
@@ -59,8 +67,9 @@
                     <button class="rounded-md border bg-white px-3 py-1 hover:bg-slate-50"
                             :disabled="calcRunning"
                             @click="verify(a.id)">
-                    {{ calcRunning ? '계산 중' : '정합성 검증하기' }}
+                    {{ calcRunning ? '계산 중' : (a.finalScore != null ? '다시 검증' : '정합성 검증하기') }}
                     </button>
+
                     </div>
                 </div>
                 </div>
@@ -129,7 +138,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/api/axios'
 
@@ -148,9 +157,28 @@ const companyTemplateId = ref(route.params.companyTemplateId || route.query.comp
 // ---- Resume
 const resumeLoading = ref(false)
 const resumeErr = ref('')
-const photoCache = ref({})            // { [resumeId]: objectURL }
-function displayAvatar(a){
-    return photoCache.value[a.id] || a.avatarUrl || fallbackAvatar
+
+// image helper
+function backendOrigin() {
+const b = api.defaults.baseURL || '';
+try { return new URL(b).origin } catch { return b.replace(/\/api\/.*/,'') }
+}
+function absoluteUrl(path) {
+if (!path) return null
+if (/^https?:\/\//i.test(path)) return path
+const origin = backendOrigin().replace(/\/+$/,'')
+return origin + (path.startsWith('/') ? path : '/' + path)
+}
+function displayAvatar(a){ return a?.avatarUrl ? absoluteUrl(a.avatarUrl) : fallbackAvatar }
+
+async function fetchAvatarUrl(resumeId){
+const r = await api.get(`company/resumes/${resumeId}`, {
+headers: { 'X-Company-Slug': companySlug.value },
+validateStatus: s => s < 500
+})
+if (r.status !== 200) return null
+const root = r.data?.data?.resume ?? {}
+return root.basic?.profileImageUrl || root.profileImageUrl || null
 }
 
 // ---- State
@@ -175,6 +203,12 @@ const hasQuestions = computed(() =>
 )
 
 const fallbackAvatar = 'https://placehold.co/96x96/png'
+
+function validationState(a){
+    return a?.finalScore != null
+    ? { label:'완료', cls:'bg-emerald-100 text-emerald-700 border-emerald-200' }
+    : { label:'미완료', cls:'bg-slate-100 text-slate-600 border-slate-200' }
+}
 
 // ---- API
 async function fetchTemplateDetail(id) {
@@ -203,62 +237,23 @@ async function fetchTemplateDetail(id) {
     }
     }
 
-    async function fetchPercentile(resumeId){
-    try {
-        const r = await api.get('validation/percentile', {
-        headers: { 'X-Company-Slug': companySlug.value },
-        params: { resumeId }
-        })
-        return r.data?.percentile ?? null     // 숫자 반환
-    } catch { return null }
-    }
-
-    async function fetchPhotoBlob(resumeId){
-    const headers = { 'X-Company-Slug': companySlug.value }
-    try {
-        const r = await api.get(`company/resumes/${resumeId}/photo`, { headers, responseType: 'blob', validateStatus:s=>s<500 })
-        if (r.status === 200) return r.data
-    } catch {}
-    const r2 = await api.get(`company/resumes/${resumeId}/photo`, { headers, responseType: 'blob', validateStatus:s=>s<500 })
-    if (r2.status === 200) return r2.data
-    throw new Error('no-photo')
-    }
-
-
-    function prunePhotoCache(validIds){
-    const set = new Set(validIds)
-    for (const [id, url] of Object.entries(photoCache.value)){
-        if (!set.has(id)) { URL.revokeObjectURL(url); delete photoCache.value[id] }
-    }
-    }
-
-    function putPhotoURL(resumeId, blob){
-    const next = URL.createObjectURL(blob)
-    const prev = photoCache.value[resumeId]
-    if (prev) URL.revokeObjectURL(prev)
-    photoCache.value = { ...photoCache.value, [resumeId]: next }
-    }
-
-    async function hydratePhotos(candidates){
-    const targets = candidates.filter(a => !a.avatarUrl && !photoCache.value[a.id])
-    for (const a of targets){
-        try {
-        const blob = await fetchPhotoBlob(a.id)
-        putPhotoURL(a.id, blob)
-        } catch (e) {
-        // 사진 없으면 무시. 필요시 로그
-        console.debug('photo miss', a.id, e?.response?.status)
-        }
-    }
-    }
-
-    function toggleQuestion(i) {
-        openIdx.value = openIdx.value === i ? null : i
-    }
-
-    async function fetchApplicants(reset = false) {
-    return fetchResumes({ reset })
-    }
+async function fetchPercentile(resumeId){
+  try {
+    const r = await api.post(
+      'validation/percentile',
+      { templateId: companyTemplateId.value, resumeId },
+      {
+        headers: { 'X-Company-Slug': companySlug.value, 'Content-Type': 'application/json' },
+        validateStatus: s => s < 500,  // 4xx도 예외로 던지지 않음
+      }
+    )
+    // 응답 래핑 형태 대응
+    const d = r.data?.data ?? r.data ?? {}
+    return d.percentile ?? null
+  } catch {
+    return null
+  }
+}
 
     
 
@@ -289,14 +284,14 @@ async function fetchTemplateDetail(id) {
     if (!isUuid) { error.value = '잘못된 이력서 ID'; return }
 
     const url = 'validation/calculate'  // 상대경로
-    const body = { resumeIds: [id] }
+    const body = { resumeId: id }
     const headers = { 'X-Company-Slug': companySlug.value, 'Content-Type': 'application/json' }
 
     calcRunning.value = true
     try {
         console.debug('POST', url, body, headers)
         await api.post(url, body, { headers, validateStatus:s=>s<500 })
-        await fetchApplicants(true)
+        await fetchResumes({ reset:true })
     } catch (e) {
         console.error('calculate error', e?.response?.data || e)
         error.value = e?.response?.data?.message || e?.message || '정합성 계산 실패'
@@ -342,11 +337,6 @@ async function fetchTemplateDetail(id) {
     }
     }
 
-
-
-
-
-    function ping() {}
     function dday(endIso){ if(!endIso) return '-'; const e=new Date(endIso), t=new Date(); const ms=e.setHours(0,0,0,0)-t.setHours(0,0,0,0); const d=Math.ceil(ms/86400000); return d>0?d:0 }
     function fmtDateTime(iso){ return iso?new Date(iso).toLocaleString():'-' }
     function fmtScore(s){ return s==null?'-':Number(s).toFixed(2) }
@@ -366,7 +356,7 @@ async function fetchTemplateDetail(id) {
         if (reset) { page.value = 0; applicants.value = [] }
 
         const res = await api.get('company/resumes/list', {
-        headers: { Accept: 'application/json' },
+        headers: { Accept: 'application/json', 'X-Company-Slug': companySlug.value },
         params: { templateId: companyTemplateId.value, page: page.value, size: pageSize, sort: 'createdAt,desc' },
         paramsSerializer: { indexes: null },
         });
@@ -395,10 +385,12 @@ async function fetchTemplateDetail(id) {
         phoneMasked: x.phone || x.mobile || '010-XXXX-XXXX',
         score: x.score ?? x.consistencyScore ?? x.accuracyScore,
         verifyStatus: x.verifyStatus || x.status || 'COMPLETE',
-        avatarUrl: x.avatarUrl || x.profileImageUrl || null,
+        avatarUrl: x.profileImageUrl || x.avatarUrl || x.basic?.profileImageUrl || x.photoUrl || null,
         reviewers: x.reviewers || x.reviewersInfo || [],
         }));
     
+
+        console.log('profileImageUrl sample:', rows[0]?.profileImageUrl);
 
         applicants.value = reset ? mapped : applicants.value.concat(mapped)
         totalApplicants.value = totalFromServer
@@ -409,9 +401,10 @@ async function fetchTemplateDetail(id) {
         a.percentile = p
         const fs = await fetchFinalScore(a.id)
         a.finalScore = fs
+        if (!a.avatarUrl) {
+            a.avatarUrl = await fetchAvatarUrl(a.id)
+            }
         }
-        prunePhotoCache(applicants.value.map(a => a.id))
-        hydratePhotos(mapped).catch(()=>{})
     } catch (e) {
         console.error('resumes/list error', {
         url: e?.config?.url, params: e?.config?.params, status: e?.response?.status, data: e?.response?.data
@@ -423,19 +416,11 @@ async function fetchTemplateDetail(id) {
     
 }
 
-onBeforeUnmount(() => {
-  // 객체 URL 해제
-  for (const k of Object.keys(photoCache.value)){
-    URL.revokeObjectURL(photoCache.value[k])
-  }
-})
-
 onMounted(async () => {
     try {
         if (!companyTemplateId.value) throw new Error('찾을 수 없는 채용공고 입니다.')
         template.value = await fetchTemplateDetail(companyTemplateId.value)
             await fetchResumes({ reset:true })
-            prunePhotoCache(applicants.value.map(a => a.id))
         console.debug('questions length =', (template.value.essayQuestions||[]).length, template.value.essayQuestions)
     } catch (e) {
         error.value = e?.response?.data?.message || e.message || '조회 실패'
@@ -451,6 +436,5 @@ watch(() => route.fullPath, async () => {
     companyTemplateId.value = next
     template.value = await fetchTemplateDetail(companyTemplateId.value)
     await fetchResumes({ reset:true })
-    prunePhotoCache(applicants.value.map(a => a.id))
 })
 </script>
