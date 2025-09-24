@@ -5,10 +5,11 @@
             <div class="flex items-end gap-3">
             
         <RouterLink 
-        v-if="companySlug"
-        :to="`/c/${companySlug}/dashboard`"
-        class="text-2xl font-extrabold tracking-tight hover:text-amber-400 transition-colors">
-        SPECGUARD
+            :to="authStore.isLoggedIn && companySlug
+                ? `/c/${companySlug}/dashboard` 
+                : '/'"
+            class="text-2xl font-extrabold tracking-tight hover:text-amber-400 transition-colors">
+            SPECGUARD
         </RouterLink>
 
 
@@ -168,6 +169,7 @@ import api from '@/api/axios';
 const authStore = useAuthStore();
 const router = useRouter()
 const route = useRoute()
+
 const companySlug = computed(() => authStore.companySlug)
 const managerSlug  = computed(() => authStore.managerSlug)
 const isOwner      = computed(() => authStore.role === 'OWNER' || authStore.isOwner === true)
