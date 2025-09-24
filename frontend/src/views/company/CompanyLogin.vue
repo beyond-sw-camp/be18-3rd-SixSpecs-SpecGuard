@@ -6,11 +6,12 @@
         
     <!--메인 홈으로 돌아가~!-->
     <RouterLink 
-    :to="`/c/${companySlug}/dashboard`" 
-    class="text-2xl font-extrabold tracking-tight hover:text-amber-400 transition-colors"
-    >
-    SPECGUARD
-    </RouterLink>
+            :to="auth.isLoggedIn && companySlug && companySlug != null
+                ? `/c/${companySlug}/dashboard` 
+                : '/'"
+            class="text-2xl font-extrabold tracking-tight hover:text-amber-400 transition-colors">
+            SPECGUARD
+        </RouterLink>
 
 
             <span class="text-[11px] leading-none text-slate-300 mb-1">이력 검증 시스템</span>
@@ -126,7 +127,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()

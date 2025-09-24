@@ -31,7 +31,7 @@
                 </div>
             </div>
 
-            <div class="col-span-12 xl:col-span-5 rounded-xl border p-4">
+            <!-- <div class="col-span-12 xl:col-span-5 rounded-xl border p-4">
                 <ul class="grid grid-cols-2 gap-y-1 text-sm">
                 <li class="col-span-1">GITHUB :</li><li class="col-span-1 text-right">{{ resume?.scores?.github ?? '-' }}</li>
                 <li class="col-span-1">NOTION :</li><li class="col-span-1 text-right">{{ resume?.scores?.notion ?? '-' }}</li>
@@ -39,37 +39,55 @@
                 <li class="col-span-1">CAREER_MATCH :</li><li class="col-span-1 text-right">{{ resume?.scores?.career ?? '-' }}</li>
                 <li class="col-span-1">CERTIFICATE_MATCH :</li><li class="col-span-1 text-right">{{ resume?.scores?.cert ?? '-' }}</li>
                 </ul>
-            </div>
+            </div> -->
             </div>
 
-            <!-- 그래프 2개 자리는 보더 박스만 (실제 차트는 추후 교체) -->
             <div class="mt-4 grid grid-cols-12 gap-4">
-            <div class="col-span-12 lg:col-span-7 rounded-xl border p-4">
+            <!-- <div class="col-span-12 lg:col-span-5 xl:col-span-4 rounded-xl border p-4">
                 <h3 class="font-bold mb-2">정합성 결과</h3>
                 <div class="h-40 rounded-md bg-slate-50 border border-dashed"></div>
-            </div>
-            <div class="col-span-12 lg:col-span-5 rounded-xl border p-4">
+            </div> -->
+            <div class="col-span-12 xl:col-span-7 rounded-xl border p-4">
                 <h3 class="font-bold mb-2">프로젝트 언어분석</h3>
-                <div class="h-40 rounded-md bg-slate-50 border border-dashed"></div>
+                <div class="h-40 rounded-md bg-slate-50 border p-3 flex items-center justify-center">
+                  <div v-if="langSlices.length" class="flex items-center gap-6">
+                    <!-- 파이 -->
+                    <svg class="w-[160px] h-[160px] shrink-0" viewBox="0 0 160 160">
+                      <g transform="translate(80,80)">
+                        <template v-for="(s, i) in langSlices" :key="i">
+                          <path :d="s.d" :fill="s.color" stroke="white" stroke-width="1"/>
+                        </template>
+                      </g>
+                    </svg>
+                    <!-- 범례 -->
+                    <ul class="text-sm space-y-1 flex-1 min-w-[140px]">
+                      <li v-for="(s, i) in langSlices" :key="'lg-'+i" class="flex items-center gap-2">
+                        <span class="inline-block w-3 h-3 rounded-sm" :style="{background:s.color}"></span>
+                        <span class="font-medium">{{ s.name }}</span>
+                        <span class="text-slate-500">{{ s.percent }}%</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div v-else class="text-sm text-slate-500">언어 데이터가 없습니다.</div>
+                </div>
             </div>
             </div>
 
             <!-- AI 분석 요약 박스 -->
             <div class="mt-4 rounded-xl border p-4">
-            <h3 class="font-bold mb-2">지원자 AI분석</h3>
-            <div class="grid grid-cols-12 gap-4 text-sm leading-6">
-                <div class="col-span-12 md:col-span-6">
-                <ol class="list-decimal pl-5 space-y-1">
-                    <li>정합성 분석: {{ resume?.analysis?.integrity || '요약 준비중' }}</li>
-                    <li>인사이트: {{ resume?.analysis?.insight || '요약 준비중' }}</li>
-                </ol>
+              <h3 class="font-bold mb-2">자기소개서 AI 요약본</h3>
+
+              <div v-if="summaries.length" class="space-y-3 text-slate-700 text-sm leading-6">
+                <div
+                  v-for="(s, i) in summaries"
+                  :key="i"
+                  class="rounded-xl border px-4 py-3 whitespace-pre-line"
+                >
+                  {{ s }}
                 </div>
-                <div class="col-span-12 md:col-span-6">
-                <div class="rounded-md border p-3 bg-slate-50">
-                    종합 평가: {{ resume?.analysis?.overall || '요약 준비중' }}
-                </div>
-                </div>
-            </div>
+              </div>
+
+              <div v-else class="text-sm text-slate-500">요약 준비중</div>
             </div>
         </header>
 
@@ -121,14 +139,17 @@
 
             <aside class="col-span-12 xl:col-span-4">
             <div class="rounded-2xl bg-white border p-6 sticky top-20 space-y-4">
-                <h4 class="text-xl font-extrabold">정합성 결과</h4>
+                <h3 class="font-bold mb-2">정합성 결과</h3>
                 <div class="text-5xl font-extrabold text-slate-900">{{ fmtScore(resume?.matchScore) }}</div>
                 <ul class="mt-2 text-sm space-y-1">
-                <li>포트폴리오 유사도: {{ resume?.details?.portfolio ?? '-' }}</li>
-                <li>키워드: {{ (resume?.details?.keywords || []).join(', ') || '-' }}</li>
-                <li>불일치: {{ (resume?.details?.mismatch || []).join(', ') || '-' }}</li>
-                <li>분석 시각: {{ fmtDateTime(resume?.analyzedAt) }}</li>
+                  <li>포트폴리오 유사도: {{ resume?.details?.portfolio ?? '-' }}</li>
+                  <li>키워드: {{ (resume?.details?.keywords || []).join(', ') || '-' }}</li>
+                  <li>불일치: {{ (resume?.details?.mismatch || []).join(', ') || '-' }}</li>
+                  <li>분석 시각: {{ fmtDateTime(resume?.analyzedAt) }}</li>
                 </ul>
+                <p v-if="resume?.details?.comment" class="mt-2 text-sm text-slate-700">
+                  {{ resume.details.comment }}
+                </p>
                 <div>
                 <label class="text-sm font-semibold">코멘트 작성</label>
                 <textarea v-model="comment" rows="4" class="mt-1 w-full rounded-md border px-3 py-2"></textarea>
@@ -158,34 +179,6 @@
                 <div v-if="!resume?.essays?.length" class="text-sm text-slate-500">등록된 자기소개서가 없습니다.</div>
             </div>
             </div>
-
-            <aside class="col-span-12 xl:col-span-4">
-            <div class="rounded-2xl bg-white border p-6 sticky top-20">
-                <h4 class="text-xl font-extrabold mb-3">정합성 결과</h4>
-                <p class="text-5xl font-extrabold">{{ fmtScore(resume?.matchScore) }}</p>
-                <p class="mt-3 text-sm text-slate-700">{{ resume?.summary || '요약 준비중' }}</p>
-            </div>
-            </aside>
-        </section>
-
-        <!-- 4) AI 자기소개서 요약 패널 -->
-        <section class="grid grid-cols-12 gap-4">
-            <div class="col-span-12 xl:col-span-8">
-            <div class="rounded-xl border p-5">
-                <h3 class="text-2xl font-extrabold">자기소개서</h3>
-                <!-- 동일한 본문이 이어짐. 필요 시 더 로드 -->
-                <div v-for="(q, idx) in resume?.essays2 || []" :key="'e2-'+idx" class="rounded-lg border p-4 mt-4">
-                <div class="font-semibold mb-1">{{ idx + 1 }}번 문항</div>
-                <p class="whitespace-pre-line">{{ q.answer }}</p>
-                </div>
-            </div>
-            </div>
-            <aside class="col-span-12 xl:col-span-4 pr-4"><!-- 우측 살짝 여백 -->
-            <div class="rounded-2xl bg-white border p-6 sticky top-20">
-                <h4 class="text-xl font-extrabold mb-3">AI 자기소개서 요약</h4>
-                <div class="h-64 rounded-md bg-slate-50 border border-dashed"></div>
-            </div>
-            </aside>
         </section>
         </section>
 
@@ -257,6 +250,8 @@ const list = ref([])
 const filter = ref({ dept: '', role: '', careerType: '' })
 const comment = ref('')
 const fallbackAvatar = 'https://placehold.co/96x96/png'
+
+const summaries = ref([])
 
 // links 계산
 const portfolioLinks = computed(() => {
@@ -370,36 +365,57 @@ function normalizeFromSwagger(src = {}, extra = {}) {
 
 async function fetchResume(id = resumeId) {
   const r = await api.get(`company/resumes/${id}`, {
-    headers: { 'X-Company-Slug': companySlug },
+    headers: { 'X-Company-Slug': companySlug, Accept: 'application/json' },
     validateStatus: s => s < 500,
   })
   if (r.status !== 200) { resume.value = null; return }
 
-  const root = r.data?.resume ?? r.data?.data ?? r.data ?? {}
-  const gitMeta = r.data?.gitMetadata ?? null
+  const root = r.data?.data?.resume ?? r.data?.resume ?? r.data ?? {}
+  const gitMeta = r.data?.data?.gitMetadata ?? null
+  const summariesArr = Array.isArray(r.data?.data?.summaries) ? r.data.data.summaries : []
 
-  let finalScore = null, percentile = null
-  if (hasAuth.value) {
-    try {
-      const [fs, pct] = await Promise.all([
-        api.get(`validation/${id}/final`, {
-          __skipAuthRedirect: true,
-          validateStatus: () => true
-        }),
-        api.get(`validation/percentile`, {
-          params: { resumeId: id },
-          __skipAuthRedirect: true,
-          validateStatus: () => true
-        })
-      ])
-      finalScore = fs.status===200
-        ? ((fs.data?.data ?? fs.data ?? {}).finalScore ?? (fs.data?.data ?? fs.data ?? {}).score ?? null)
-        : null
-      percentile = pct.status===200 ? (pct.data?.percentile ?? null) : null
-    } catch {}
-  }
+let finalScore = null, percentile = null, analyzedAt = null, details = {}
+  try {
+    const [fs, pct] = await Promise.all([
+      api.get(`validation/${id}/final`, {
+        headers: { 'X-Company-Slug': companySlug, Accept: 'application/json' },
+        validateStatus: s => s < 500
+      }),
+      api.post('validation/percentile',
+        { templateId: companyTemplateId, resumeId: id },
+        { headers: { 'X-Company-Slug': companySlug, 'Content-Type': 'application/json' }, validateStatus: s => s < 500 }
+      )
+    ])
+    if (fs.status === 200) {
+      const fd = fs.data?.data ?? fs.data ?? {}
+      finalScore = fd.finalScore ?? fd.score ?? null
+      details = {
+        ...details,
+        keywords: splitComma(fd.matchKeyword),
+        mismatch: splitComma(fd.mismatchKeyword),
+        comment: fd.descriptionComment ?? null,
+      };
+      analyzedAt = fd.resultAt ?? fd.calculatedAt ?? null
+    }
+    if (pct.status === 200) {
+      const pd = pct.data?.data ?? pct.data ?? {}
+      percentile = pd.percentile ?? null
+      analyzedAt = analyzedAt || pd.resultAt || pd.calculatedAt || null
+      details = { ...details, ...(pd.details || {}) }
+    }
+  } catch { /* 에러는 무시하고 기본값 유지 */ }
 
-  resume.value = normalizeFromSwagger(root, { finalScore, percentile, gitMetadata: gitMeta })
+  const normalized = normalizeFromSwagger(root, { finalScore, percentile, gitMetadata: gitMeta })
+  normalized.analyzedAt = analyzedAt
+  normalized.details = { ...(normalized.details || {}), ...details }
+  normalized.matchScore = finalScore;
+  if (!normalized.summary && summariesArr.length) {
+  normalized.summary = summariesArr.join('\n').trim()
+}
+  summaries.value = summariesArr
+  resume.value = normalized
+
+
 }
 
 async function fetchList() {
@@ -434,6 +450,128 @@ async function saveComment() {
     { headers: { ...headers.value, 'Content-Type': 'application/json' } }
   )
   comment.value = ''
+}
+
+// 언어 집계
+function aggregateLang(meta) {
+  if (!meta) return {};
+  const out = {};
+
+  // 1) GitHub style: { languagePercentages: 
+  const lp = meta.languagePercentages || meta.language_percentages;
+  if (lp && typeof lp === 'object' && !Array.isArray(lp)) {
+    for (const [k, v] of Object.entries(lp)) out[k] = Number(v || 0);
+  }
+
+  // 2) { languages: { js: 12000, python: 8000 } }
+  if (meta.languages && typeof meta.languages === 'object' && !Array.isArray(meta.languages)) {
+    for (const [k, v] of Object.entries(meta.languages)) out[k] = (out[k] || 0) + Number(v || 0);
+  }
+
+  // 3) { languages: [{name:'js', value:12000}, ...] }
+  if (Array.isArray(meta.languages)) {
+    for (const x of meta.languages) {
+      const k = (x.name || x.lang || x.language || '').toString();
+      let v = x.value ?? x.bytes ?? x.count ?? x.percent ?? x.ratio ?? 0;
+      if (typeof v === 'string' && v.includes('%')) v = parseFloat(v);
+      if (x.ratio != null && v <= 1) v = Number(x.ratio) * 100;
+      if (k) out[k] = (out[k] || 0) + Number(v || 0);
+    }
+  }
+
+  // 4) repos[].languages
+  if (Array.isArray(meta.repos)) {
+    for (const r of meta.repos) {
+      const langs = r?.languages;
+      if (!langs) continue;
+      if (Array.isArray(langs)) {
+        for (const x of langs) {
+          const k = (x.name || x.lang || x.language || '').toString();
+          let v = x.value ?? x.bytes ?? x.count ?? x.percent ?? x.ratio ?? 0;
+          if (typeof v === 'string' && v.includes('%')) v = parseFloat(v);
+          if (x.ratio != null && v <= 1) v = Number(x.ratio) * 100;
+          if (k) out[k] = (out[k] || 0) + Number(v || 0);
+        }
+      } else if (typeof langs === 'object') {
+        for (const [k, v] of Object.entries(langs)) {
+          out[k] = (out[k] || 0) + Number(v || 0);
+        }
+      }
+    }
+  }
+
+  // 5) 기타 variant
+  if (meta.languageStats && typeof meta.languageStats === 'object') {
+    for (const [k, v0] of Object.entries(meta.languageStats)) {
+      let v = v0;
+      if (typeof v === 'string' && v.includes('%')) v = parseFloat(v);
+      if (v <= 1) v = Number(v) * 100;
+      out[k] = (out[k] || 0) + Number(v || 0);
+    }
+  }
+  if (Array.isArray(meta.topLanguages)) {
+    for (const x of meta.topLanguages) {
+      const k = (x.name || x.lang || x.language || '').toString();
+      let v = x.percent ?? x.ratio ?? 0;
+      if (typeof v === 'string' && v.includes('%')) v = parseFloat(v);
+      if (x.ratio != null && v <= 1) v = Number(x.ratio) * 100;
+      if (k) out[k] = (out[k] || 0) + Number(v || 0);
+    }
+  }
+
+  return out;
+}
+
+
+// 색상(고정 팔레트 + 해시 백업)
+const PALETTE = ['#1f2937','#f59e0b','#60a5fa','#ef4444','#10b981','#8b5cf6','#14b8a6','#f97316'];
+function hashColor(name){
+  let h=0; for (let i=0;i<name.length;i++) h=(h*31+name.charCodeAt(i))|0;
+  const idx = Math.abs(h)%PALETTE.length; return PALETTE[idx];
+}
+
+// 원호 path 만들기
+function arcPath(cx, cy, r, startAngle, endAngle){
+  const sa = (startAngle-90)*Math.PI/180, ea=(endAngle-90)*Math.PI/180;
+  const x1 = cx + r*Math.cos(sa), y1 = cy + r*Math.sin(sa);
+  const x2 = cx + r*Math.cos(ea), y2 = cy + r*Math.sin(ea);
+  const large = (endAngle-startAngle) > 180 ? 1 : 0;
+  return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
+}
+
+// 파이 슬라이스 계산 (상위 4개 + 기타)
+const langSlices = computed(() => {
+  const meta = resume.value?.gitMeta;
+  const agg = aggregateLang(meta);
+  const entries = Object.entries(agg).filter(([,v]) => v>0);
+  if (!entries.length) return [];
+  const total = entries.reduce((s, [,v]) => s+v, 0);
+
+  // 상위 4개 + 기타
+  entries.sort((a,b)=>b[1]-a[1]);
+  const top = entries.slice(0,4);
+  const others = entries.slice(4);
+  if (others.length){
+    top.push(['Others', others.reduce((s, [,v])=>s+v,0)]);
+  }
+
+  let angle = 0;
+  const r = 70, cx=0, cy=0;
+  return top.map(([name, v], idx) => {
+    const percent = Math.round((v/total)*100);
+    const sweep = (v/total)*360;
+    const d = arcPath(cx, cy, r, angle, angle+sweep);
+    angle += sweep;
+    return { name, percent, d, color: PALETTE[idx] || hashColor(name) };
+  });
+});
+
+function splitComma(s){
+  if (!s) return [];
+  return String(s)
+    .split(',')
+    .map(v => v.trim())
+    .filter(Boolean);
 }
 
 // utils
