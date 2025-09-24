@@ -5,20 +5,15 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
 
             <!-- 좌측(2칸): 폼 -->
-            <div class="md:col-span-2 space-y-8">
+            <div class="md:col-span-2">
+                <div class="space-y-6">
                 <!-- 계정 정보 -->
-                <div>
                 <h2 class="text-2xl font-extrabold tracking-tight">계정 정보</h2>
 
                 <label class="mt-6 block text-sm font-semibold">이름 *</label>
                 <input v-model.trim="form.username" required
                         class="mt-2 w-full max-w-md rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
                 <p v-if="errors.username" class="mt-1 text-xs text-red-600">{{ errors.username }}</p>
-
-                <label class="mt-5 block text-sm font-semibold">비밀번호 *</label>
-                <input v-model.trim="form.password" type="password"
-                        class="mt-2 w-full max-w-md rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
-                <p v-if="errors.password" class="mt-1 text-xs text-red-600">{{ errors.password }}</p>
 
                 <label class="mt-5 block text-sm font-semibold">전화번호 *</label>
                 <input v-model.trim="form.phone" inputmode="tel" required :readonly="true"
@@ -36,17 +31,62 @@
                 </div>
                 <p v-if="errors.email" class="mt-1 text-xs text-red-600">{{ errors.email }}</p>
 
+                <!-- 인증번호 -->
                 <label class="mt-5 block text-sm font-semibold">인증번호</label>
-                <div class="mt-2 flex gap-3 max-w-md">
-                    <input v-model.trim="form.code" type="text" inputmode="numeric" pattern="\d*" maxlength="6" required
-                        autocomplete="one-time-code"
-                        class="w-28 rounded-md border border-slate-300 bg-slate-100 px-2 py-2 outline-none"/>
-                    <button type="button" @click="confirmCode" :disabled="ui.confirming"
-                            class="shrink-0 rounded-md bg-slate-800 px-4 py-2 text-white font-semibold hover:bg-slate-700 disabled:bg-slate-400">
+                <div class="mt-2 grid grid-cols-[1fr_auto] items-center gap-3 max-w-md">
+                <input
+                    v-model.trim="form.code"
+                    type="text"
+                    inputmode="numeric"
+                    pattern="\d*"
+                    maxlength="6"
+                    autocomplete="one-time-code"
+                    class="w-28 rounded-md border border-slate-300 bg-slate-100 px-2 py-2 outline-none"
+                />
+                <div class="flex gap-2">
+                    <button
+                    type="button"
+                    @click="confirmCode"
+                    :disabled="ui.confirming"
+                    class="shrink-0 rounded-md bg-slate-800 px-4 py-2 text-white font-semibold hover:bg-slate-700 disabled:bg-slate-400"
+                    >
                     {{ ui.confirming ? '확인 중' : '인증 하기' }}
+                    </button>
+                    <button
+                    type="button"
+                    @click="openPwdModal"
+                    :disabled="!emailVerified"
+                    class="shrink-0 rounded-md ring-1 ring-slate-300 bg-white px-4 py-2 font-semibold hover:bg-slate-100 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                    비밀번호 변경
                     </button>
                 </div>
                 </div>
+                </div>
+                <!-- 모달은 루트로 텔레포트 -->
+                <teleport to="body">
+                <div v-if="showPwdModal" class="fixed inset-0 z-50 flex items-center justify-center">
+                    <div class="absolute inset-0 bg-black/40" @click="closePwdModal"></div>
+                    <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                    <h3 class="text-lg font-bold">비밀번호 변경</h3>
+                    <div class="mt-4 grid gap-3">
+                        <input v-model.trim="pwd.old" type="password" placeholder="현재 비밀번호"
+                            class="rounded-md border border-slate-300 bg-slate-50 px-4 py-2 outline-none" />
+                        <input v-model.trim="pwd.next" type="password" placeholder="새 비밀번호(8~64자, 영문+숫자)"
+                            class="rounded-md border border-slate-300 bg-slate-50 px-4 py-2 outline-none" />
+                        <p v-if="errors.passwordChange" class="text-xs text-red-600">{{ errors.passwordChange }}</p>
+                    </div>
+                    <div class="mt-5 flex justify-end gap-2">
+                        <button type="button" @click="closePwdModal"
+                                class="rounded-md px-4 py-2 font-semibold ring-1 ring-slate-300 bg-white hover:bg-slate-100">취소</button>
+                        <button type="button" @click="changePassword" :disabled="ui.changingPwd"
+                                class="rounded-md px-4 py-2 font-semibold text-white bg-slate-800 hover:bg-slate-700 disabled:bg-slate-400">
+                        {{ ui.changingPwd ? '변경 중' : '변경하기' }}
+                        </button>
+                    </div>
+                    </div>
+                </div>
+                </teleport>
 
                 <!-- 기업/담당자 정보 -->
                 <div>
@@ -78,9 +118,10 @@
                 <!-- 버튼 영역 -->
                 <div class="md:col-span-2 flex items-center justify-between">
                 <button type="button"
-                        :disabled="isValid"
+                        :disabled="!canProceed"
                         @click="onDelete"
-                        class="rounded-md px-6 py-2 font-semibold text-white bg-red-600 hover:bg-red-500">
+                        class="rounded-md px-6 py-2 font-semibold text-white bg-red-600 disabled:cursor-not-allowed
+                            disabled:bg-slate-400 bg-slate-800 hover:bg-red-500">
                     계정탈퇴
                 </button>
 
@@ -91,7 +132,7 @@
                     취소
                     </button>
                     <button type="submit"
-                            :disabled="!isValid"
+                            :disabled="!canProceed"
                             class="rounded-md px-6 py-2 font-semibold text-white disabled:cursor-not-allowed
                                 disabled:bg-slate-400 bg-slate-800 hover:bg-slate-700">
                     수정하기
@@ -139,6 +180,8 @@ import { reactive, computed, ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api/axios'
+import { onBeforeRouteUpdate } from 'vue-router'
+onBeforeRouteUpdate(() => { emailVerified.value = false; form.code = '' })
 
 const API = `${(import.meta.env.VITE_API_URL ?? 'http://localhost:8080').replace(/\/$/,'')}/api/v1`
 
@@ -168,6 +211,7 @@ const isValid = computed(() =>
 form.companyName && isBizNo(form.bizRegNo) &&
 form.managerName && isPhone(form.managerPhone) && isEmail(form.managerEmail)
 )
+const canProceed = computed(() => isValid.value && emailVerified.value)
 
     // 인증번호 요청
     async function verifyEmail() {
@@ -189,8 +233,7 @@ form.managerName && isPhone(form.managerPhone) && isEmail(form.managerEmail)
         try {
             const r = await fetch(`${API}/verify/company/confirm`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ email: form.email, code: form.code }) })
             if (!r.ok) throw new Error()
-            await loadEmailStatus()
-            if (!emailVerified.value) throw new Error('verify-failed')
+            emailVerified.value = true
             alert('이메일 인증이 완료되었습니다.')
         } catch (e) {
             console.error(e); alert('인증 실패. 코드와 이메일을 확인하세요.')
@@ -208,8 +251,9 @@ form.managerName && isPhone(form.managerPhone) && isEmail(form.managerEmail)
 watch(() => form.email, () => { emailVerified.value = false; form.code=''; })
 
 onMounted(async () => {
+    emailVerified.value = false
+    form.code = ''
     await loadMe()
-    if (form.email) await loadEmailStatus()
 })
 
 function validateAll() {
@@ -292,6 +336,50 @@ alert('수정되었습니다.');
 console.error('COMPANY PATCH 실패', e?.response?.status, e?.response?.data || e?.message);
 alert('회사 정보 수정 실패');
 }
+}
+
+const showPwdModal = ref(false)
+const pwd = reactive({ old: '', next: '' })
+ui.changingPwd = false
+errors.passwordChange = ''
+
+function openPwdModal() {
+  if (!emailVerified.value) {
+    alert('이메일 인증을 먼저 완료해주세요.')
+    return
+  }
+  errors.passwordChange = ''
+  pwd.old = ''; pwd.next = ''
+  showPwdModal.value = true
+}
+function closePwdModal() {
+  showPwdModal.value = false
+  pwd.old = ''; pwd.next = ''
+}
+
+function validNewPwd(v) {
+  return typeof v === 'string'
+    && v.length >= 8 && v.length <= 64
+    && /[A-Za-z]/.test(v) && /\d/.test(v)
+}
+
+async function changePassword() {
+  errors.passwordChange = ''
+  if (!pwd.old || !pwd.next) { errors.passwordChange = '현재/새 비밀번호를 입력하세요.'; return }
+  if (pwd.old === pwd.next) { errors.passwordChange = '새 비밀번호가 현재 비밀번호와 같습니다.'; return }
+  if (!validNewPwd(pwd.next)) { errors.passwordChange = '8~64자, 영문+숫자 포함'; return }
+
+  ui.changingPwd = true
+  try {
+    await api.patch('/me/password', { oldPassword: pwd.old, newPassword: pwd.next })
+    alert('비밀번호가 변경되었습니다.')
+    closePwdModal()
+  } catch (e) {
+    const msg = e?.response?.data?.message || '변경 실패. 현재 비밀번호를 확인하세요.'
+    errors.passwordChange = msg
+  } finally {
+    ui.changingPwd = false
+  }
 }
 
 
