@@ -1,8 +1,6 @@
 <template>
   <div class="w-full grid grid-cols-12 gap-6">
-    <!-- Main -->
     <div class="col-span-12 lg:col-span-9">
-      <!-- Search -->
       <div class="flex items-center gap-3 mb-4">
         <div class="flex-1">
           <div class="h-10 rounded-full bg-slate-100 flex items-center px-4 gap-2">
@@ -11,9 +9,10 @@
           </div>
         </div>
       </div>
-      <p class="mb-6 font-semibold">총 <span class="text-rose-500">{{ filteredTemplates.length }}</span> 건의 채용이 진행중 입니다.</p>
+      <p class="mb-6 font-semibold">
+        총 <span class="text-rose-500">{{ filteredTemplates.length }}</span> 건의 채용이 진행중 입니다.
+      </p>
 
-      <!-- Templates cards -->
       <section class="space-y-6">
         <article
           v-for="template in filteredTemplates"
@@ -47,40 +46,15 @@
       </section>
     </div>
 
-    <!-- Right filter panel -->
     <aside class="col-span-12 lg:col-span-3 border-l border-slate-200 pl-6 pr-4">
       <div class="sticky top-20 space-y-6">
         <div class="rounded-2xl border border-slate-200 p-6">
           <h4 class="text-xl font-extrabold mb-4">부서</h4>
-          <input
-            v-model.trim="dept"
-            type="text"
-            class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            placeholder="부서 입력"
-          />
-          <!-- <select v-model="dept" class="w-full rounded-lg border-slate-300 text-sm">
-            <option value="">전체</option>
-            <option>백엔드</option>
-            <option>프론트엔드</option>
-            <option>데이터</option>
-            <option>플랫폼</option>
-          </select> -->
+          <input v-model.trim="dept" type="text" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" placeholder="부서 입력" />
         </div>
         <div class="rounded-2xl border border-slate-200 p-6">
           <h4 class="text-xl font-extrabold mb-4">직무</h4>
-          <input
-            v-model.trim="role"
-            type="text"
-            class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            placeholder="직무 입력"
-          />
-          <!-- <select v-model="role" class="w-full rounded-lg border-slate-300 text-sm">
-            <option value="">전체</option>
-            <option>백엔드</option>
-            <option>프론트엔드</option>
-            <option>DevOps</option>
-            <option>QA</option>
-          </select> -->
+          <input v-model.trim="role" type="text" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" placeholder="직무 입력" />
         </div>
         <div class="rounded-2xl border border-slate-200 p-6">
           <h4 class="text-xl font-extrabold mb-2">시작일</h4>
@@ -108,6 +82,10 @@ const route = useRoute()
 const router = useRouter()
 const companySlug = route.params.companySlug || ''
 
+const isUuid = (v) =>
+  typeof v === 'string' &&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v)
+
 const norm = s => (s ?? '').toString().trim().toLowerCase()
 
 // UI 상태
@@ -117,9 +95,9 @@ const role = ref('')
 const status = ref('')
 const years = ref('')
 const startDate = ref('')
-const startTime = ref('')   // 추가
+const startTime = ref('')
 const endDate = ref('')
-const endTime = ref('')     // 추가
+const endTime = ref('')
 const page = ref(0)
 const size = ref(10)
 const sort = ref('createdAt,DESC')
@@ -130,7 +108,6 @@ const templates = ref([])
 const loading = ref(false)
 const error = ref('')
 
-// 로드 및 필터 변경 시 재조회
 onMounted(fetchTemplates)
 watch([status, years, startDate, endDate, page, size, sort], fetchTemplates)
 
@@ -153,8 +130,8 @@ async function fetchTemplates () {
         desc: b.description || '',
         dept: b.department || '',
         role: b.category || '',
-        startAt: d.startDate || null,     // e.g. "2025-09-19T09:00:00"
-        endAt: d.endDate || null,         // e.g. "2025-10-09T23:59:59"
+        startAt: d.startDate || null,
+        endAt: d.endDate || null,
       }
     })
   } catch (e) {
@@ -164,29 +141,67 @@ async function fetchTemplates () {
   }
 }
 
-async function goSet(id) {
-  router.push({ path: `/c/${companySlug}/post/${id}/weight` })
+/** 템플릿 선택 → 기존 프로필 존재 여부 확인 후 생성/수정 라우팅 */
+async function goSet(companyTemplateId) {
+  try {
+    // 이 템플릿으로 만들어진 기존 프로필이 있는지 확인
+    // 후보 경로를 순차 시도 (서버 경로 차이 대응)
+    const paths = [
+      '/evaluationProfiles',
+      '/evaluationProfiles/',
+      '/evaluation-profile',
+      '/evaluation-profiles',
+    ]
+    let got
+    for (const p of paths) {
+      const res = await api.get(p, {
+        params: { companyTemplateId, page: 0, size: 1, sort: 'createdAt,DESC' },
+        _skipGlobalError: true,
+        validateStatus: () => true,
+      })
+      if (res.status >= 200 && res.status < 300) { got = res; break }
+    }
+
+    const data = got?.data ?? {}
+    const list =
+      Array.isArray(data.evaluationProfiles) ? data.evaluationProfiles :
+      Array.isArray(data.content) ? data.content : []
+    const profileId = list[0]?.id || null
+
+    if (profileId) {
+      router.push({
+        name: 'CompanyEditEvaluationWeight',
+        params: { companySlug: String(companySlug), companyTemplateId: String(companyTemplateId), profileId: String(profileId) },
+      })
+    } else {
+      router.push({
+        name: 'CompanyCreateEvaluationWeight',
+        params: { companySlug: String(companySlug), companyTemplateId: String(companyTemplateId) },
+      })
+    }
+  } catch (e) {
+    // 실패해도 최소 생성 화면으로 진입
+    router.push({
+      name: 'CompanyCreateEvaluationWeight',
+      params: { companySlug: String(companySlug), companyTemplateId: String(companyTemplateId) },
+    })
+  }
 }
 
 function toLocalTs(dateStr, timeStr, endOfDay = false) {
   if (!dateStr) return null
   const [y, m, d] = dateStr.split('-').map(Number)
   let hh = 0, mm = 0
-  if (timeStr) {
-    ;[hh, mm] = timeStr.split(':').map(Number)
-  } else if (endOfDay) {
-    hh = 23; mm = 59
-  }
+  if (timeStr) { [hh, mm] = timeStr.split(':').map(Number) } else if (endOfDay) { hh = 23; mm = 59 }
   return new Date(y, m - 1, d, hh, mm, 0, 0).getTime()
 }
 
-// 검색 필터
 const filteredTemplates = computed(() => {
   const q = norm(query.value)
   const d = norm(dept.value)
   const r = norm(role.value)
   const sTs = toLocalTs(startDate.value, startTime.value, false)
-  const eTs = toLocalTs(endDate.value, endTime.value, true)    
+  const eTs = toLocalTs(endDate.value, endTime.value, true)
 
   return templates.value.filter(j => {
     const title = norm(j.title)
@@ -201,18 +216,15 @@ const filteredTemplates = computed(() => {
     const jStartTs = j.startAt ? new Date(j.startAt).getTime() : null
     const jEndTs   = j.endAt   ? new Date(j.endAt).getTime()   : null
 
-    const matchStart = !sTs || (jStartTs !== null && jStartTs >= sTs) // 설정한 시작일 이후(포함)
-    const matchEnd   = !eTs || (jEndTs   !== null && jEndTs   <= eTs) // 설정한 마감일
-    
+    const matchStart = !sTs || (jStartTs !== null && jStartTs >= sTs)
+    const matchEnd   = !eTs || (jEndTs   !== null && jEndTs   <= eTs)
     return matchQuery && matchDept && matchRole && matchStart && matchEnd
   })
 })
 
-// D-day
 function parseLocalDate(dateLike) {
   if (!dateLike) return null
   if (typeof dateLike === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateLike)) {
-    // "YYYY-MM-DD" 또는 "YYYY-MM-DDTHH:mm:ss"
     const [datePart, timePart] = dateLike.split('T')
     const [y, m, d] = datePart.split('-').map(Number)
     if (!timePart) return new Date(y, m - 1, d, 0, 0, 0, 0)
@@ -230,11 +242,7 @@ function dday(endLike) {
   const days = Math.ceil((eod.getTime() - today0.getTime()) / 86400000)
   return days > 0 ? days : 0
 }
-
-
-
 </script>
-
 
 <style scoped>
 .fade-slide-enter-active,.fade-slide-leave-active{transition:opacity .2s cubic-bezier(.22,.61,.36,1),transform .2s cubic-bezier(.22,.61,.36,1);will-change:transform,opacity}

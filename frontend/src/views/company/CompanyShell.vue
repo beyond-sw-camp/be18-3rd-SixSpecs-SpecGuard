@@ -139,8 +139,8 @@
                 </summary>
                 <div class="mt-2 rounded-xl bg-white/80 p-3 shadow-sm">
                     <ul class="list-disc pl-5 text-sm leading-8">
-                    <li><button class="hover:underline" @click="pageMove('CompanyEvaluationWeightList')">가중치 프로필 생성</button></li>
-                    <li><button class="hover:underline" @click="pageMove('CompanyEvaluationWeightUpdate')">가중치 프로필 수정</button></li>
+                    <li><button class="hover:underline" @click="pageMove('CompanyEvaluationWeightList')">가중치 생성/수정</button></li>
+                    <!-- <li><button class="hover:underline" @click="pageMove('CompanyEvaluationWeightUpdate')">가중치 프로필 수정</button></li> -->
                     </ul>
                 </div>
                 </details>

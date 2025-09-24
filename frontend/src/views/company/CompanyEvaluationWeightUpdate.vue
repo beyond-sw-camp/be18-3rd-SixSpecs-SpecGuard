@@ -37,20 +37,7 @@
                     {{ p.templateTitle || p.name || '(제목 없음)' }}
                   </button>
                 </h3>
-
-                <p class="mt-1 text-slate-600">
-                  <span class="rounded bg-slate-100 px-2 py-0.5 text-xs">Profile</span>
-                  <span class="ml-2">{{ p.name || '-' }}</span>
-                </p>
-
                 <p v-if="p.description" class="mt-2 text-slate-600">{{ p.description }}</p>
-
-                <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
-                  <span class="rounded-md bg-slate-100 px-2 py-1">Template ID: {{ p.companyTemplateId }}</span>
-                  <span class="rounded-md bg-slate-100 px-2 py-1">Weights: {{ (p.weights?.length || 0) }}개</span>
-                  <span class="rounded-md bg-slate-100 px-2 py-1">활성: {{ p.isActive ? 'Y' : 'N' }}</span>
-                </div>
-
                 <div class="mt-3">
                   <button class="rounded-md bg-slate-100 px-3 py-1 text-sm" @click.stop="goEdit(p)">
                     가중치 수정
@@ -87,13 +74,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/api/axios'
 
+const props = defineProps({ companySlug: { type: String, required: false } })
 const route = useRoute()
 const router = useRouter()
-const companySlug = route.params.companySlug || ''
+const companySlug = props.companySlug || route.params.companySlug
 
 const query = ref('')
 const onlyActive = ref('')
@@ -102,55 +90,87 @@ const error = ref('')
 
 const profiles = ref([])
 
+// ---- 공통: 여러 경로를 순차 시도하는 GET 헬퍼
+async function tryGet(paths, config = {}) {
+  let lastErr
+  for (const p of paths) {
+    try {
+      const res = await api.get(p, { ...config, _skipGlobalError: true, validateStatus: () => true })
+      if (res.status >= 200 && res.status < 300) return res
+      lastErr = res
+    } catch (e) {
+      lastErr = e
+    }
+  }
+  throw lastErr
+}
+
+// 목록 조회
 async function fetchProfiles () {
-  loading.value = true; error.value = ''
+  loading.value = true
+  error.value = ''
   try {
-    const { data } = await api.get('/evaluationProfiles', {
-      // axios 인터셉터에서 X-Company-Slug를 이미 넣고 있으므로 이 headers는 생략 가능.
-      // headers: { 'X-Company-Slug': companySlug },
-      params: { page: 0, size: 100, sort: 'createdAt,DESC' },
-      _skipGlobalError: true, // 전역 401 라우팅 방지(디버깅 시)
-    })
-    const list = Array.isArray(data?.evaluationProfiles)
-      ? data.evaluationProfiles
-      : (data?.content ?? [])
+    const isActiveParam =
+      onlyActive.value === 'Y' ? 'true' :
+      onlyActive.value === 'N' ? 'false' : undefined  // 서버가 isActive를 필수로 안 받으면 생략
+
+    const params = { page: 0, size: 50, sort: 'createdAt,DESC' }
+    if (typeof isActiveParam !== 'undefined') params.isActive = isActiveParam
+
+    // ✅ 후보 경로들: 카멜/케밥, 단·복수, 슬래시 유무
+    const CANDIDATES = [
+      '/evaluationProfiles',
+      '/evaluationProfiles/',
+      '/evaluation-profile',
+      '/evaluation-profiles',
+    ]
+
+    const res = await tryGet(CANDIDATES, { params })
+    const data = res.data ?? {}
+
+    // 응답 형태 유연 파싱
+    let list = []
+    if (Array.isArray(data.evaluationProfiles)) list = data.evaluationProfiles
+    else if (Array.isArray(data.content))        list = data.content
+    else {
+      const firstArr = Object.values(data).find(v => Array.isArray(v))
+      if (Array.isArray(firstArr)) list = firstArr
+    }
 
     profiles.value = list.map(p => ({
       id: p.id,
-      name: p.name,
-      description: p.description,
-      isActive: p.isActive,
-      companyTemplateId: p.companyTemplateId || p.templateId || p.companyTemplate?.id,
-      templateTitle: p.companyTemplate?.name || p.templateName || null,
-      weights: p.weights || [],
-      createdAt: p.createdAt || null,
-      updatedAt: p.updatedAt || null,
+      name: p.name ?? '',
+      description: p.description ?? '',
+      isActive: !!p.isActive,
+      companyTemplateId:
+        p.companyTemplateId ?? p.templateId ?? p.companyTemplate?.id ?? p.template?.id ?? null,
+      templateTitle:
+        p.companyTemplate?.name ?? p.templateName ?? p.template?.name ?? null,
+      weights: Array.isArray(p.weights) ? p.weights : [],
+      createdAt: p.createdAt ?? null,
+      updatedAt: p.updatedAt ?? null,
     }))
   } catch (e) {
-    // 디버깅용 상세 로그
-    console.error('[GET /evaluationProfiles failed]',
-      e?.response?.status,
-      e?.response?.data || e.message,
-      { headers: e?.config?.headers, params: e?.config?.params }
-    )
-    error.value = e?.response?.data?.message || e.message || String(e)
+    const res = e?.response || e // tryGet이 던진 마지막
+    console.error('[profiles list] failed', res?.status || '', res?.data || e?.message)
+    error.value = res?.data?.message || e?.message || '목록 조회 실패'
   } finally {
     loading.value = false
   }
 }
 
 onMounted(fetchProfiles)
+watch(onlyActive, fetchProfiles)
 
+// 검색 필터
 const norm = s => (s ?? '').toString().trim().toLowerCase()
-
 const filteredProfiles = computed(() => {
   const q = norm(query.value)
   const flt = onlyActive.value
   return profiles.value.filter(p => {
     const t = norm(p.templateTitle || '')
     const n = norm(p.name || '')
-    const matchQ = !q || t.includes(q) || n.includes(q) ||
-                   (p.companyTemplateId || '').toString().includes(q)
+    const matchQ = !q || t.includes(q) || n.includes(q) || (p.companyTemplateId || '').toString().includes(q)
     const matchActive = !flt || (flt === 'Y' && p.isActive) || (flt === 'N' && !p.isActive)
     return matchQ && matchActive
   })
@@ -163,14 +183,42 @@ function toDate(iso) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
 
-function goEdit(p) {
-  if (!p.companyTemplateId || !p.id) {
-    alert('필수 정보가 부족합니다. (companyTemplateId / profileId)')
-    return
+// 수정 화면 진입
+async function goEdit(p) {
+  if (!p?.id) return alert('profileId가 없습니다.')
+
+  // 템플릿 id 없으면 단건조회로 보강 (후보 경로 순차 시도)
+  let templateId = p.companyTemplateId ?? null
+  if (!templateId) {
+    try {
+      const detailPaths = [
+        `/evaluationProfiles/${p.id}`,
+        `/evaluationProfiles/${p.id}/`,
+        `/evaluation-profile/${p.id}`,
+        `/evaluation-profiles/${p.id}`,
+      ]
+      const res = await tryGet(detailPaths)
+      const d = res.data || {}
+      templateId =
+        d.companyTemplateId ?? d.templateId ?? d.companyTemplate?.id ?? d.template?.id ?? null
+    } catch (e) {
+      // 무시하고 아래에서 경고
+    }
   }
+
+  if (!templateId) {
+    alert('이 프로필에 연결된 템플릿 ID를 찾을 수 없습니다.')
+    return
+    // 필요하면 여기서 템플릿 선택 모달을 띄워 사용자가 직접 선택하도록 처리 가능
+  }
+
   router.push({
-    name: 'CompanySetEvaluationWeight',
-    params: { companySlug, companyTemplateId: p.companyTemplateId, profileId: p.id },
+    name: 'CompanyEditEvaluationWeight',
+    params: {
+      companySlug: String(companySlug),
+      companyTemplateId: String(templateId),
+      profileId: String(p.id),
+    },
   })
 }
 </script>
