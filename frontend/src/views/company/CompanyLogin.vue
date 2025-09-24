@@ -4,15 +4,20 @@
         <div class="mx-auto max-w-6xl h-16 px-6 flex items-center justify-between">
             <div class="flex items-end gap-3">
         
-    <!--메인 홈으로 돌아가~!-->
+    <!--<RouterLink 
+    :to="`/c/${companySlug}/dashboard`" 
+    class="text-2xl font-extrabold tracking-tight hover:text-amber-400 transition-colors"
+    >
+    SPECGUARD
+    </RouterLink>
+    -->
+    <!--로그인 안된 상태에서, SPECGUARD 클릭하면 메인 홈으로 감-->
     <RouterLink 
-            :to="auth.isLoggedIn && companySlug && companySlug != null
-                ? `/c/${companySlug}/dashboard` 
-                : '/'"
-            class="text-2xl font-extrabold tracking-tight hover:text-amber-400 transition-colors">
-            SPECGUARD
-        </RouterLink>
-
+    to="/" 
+    class="text-2xl font-extrabold tracking-tight hover:text-amber-400 transition-colors"
+    >
+    SPECGUARD
+    </RouterLink>
 
             <span class="text-[11px] leading-none text-slate-300 mb-1">이력 검증 시스템</span>
             </div>
@@ -47,7 +52,8 @@
                     Continue with Google
                 </button>
                 <button @click="goNaver" type="button" class="inline-flex items-center justify-center gap-2 rounded-md bg-[#03C75A] px-3 py-2 text-sm font-medium text-white shadow-sm">
-                    <img alt="Naver" class="h-4 w-4" src="https://static.nid.naver.com/oauth/small_g_invert.png" /> 
+                    <!--네이버 이모지 삽입-->
+                    <img alt="Naver" class="h-4 w-4" src="https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAxNzA4MTBfMjkg%2FMDAxNTAyMzQ1NjgxMTcx.HN5OduMJB4wLP2Ryov53lcBW-UhIkXLXZdd_SRReFAgg.mL_h394FDyN7gsATSeFOYSoDYWMPnuLPSfcLkquAIdMg.PNG.baroniter%2Fnaver_pay_img_04.png&type=sc960_832" />
                     Continue with Naver
                 </button>
                 </div>
@@ -80,19 +86,33 @@
                 </div>
             </li>
             <li class="flex items-start gap-4">
-                <svg class="w-9 h-9 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!--<svg class="w-9 h-9 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h12" />
                 </svg>
+            -->
+                <!--'AI' 글자로 보이게 만들기-->
+                <span class="w-9 h-9 flex items-center justify-center text-slate-600 font-bold text-lg">
+                    AI
+                </span>
+
                 <div>
                 <h3 class="font-extrabold text-lg">AI 요약 및 정합성 분석</h3>
                 <p class="text-slate-600 text-sm mt-1">이력서, 자소서 서류 검사를 자동화해드립니다</p>
                 </div>
             </li>
             <li class="flex items-start gap-4">
-                <svg class="w-9 h-9 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!--<svg class="w-9 h-9 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M17 20h5v-2a3 3 0 00-3-3h-2m-4 5H6a2 2 0 01-2-2V7a2 2 0 012-2h8a2 2 0 012 2v11a2 2 0 01-2 2z" />
+                </svg>-->
+
+                <!--사람 이모지로 변경-->
+                <svg class="w-9 h-9 text-slate-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
                 </svg>
+
+
                 <div>
                 <h3 class="font-extrabold text-lg">지원자 통합 관리</h3>
                 <p class="text-slate-600 text-sm mt-1">모든 지원자를 효율적으로 관리해보세요</p>
