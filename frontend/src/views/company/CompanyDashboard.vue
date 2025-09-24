@@ -41,7 +41,13 @@
                 </div>
               </div>
             </div>
-            <div class="text-2xl font-extrabold pr-4 pt-1">D-{{ dday(template.endAt) }}</div>
+            <!--<div class="text-2xl font-extrabold pr-4 pt-1">D-{{ dday(template.endAt) }}</div>-->
+        <!--D-X 줄 바꿈된 거, 오른쪽으로 쭉 보이도록 수정함.-->
+            <div v-if="template" 
+            class="text-2xl font-extrabold pr-2 pt-1 whitespace-nowrap">
+          D-{{ dday(template.endAt) }}
+        </div>
+
           </div>
         </article>
 

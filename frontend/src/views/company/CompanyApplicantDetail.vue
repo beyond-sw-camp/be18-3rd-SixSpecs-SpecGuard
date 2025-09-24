@@ -191,15 +191,43 @@
             <div class="space-y-3 text-sm">
                 <div>
                 <div class="font-bold">부서</div>
-                <select v-model="filter.dept" class="w-full rounded-md border px-2 py-1">
+
+                <!--<select v-model="filter.dept" class="w-full rounded-md border px-2 py-1">
                     <option value="">전체</option><option>IT 개발</option>
-                </select>
+                </select>-->
+
+                <!--직무 IT개발밖에 없어서, 다른 직무들도 추가함.-->
+    <select v-model="filter.dept" class="w-full rounded-md border px-2 py-1">
+      <option value="">전체</option>
+      <option value="IT">IT</option>
+      <option value="미디어, 광고">미디어, 광고</option>
+      <option value="판매, 유통">판매, 유통</option>
+      <option value="제조, 생산, 화학">제조, 생산, 화학</option>
+      <option value="금융, 은행">금융, 은행</option>
+      <option value="서비스">서비스</option>
+      <option value="공공기관 / 공기업">공공기관 / 공기업</option>
+    </select>
+
                 </div>
                 <div>
                 <div class="font-bold">직무</div>
-                <select v-model="filter.role" class="w-full rounded-md border px-2 py-1">
+                
+                <!--<select v-model="filter.role" class="w-full rounded-md border px-2 py-1">
                     <option value="">전체</option><option>백엔드 개발자</option>
-                </select>
+                </select>-->
+
+                <!--직무 상세도 위와 같이 수정-->
+    <select v-model="filter.role" class="w-full rounded-md border px-2 py-1">
+      <option value="">전체</option>
+      <option value="프론트엔드 개발">프론트엔드 개발</option>
+      <option value="백엔드 개발">백엔드 개발</option>
+      <option value="데이터 분석">데이터 분석</option>
+      <option value="ERP">ERP</option>
+      <option value="QA">QA</option>
+      <option value="네트워크 엔지니어">네트워크 엔지니어</option>
+      <option value="HR">HR</option>
+    </select>
+
                 </div>
                 <div>
                 <div class="font-bold">신입/경력</div>

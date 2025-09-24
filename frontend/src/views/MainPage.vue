@@ -43,13 +43,32 @@
             <button v-if="authStore.isLoggedIn" aria-label="계정" class="p-1 hover:text-gray-300">
               <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
             </button>
-            <button v-if="authStore.isLoggedIn" aria-label="로그아웃" class="p-1 hover:text-white" @click="authStore.logout()">
+
+            <!--<button v-if="authStore.isLoggedIn" aria-label="로그아웃" class="p-1 hover:text-white" @click="authStore.logout()">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M14 3h7m0 0v7m0-7L10 14"/>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10v11h11"/>
               </svg>
-            </button>
+            </button>-->
+
+        <!--로그아웃 이모지 문모양으로 바꿈-->
+          <button
+          v-if="authStore.isLoggedIn"
+          aria-label="로그아웃"
+          class="p-1 hover:text-white"
+          @click="authStore.logout()">
+          <svg xmlns="http://www.w3.org/2000/svg" 
+              class="w-6 h-6" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor" 
+              stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" 
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
+          </svg>
+        </button>
+
           </div>
         </div>
       </nav>
