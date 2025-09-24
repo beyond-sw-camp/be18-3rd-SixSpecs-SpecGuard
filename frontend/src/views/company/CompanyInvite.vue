@@ -33,12 +33,12 @@
                 <br><br>
                 <h3 class="text-1xl font-extrabold tracking-tight"> 
                     - MANABER <br> 
-                    VIEWR의 권한을 포함하고 ... 가능
+                    VIEWR의 권한을 포함하고 지원서 정합성 결과 열람/의견 작성 가능
                 </h3>
                 <br>
                 <h3 class="text-1xl font-extrabold tracking-tight">
                     - VIEWER <br>
-                    ... 가능한 권한이다.
+                    결과 열람만 가능한 권한이다.
                 </h3>
 
             </div>
