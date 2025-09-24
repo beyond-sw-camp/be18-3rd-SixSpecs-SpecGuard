@@ -19,7 +19,7 @@
             <button class="p-1 hover:text-amber-300" aria-label="알림">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1"/></svg>
             </button>
-            <button class="p-1 hover:text-amber-300" aria-label="계정">
+            <button class="p-1 hover:text-amber-300" @click="goMyPage('CompanyOwnerMypage')" aria-label="계정">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A7 7 0 0112 15a7 7 0 016.879 2.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             </button>
             <button class="p-1 hover:text-amber-300" aria-label="공유">
@@ -103,15 +103,6 @@
                     </ul>
                 </div>
                 </details>
-              
-                <details class="group">
-                <summary class="list-none flex items-center justify-between rounded-lg bg-slate-900/10 px-3 py-2 font-semibold">
-                    <span>지원자 관리</span>
-                    <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/>
-                    </svg>
-                </summary>
-                </details>
 
                 <details class="group">
                 <summary class="list-none flex items-center justify-between rounded-lg bg-slate-900/10 px-3 py-2 font-semibold">
@@ -178,11 +169,13 @@ const authStore = useAuthStore();
 const router = useRouter()
 const route = useRoute()
 const companySlug = computed(() => authStore.companySlug)
+const managerSlug  = computed(() => authStore.managerSlug)
+const isOwner      = computed(() => authStore.role === 'OWNER' || authStore.isOwner === true)
 
 
 onMounted(async () => {
     try {
-        const { data } = await api.get(`/company/${companySlug}/users/me`)
+        const { data } = await api.get(`/company/${companySlug.value}/users/me`)
         const name = data?.company?.managerName ?? data?.user?.name
         if (name) {
             userName.value = name
@@ -205,9 +198,19 @@ function logout() {
 function pageMove(name, extraParams = {}, query) {
     router.push({
         name,
-        params: { companySlug, ...extraParams },
+        params: { companySlug: companySlug.value, ...extraParams },
         query,
     })
+}
+
+function goMyPage() {
+    if (!companySlug.value) return
+    if (isOwner.value) {
+        pageMove('CompanyOwnerMypage')
+    } else {
+        if (!managerSlug.value) return
+        pageMove('CompanyManagerMypage', { managerSlug: managerSlug.value })
+    }
 }
 // 사이드바 오픈
 const sidebarOpen = ref(true)
