@@ -31,7 +31,6 @@
           <p>회사: <span class="font-semibold">{{ inviteInfo?.companyName }}</span></p>
           <p>역할: <span class="font-semibold">{{ inviteInfo?.role }}</span></p>
         </div>
-
         <div class="mt-8 space-y-3">
           <button
             @click="goForm"
@@ -90,7 +89,7 @@ onMounted(async () => {
 })
 
 const goForm = () => {
-  window.location.href = `/oauth2/authorization/naver?inviteToken=${route.query.token}`;
+  router.push({ name: "CompanyInviteSignup", query: { token } });
 }
 const goNaverLogin = () => {
     window.location.href = `${API_URL}/oauth2/authorization/naver?inviteToken=${token}`;
