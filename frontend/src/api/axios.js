@@ -30,6 +30,10 @@ api.interceptors.request.use((cfg) => {
     cfg.headers = cfg.headers || {};
     cfg.headers.Authorization = `Bearer ${t}`;
   }
+  if (!pub && store?.companySlug) {
+    cfg.headers = cfg.headers || {};
+    cfg.headers["X-Company-Slug"] = store.companySlug;
+  }
   if (import.meta.env.DEV) {
     console.debug("[api:req]", (cfg.method || "").toUpperCase(), cfg.url, "public?", pub, "auth?", !!t);
   }

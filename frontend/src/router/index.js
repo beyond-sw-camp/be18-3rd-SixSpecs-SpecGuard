@@ -19,6 +19,7 @@ import CompanyCreatePostBasic from '../views/company/CompanyCreatePostBasic.vue'
 import CompanyCreatePostDetail from '../views/company/CompanyCreatePostDetail.vue'
 import CompanySetEvaluationWeight from '../views/company/CompanySetEvaluationWeight.vue'
 import CompanyEvaluationWeightList from '../views/company/CompanyEvaluationWeightList.vue'
+import CompanyEvaluationWeightUpdate from '@/views/company/CompanyEvaluationWeightUpdate.vue'
 import CompanyTemplateDetail from '../views/company/CompanyTemplateDetail.vue'
 import CompanyApplicantDetail from '../views/company/CompanyApplicantDetail.vue'
 import CompanyModifyPostBasic from '../views/company/CompanyModifyPostBasic.vue'
@@ -45,6 +46,9 @@ import ResumeSubmit from '../views/resume/ResumeSubmit.vue'
 
 
 
+const isUuid = (v) =>
+  typeof v === 'string' &&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v)
 
 
 const routes = [
@@ -75,7 +79,9 @@ const routes = [
       { path: 'create/post/basic', name: 'CompanyCreatePostBasic', component: CompanyCreatePostBasic, props: true },
       { path: 'create/post/detail/:templateId', name: 'CompanyCreatePostDetail', component: CompanyCreatePostDetail, props: true },
       { path: 'evaluation/list', name: 'CompanyEvaluationWeightList', component: CompanyEvaluationWeightList, props: true },
-      { path: 'post/:companyTemplateId/weight', name: 'CompanySetEvaluationWeight', component: CompanySetEvaluationWeight, props: true },
+      { path: 'evaluation/update', name: 'CompanyEvaluationWeightUpdate', component: CompanyEvaluationWeightUpdate, props: true },
+      { path: 'post/:companyTemplateId/weight', name: 'CompanyCreateEvaluationWeight', component: CompanySetEvaluationWeight, props: true},
+      { path: 'post/:companyTemplateId/weight/:profileId', name: 'CompanyEditEvaluationWeight', component: CompanySetEvaluationWeight, props: true},
       { path: 'post/:companyTemplateId/detail', name:'CompanyTemplateDetail', component:CompanyTemplateDetail, props: true },
       { path: 'post/:companyTemplateId/applicant/:resumeId', name: 'CompanyApplicantDetail', component:CompanyApplicantDetail, props: true },
       { path: 'modify/post/:companyTemplateId/edit/basic', name: 'CompanyModifyPostBasic', component: CompanyModifyPostBasic, props: true },

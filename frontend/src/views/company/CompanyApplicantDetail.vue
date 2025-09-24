@@ -154,7 +154,7 @@
                 <label class="text-sm font-semibold">코멘트 작성</label>
                 <textarea v-model="comment" rows="4" class="mt-1 w-full rounded-md border px-3 py-2"></textarea>
                 <button class="mt-2 rounded-md bg-slate-800 text-white px-4 py-2 text-sm" @click="saveComment">작성하기</button>
-                </div>
+              </div>
             </div>
             </aside>
         </section>
@@ -252,6 +252,9 @@ const comment = ref('')
 const fallbackAvatar = 'https://placehold.co/96x96/png'
 
 const summaries = ref([])
+const validationResultId = ref(null)   
+const savingComment = ref(false)      
+const saveMsg = ref('')  
 
 // links 계산
 const portfolioLinks = computed(() => {
@@ -396,6 +399,16 @@ let finalScore = null, percentile = null, analyzedAt = null, details = {}
         comment: fd.descriptionComment ?? null,
       };
       analyzedAt = fd.resultAt ?? fd.calculatedAt ?? null
+
+    validationResultId.value =
+    fd.resultId || fd.id || fd.validationResultId || fd.validation_result_id || null
+
+    // 기존 코멘트 있으면 에디터에 반영
+    if (fd.descriptionComment) {
+      comment.value = fd.descriptionComment
+    }
+
+
     }
     if (pct.status === 200) {
       const pd = pct.data?.data ?? pct.data ?? {}
@@ -444,13 +457,47 @@ async function fetchList() {
 }
 
 async function saveComment() {
-  await api.post(
-    `company/resumes/${resumeId}/comments`,
-    { content: comment.value },
-    { headers: { ...headers.value, 'Content-Type': 'application/json' } }
-  )
-  comment.value = ''
+  if (!validationResultId.value) {
+    alert('분석 결과 ID가 없어 코멘트를 저장할 수 없습니다. 먼저 정합성 분석을 실행하세요.')
+    return
+  }
+
+  const body = { comment: (comment.value ?? '').trim() }
+  if (!body.comment) {
+    if (!confirm('내용이 비어 있습니다. 빈 코멘트로 저장할까요?')) return
+  }
+
+  savingComment.value = true
+  saveMsg.value = ''
+  try {
+    const r = await api.patch(
+      `validation/${validationResultId.value}/comment`,
+      body,
+      {
+        headers: { ...headers.value, 'Content-Type': 'application/json' },
+        validateStatus: s => s < 500
+      }
+    )
+
+    if (r.status === 200 || r.status === 204) {
+      resume.value = {
+        ...(resume.value || {}),
+        details: { ...(resume.value?.details || {}), comment: body.comment }
+      }
+      saveMsg.value = '저장되었습니다.'
+    } else if (r.status === 401 || r.status === 403) {
+      throw new Error('권한이 없습니다. 로그인 상태 또는 권한을 확인해 주세요.')
+    } else {
+      throw new Error(r.data?.message || '저장에 실패했습니다.')
+    }
+  } catch (e) {
+    console.error(e)
+    saveMsg.value = e?.message || '저장 중 오류가 발생했습니다.'
+  } finally {
+    savingComment.value = false
+  }
 }
+
 
 // 언어 집계
 function aggregateLang(meta) {
