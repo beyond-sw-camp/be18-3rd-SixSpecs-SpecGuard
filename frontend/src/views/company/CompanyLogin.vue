@@ -47,7 +47,7 @@
 
                 <p class="mt-6 text-center text-sm">SNS 계정으로 간편하게 시작하기</p>
                 <div class="mt-3 grid grid-cols-2 gap-3">
-                <button type="button" class="inline-flex items-center justify-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-medium ring-1 ring-slate-200 shadow-sm">
+                <button @click="goGoogle" type="button" class="inline-flex items-center justify-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-medium ring-1 ring-slate-200 shadow-sm">
                     <img alt="Google" class="h-4 w-4" src="https://www.svgrepo.com/show/475656/google-color.svg" />
                     Continue with Google
                 </button>
@@ -175,6 +175,10 @@ onMounted(() => {
 
 const goNaver = () => {
   window.location.href = "http://localhost:8080/oauth2/authorization/naver";
+};
+
+const goGoogle = () => {
+  window.location.href = "http://localhost:8080/oauth2/authorization/google";
 };
 
 
