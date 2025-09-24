@@ -68,6 +68,10 @@
     import { reactive, computed, ref, watch, onMounted } from 'vue'
     import { useRouter, useRoute } from 'vue-router'
     import api from '@/api/axios'
+    import { useAuthStore } from '@/stores/auth'
+
+    const auth = useAuthStore()
+    const companySlug = computed(() => auth.companySlug)
 
     const API = `${(import.meta.env.VITE_API_URL ?? 'http://localhost:8080').replace(/\/$/,'')}/api/v1`
 
@@ -132,19 +136,32 @@
 
     watch(() => form.email, () => { emailVerified.value = false; form.code=''; })
 
-    onMounted(async () => {
-    if (!token) return
-    try {
+onMounted(async () => {
+    if (token) {
+        try {
         const { data } = await api.get(`/auth/signup/invite/check?token=${token}`)
         if (data?.email) {
-        form.email = String(data.email).trim().toLowerCase()
-        prefilled.email = true
-        await loadEmailStatus()
+            form.email = String(data.email).trim().toLowerCase()
+            prefilled.email = true
+            await loadEmailStatus()
         }
-    } catch (e) {
-        console.error('invite check 실패', e)
+        } catch (e) { console.error('invite check 실패', e) }
     }
-    })
+    await loadMe()
+})
+// me 조회
+async function loadMe() {
+    if (!companySlug.value) return
+    try {
+        const { data } = await api.get(`/company/${companySlug.value}/users/me`)
+        // 초대 토큰으로 이메일이 이미 채워졌다면 덮어쓰지 않음
+        if (!prefilled.email && data?.email) form.email = String(data.email).trim().toLowerCase()
+        if (data?.name) form.username = data.name
+        if (data?.phone) form.phone = data.phone
+    } catch (e) {
+        console.debug('me 조회 실패', e?.response?.status, e?.message)
+    }
+}
 
     function validateAll() {
     errors.username = form.username ? '' : '이름를 입력하세요.'
