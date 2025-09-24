@@ -15,14 +15,14 @@
 
 
                 <label class="mt-5 block text-sm font-semibold">전화번호 *</label>
-                <input v-model.trim="form.phone" inputmode="tel" required
+                <input v-model.trim="form.phone" inputmode="tel"
                 class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
                 <p v-if="errors.phone" class="mt-1 text-xs text-red-600">{{ errors.phone }}</p>
 
                 <label class="mt-5 block text-sm font-semibold">이메일 *</label>
                 <div class="mt-2 flex gap-3">
-                    <input v-model.trim="form.email" type="email" required
-                        :readonly="prefilledEmail"
+                    <input v-model.trim="form.email" type="email" required 
+                        :readonly="true"
                         class="flex-1 rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
                     <button type="button" @click="verifyEmail" :disabled="ui.sending"
                             class="shrink-0 rounded-md bg-slate-800 px-4 py-2 text-white font-semibold hover:bg-slate-700 disabled:bg-slate-400">
@@ -80,7 +80,7 @@
             <!-- 버튼 영역 -->
                 <div class="md:col-span-2 flex items-center justify-between">
                 <button type="button"
-                        :disabled="!canProceed"
+                        :disabled="!emailVerified"
                         @click="onDelete"
                         class="rounded-md px-6 py-2 font-semibold text-white bg-red-600 disabled:cursor-not-allowed
                             disabled:bg-slate-400 bg-slate-800 hover:bg-red-500">
@@ -94,7 +94,7 @@
                     취소
                     </button>
                     <button type="submit"
-                            :disabled="!canProceed"
+                            :disabled="!emailVerified"
                             class="rounded-md px-6 py-2 font-semibold text-white disabled:cursor-not-allowed
                                 disabled:bg-slate-400 bg-slate-800 hover:bg-slate-700">
                     수정하기
@@ -109,23 +109,21 @@
 
 <script setup>
 import { reactive, computed, ref, watch, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import api from '@/api/axios'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import api from '@/api/axios'
 import { onBeforeRouteUpdate } from 'vue-router'
 onBeforeRouteUpdate(() => { emailVerified.value = false; form.code = '' })
+
+const API = `${(import.meta.env.VITE_API_URL ?? 'http://localhost:8080').replace(/\/$/,'')}/api/v1`
 
 const auth = useAuthStore()
 const companySlug = computed(() => auth.companySlug)
 
-const API = `${(import.meta.env.VITE_API_URL ?? 'http://localhost:8080').replace(/\/$/,'')}/api/v1`
-
 const router = useRouter()
-const route = useRoute()
-const token = String(route.query.token || '')
-const prefilled = reactive({ email: false})
-const prefilledEmail = computed(() => prefilled.email)
-const form = reactive({ username:'', phone:'', email:'', code:'' })
+const form = reactive({
+    username:'', password:'', phone:'', email:'', code:''
+})
 const ui = reactive({ sending:false, confirming:false })
 const errors = reactive({})
 
@@ -138,7 +136,7 @@ form.email = form.email.trim().toLowerCase()
 form.code  = (form.code ?? '').trim().replace(/\D/g,'')
 
 const isValid = computed(() => !!form.username && isPhone(form.phone) && isEmail(form.email))
-const canProceed = computed(() => Boolean(isValid.value && emailVerified.value))
+const canProceed = computed(() => isValid.value && emailVerified.value)
 
 // 인증번호 요청
 async function verifyEmail() {
@@ -172,51 +170,13 @@ async function confirmCode() {
     } finally { ui.confirming=false }
 }
 
-async function loadEmailStatus() {
-    if (!isEmail(form.email)) { emailVerified.value = false; return }
-        try {
-            const r = await fetch(`${API}/verify/company/status?email=${encodeURIComponent(form.email)}`)
-            const json = r.ok ? await r.json() : {}
-            const v = json?.verified
-            // true, "true", 1, "1" 모두 허용
-            emailVerified.value = r.ok && (v === true || v === 'true' || v === 1 || v === '1')
-        return ok
-        } catch {
-            emailVerified.value = false
-            return false
-        }
-}
-
-watch(() => form.email, (nv, ov) => {
-  if (nv !== ov) { emailVerified.value = false; form.code = '' }
-})
+watch(() => form.email, () => { emailVerified.value = false; form.code=''; })
 
 onMounted(async () => {
-if (token) {
-    try {
-    const { data } = await api.get(`/auth/signup/invite/check?token=${token}`)
-    if (data?.email) {
-        form.email = String(data.email).trim().toLowerCase()
-        prefilled.email = true
-        await loadEmailStatus()
-    }
-    } catch (e) { console.error('invite check 실패', e) }
-}
-await loadMe()
+    emailVerified.value = false
+    form.code = ''
+    await loadMe()
 })
-// me 조회
-async function loadMe() {
-if (!companySlug.value) return
-try {
-const { data } = await api.get(`/company/${companySlug.value}/users/me`)
-const u = data?.user || {}
-if (!prefilled.email && u.email) form.email = String(u.email).trim().toLowerCase()
-if (u.name)  form.username = u.name
-if (u.phone != null) form.phone = String(u.phone)
-} catch (e) {
-console.debug('me 조회 실패', e?.response?.status, e?.message)
-}
-}
 
 function validateAll() {
 errors.username = form.username ? '' : '이름를 입력하세요.'
@@ -226,8 +186,22 @@ errors.email = isEmail(form.email) ? '' : '이메일 형식이 올바르지 않�
 return Object.values(errors).every(v => !v)
 }
 
+async function loadMe() {
+  if (!companySlug.value) return
+  try {
+    const { data } = await api.get(`/company/${companySlug.value}/users/me`)
+    // 계정
+    form.username = data?.user?.name ?? ''
+    form.email    = data?.user?.email ?? ''
+    form.phone    = data?.user?.phone ?? ''
+  } catch (e) {
+    console.debug('me 조회 실패', e?.response?.status, e?.message)
+  }
+}
+
+// function sanitize(v) { return typeof v === 'string' ? v.trim() : v }
+
 async function nextStep() {
-    await loadEmailStatus()
     if (emailVerified.value === false) { errors.email = '이메일 인증이 필요합니다.'; return }
     if (!validateAll()) return
     const payload = {
@@ -243,6 +217,110 @@ async function nextStep() {
         console.error('ME PATCH 실패', e?.response?.status, e?.response?.data || e?.message)
         alert(e?.response?.data?.message || '수정에 실패했습니다.')
     }
+}
+
+const showPwdModal = ref(false)
+const pwd = reactive({ old: '', next: '' })
+ui.changingPwd = false
+errors.passwordChange = ''
+
+function openPwdModal() {
+  if (!emailVerified.value) {
+    alert('이메일 인증을 먼저 완료해주세요.')
+    return
+  }
+  errors.passwordChange = ''
+  pwd.old = ''; pwd.next = ''
+  showPwdModal.value = true
+}
+function closePwdModal() {
+  showPwdModal.value = false
+  pwd.old = ''; pwd.next = ''
+}
+
+function validNewPwd(v) {
+  return typeof v === 'string'
+    && v.length >= 8 && v.length <= 64
+    && /[A-Za-z]/.test(v) && /\d/.test(v)
+}
+
+async function changePassword() {
+  errors.passwordChange = ''
+  if (!pwd.old || !pwd.next) { errors.passwordChange = '현재/새 비밀번호를 입력하세요.'; return }
+  if (pwd.old === pwd.next) { errors.passwordChange = '새 비밀번호가 현재 비밀번호와 같습니다.'; return }
+  if (!validNewPwd(pwd.next)) { errors.passwordChange = '8~64자, 영문+숫자 포함'; return }
+
+  ui.changingPwd = true
+  try {
+    await api.patch('/me/password', { oldPassword: pwd.old, newPassword: pwd.next })
+    alert('비밀번호가 변경되었습니다.')
+    closePwdModal()
+  } catch (e) {
+    const msg = e?.response?.data?.message || '변경 실패. 현재 비밀번호를 확인하세요.'
+    errors.passwordChange = msg
+  } finally {
+    ui.changingPwd = false
+  }
+}
+
+async function onDelete() {
+    if (!emailVerified.value) { alert('이메일 인증을 먼저 완료해주세요.'); return }
+    if (!confirm('계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return
+
+    try {
+        await api.delete(`/me`)
+        alert('계정이 성공적으로 삭제되었습니다.')
+        try { auth.logout?.() } catch {}
+        router.push({ name: 'CompanyLogin' })
+    } catch (e) {
+        const status = e?.response?.status
+        const msg = e?.response?.data?.message || '삭제 실패'
+        if (status === 403) alert('권한이 없습니다. OWNER만 삭제할 수 있습니다.')
+        else alert(msg)
+    }
+}
+
+// async function loadEmailStatus() {
+//     if (!isEmail(form.email)) { emailVerified.value = false; return }
+//         try {
+//             const r = await fetch(`${API}/verify/company/status?email=${encodeURIComponent(form.email)}`)
+//             const json = r.ok ? await r.json() : {}
+//             const v = json?.verified
+//             const ok = r.ok && (v === true || v === 'true' || v === 1 || v === '1')
+//             emailVerified.value = ok
+//             return ok
+//         } catch {
+//             emailVerified.value = false
+//             return false
+//         }
+// }
+
+// watch(() => form.email, (nv, ov) => {
+//   if (nv !== ov) { emailVerified.value = false; form.code = '' }
+// // })
+
+// onMounted(async () => {
+// if (token) {
+//     try {
+//     const { data } = await api.get(`/auth/signup/invite/check?token=${token}`)
+//     if (data?.email) {
+//         form.email = String(data.email).trim().toLowerCase()
+//         prefilled.email = true
+//         await loadEmailStatus()
+//     }
+//     } catch (e) { console.error('invite check 실패', e) }
+// }
+// await loadMe()
+// })
+// // me 조회
+
+
+
+
+
+
+function onCancel() {
+    router.back()
 }
 console.log('API=', API)
 </script>
