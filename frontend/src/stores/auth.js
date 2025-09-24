@@ -9,11 +9,26 @@ function extractToken(res) {
     return h?.replace(/^Bearer\s+/i, "") || res.data?.accessToken || null;
 }
 
+function normalizeMe(data) {
+    const role =
+        data?.role || data?.user?.role || data?.company?.role || data?.company?.managerRole || null
+
+    let managerSlug =
+        data?.managerSlug || data?.user?.managerSlug || data?.company?.managerSlug || null
+    if (!managerSlug && role !== 'OWNER') managerSlug = data?.id || data?.user?.id || null
+
+    const isOwner = role === 'OWNER' || data?.isOwner === true || data?.company?.isOwner === true || false
+    return { role, managerSlug, isOwner }
+}
+
 export const useAuthStore = defineStore("auth", {
     state: () => ({
         accessToken: localStorage.getItem("accessToken") || null,
         user: JSON.parse(localStorage.getItem("user") || "null"),
         companySlug: localStorage.getItem("companySlug") || null,
+        role: localStorage.getItem("role") || null,
+        isOwner: JSON.parse(localStorage.getItem("isOwner") || "false"),
+        managerSlug: localStorage.getItem("managerSlug") || null,
     }),
     getters: {
         // 로그인 상태
@@ -39,6 +54,15 @@ export const useAuthStore = defineStore("auth", {
         const me = await api.get(`/company/${this.companySlug}/users/me`);
         this.user = me.data;
         localStorage.setItem("user", JSON.stringify(this.user));
+        const norm = normalizeMe(me.data)
+        this.role = norm.role
+        this.isOwner = !!norm.isOwner
+        this.managerSlug = norm.managerSlug
+
+        localStorage.setItem("role", this.role || "")
+        localStorage.setItem("isOwner", JSON.stringify(this.isOwner))
+        if (this.managerSlug) localStorage.setItem("managerSlug", this.managerSlug)
+        else localStorage.removeItem("managerSlug")
     },
 
     async loginWithOAuth2() {
@@ -59,6 +83,15 @@ export const useAuthStore = defineStore("auth", {
         const me = await api.get(`/company/${this.companySlug}/users/me`);
         this.user = me.data;
         localStorage.setItem("user", JSON.stringify(this.user));
+        const norm = normalizeMe(me.data)
+        this.role = norm.role
+        this.isOwner = !!norm.isOwner
+        this.managerSlug = norm.managerSlug
+
+        localStorage.setItem("role", this.role || "")
+        localStorage.setItem("isOwner", JSON.stringify(this.isOwner))
+        if (this.managerSlug) localStorage.setItem("managerSlug", this.managerSlug)
+        else localStorage.removeItem("managerSlug")
     },
 
     async refreshToken() {
@@ -73,6 +106,19 @@ export const useAuthStore = defineStore("auth", {
         const payload = jwtDecode(token);
         this.companySlug = payload.companySlug;
         localStorage.setItem("companySlug", this.companySlug);
+        const me = await api.get(`/company/${this.companySlug}/users/me`)
+        this.user = me.data
+        localStorage.setItem("user", JSON.stringify(this.user))
+
+        const norm = normalizeMe(me.data)
+        this.role = norm.role
+        this.isOwner = !!norm.isOwner
+        this.managerSlug = norm.managerSlug
+
+        localStorage.setItem("role", this.role || "")
+        localStorage.setItem("isOwner", JSON.stringify(this.isOwner))
+        if (this.managerSlug) localStorage.setItem("managerSlug", this.managerSlug)
+        else localStorage.removeItem("managerSlug")
 
         return token;
         } catch (err) {
@@ -89,6 +135,9 @@ export const useAuthStore = defineStore("auth", {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("user");
         localStorage.removeItem("companySlug");
+        localStorage.removeItem("role")
+        localStorage.removeItem("isOwner")
+        localStorage.removeItem("managerSlug")
     },
     },
 });

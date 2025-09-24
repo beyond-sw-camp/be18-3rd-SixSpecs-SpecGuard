@@ -25,6 +25,8 @@ import CompanyApplicantDetail from '../views/company/CompanyApplicantDetail.vue'
 import CompanyModifyPostBasic from '../views/company/CompanyModifyPostBasic.vue'
 import CompanyModifyPostDetail from '../views/company/CompanyModifyPostDetail.vue'
 import CompanyInvite from '../views/company/CompanyInvite.vue'
+import CompanyOwnerMypage from '../views/company/CompanyOwnerMypage.vue'
+import CompanyManagerMypage from '../views/company/CompanyManagerMypage.vue'
 
 // oauth2
 import Oauth2Redirect from "../views/company/Oauth2Redirect.vue";
@@ -49,6 +51,7 @@ import ResumeSubmit from '../views/resume/ResumeSubmit.vue'
 const isUuid = (v) =>
   typeof v === 'string' &&
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v)
+
 
 
 const routes = [
@@ -86,7 +89,9 @@ const routes = [
       { path: 'post/:companyTemplateId/applicant/:resumeId', name: 'CompanyApplicantDetail', component:CompanyApplicantDetail, props: true },
       { path: 'modify/post/:companyTemplateId/edit/basic', name: 'CompanyModifyPostBasic', component: CompanyModifyPostBasic, props: true },
       { path: 'modify/post/:companyTemplateId/edit/detail', name: 'CompanyModifyPostDetail', component: CompanyModifyPostDetail, props: true},
-      { path: 'invite', name: 'CompanyInvite', component: CompanyInvite, props: true }
+      { path: 'invite', name: 'CompanyInvite', component: CompanyInvite, props: true },
+      { path: 'mypage', name: 'CompanyOwnerMypage', component: CompanyOwnerMypage, props: true },
+      { path: 'mypage/:managerSlug', name: 'CompanyManagerMypage', component: CompanyManagerMypage, props: true }
     ],
   },
   
