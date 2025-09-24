@@ -151,16 +151,16 @@ onMounted(async () => {
 })
 // me 조회
 async function loadMe() {
-    if (!companySlug.value) return
-    try {
-        const { data } = await api.get(`/company/${companySlug.value}/users/me`)
-        // 초대 토큰으로 이메일이 이미 채워졌다면 덮어쓰지 않음
-        if (!prefilled.email && data?.email) form.email = String(data.email).trim().toLowerCase()
-        if (data?.name) form.username = data.name
-        if (data?.phone) form.phone = data.phone
-    } catch (e) {
-        console.debug('me 조회 실패', e?.response?.status, e?.message)
-    }
+  if (!companySlug.value) return
+  try {
+    const { data } = await api.get(`/company/${companySlug.value}/users/me`)
+    const u = data?.user || {}
+    if (!prefilled.email && u.email) form.email = String(u.email).trim().toLowerCase()
+    if (u.name)  form.username = u.name
+    if (u.phone != null) form.phone = String(u.phone)
+  } catch (e) {
+    console.debug('me 조회 실패', e?.response?.status, e?.message)
+  }
 }
 
     function validateAll() {

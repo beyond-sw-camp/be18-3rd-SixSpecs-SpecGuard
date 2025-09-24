@@ -1,131 +1,173 @@
 <template>
     <main class="mx-auto max-w-6xl px-6 py-12">
-        <!-- form으로 감싸기 -->
         <form @submit.prevent="nextStep">
-        <section class="rounded-[28px] bg-amber-400/90 p-10 shadow-sm ring-1 ring-black/5">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <section class="rounded-[28px] bg-amber-400/90 p-8 md:p-10 shadow-sm ring-1 ring-black/5">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
 
-            <!-- 계정 정보 -->
-            <div>
+            <!-- 좌측(2칸): 폼 -->
+            <div class="md:col-span-2 space-y-8">
+                <!-- 계정 정보 -->
+                <div>
                 <h2 class="text-2xl font-extrabold tracking-tight">계정 정보</h2>
 
                 <label class="mt-6 block text-sm font-semibold">이름 *</label>
                 <input v-model.trim="form.username" required
-                class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
+                        class="mt-2 w-full max-w-md rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
                 <p v-if="errors.username" class="mt-1 text-xs text-red-600">{{ errors.username }}</p>
 
                 <label class="mt-5 block text-sm font-semibold">비밀번호 *</label>
-                <input v-model.trim="form.password" type="password" required
-                class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
+                <input v-model.trim="form.password" type="password"
+                        class="mt-2 w-full max-w-md rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
                 <p v-if="errors.password" class="mt-1 text-xs text-red-600">{{ errors.password }}</p>
 
                 <label class="mt-5 block text-sm font-semibold">전화번호 *</label>
-                <input v-model.trim="form.phone" inputmode="tel" required
-                class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
+                <input v-model.trim="form.phone" inputmode="tel" required :readonly="true"
+                        class="mt-2 w-full max-w-md rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
                 <p v-if="errors.phone" class="mt-1 text-xs text-red-600">{{ errors.phone }}</p>
 
                 <label class="mt-5 block text-sm font-semibold">이메일 *</label>
-                <div class="mt-2 flex gap-3">
-                    <input v-model.trim="form.email" type="email" required
-                            class="flex-1 rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
+                <div class="mt-2 flex gap-3 max-w-md">
+                    <input v-model.trim="form.email" type="email" required :readonly="true"
+                        class="flex-1 rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
                     <button type="button" @click="verifyEmail" :disabled="ui.sending"
                             class="shrink-0 rounded-md bg-slate-800 px-4 py-2 text-white font-semibold hover:bg-slate-700 disabled:bg-slate-400">
-                        {{ ui.sending ? '요청 중' : '인증 번호 요청' }}
+                    {{ ui.sending ? '요청 중' : '인증 번호 요청' }}
                     </button>
                 </div>
                 <p v-if="errors.email" class="mt-1 text-xs text-red-600">{{ errors.email }}</p>
-                
+
                 <label class="mt-5 block text-sm font-semibold">인증번호</label>
-                <div class="mt-2 flex gap-3">
-                    <input v-model.trim="form.code"
-                            type="text" inputmode="numeric" pattern="\d*" maxlength="6" required
-                            autocomplete="one-time-code"
-                            class="w-28 rounded-md border border-slate-300 bg-slate-100 px-2 py-2 outline-none"/>
+                <div class="mt-2 flex gap-3 max-w-md">
+                    <input v-model.trim="form.code" type="text" inputmode="numeric" pattern="\d*" maxlength="6" required
+                        autocomplete="one-time-code"
+                        class="w-28 rounded-md border border-slate-300 bg-slate-100 px-2 py-2 outline-none"/>
                     <button type="button" @click="confirmCode" :disabled="ui.confirming"
                             class="shrink-0 rounded-md bg-slate-800 px-4 py-2 text-white font-semibold hover:bg-slate-700 disabled:bg-slate-400">
-                        {{ ui.confirming ? '확인 중' : '인증 하기' }}
+                    {{ ui.confirming ? '확인 중' : '인증 하기' }}
                     </button>
                 </div>
-            </div>
+                </div>
 
-            <!-- 기업/담당자 정보 -->
-            <div>
+                <!-- 기업/담당자 정보 -->
+                <div>
                 <h2 class="text-2xl font-extrabold tracking-tight">기업 정보</h2>
 
                 <label class="mt-6 block text-sm font-semibold">기업명 *</label>
-                <input v-model.trim="form.companyName" required
-                class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
-                <p v-if="errors.companyName" class="mt-1 text-xs text-red-600">{{ errors.companyName }}</p>
+                <input v-model.trim="form.companyName" required :readonly="true"
+                        class="mt-2 w-full max-w-md rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
 
                 <label class="mt-5 block text-sm font-semibold">사업자 번호(10자리) *</label>
-                <input v-model.trim="form.bizRegNo" inputmode="numeric" required
-                class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
-                <p v-if="errors.bizRegNo" class="mt-1 text-xs text-red-600">{{ errors.bizRegNo }}</p>
+                <input v-model.trim="form.bizRegNo" inputmode="numeric" required :readonly="true"
+                        class="mt-2 w-full max-w-md rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
 
                 <h3 class="mt-6 text-xl font-extrabold">담당자 정보</h3>
 
                 <label class="mt-4 block text-sm font-semibold">담당자 명 *</label>
                 <input v-model.trim="form.managerName" required
-                class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
-                <p v-if="errors.managerName" class="mt-1 text-xs text-red-600">{{ errors.managerName }}</p>
+                        class="mt-2 w-full max-w-md rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
 
                 <label class="mt-5 block text-sm font-semibold">대표 연락처 *</label>
                 <input v-model.trim="form.managerPhone" inputmode="tel" required
-                class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
-                <p v-if="errors.managerPhone" class="mt-1 text-xs text-red-600">{{ errors.managerPhone }}</p>
+                        class="mt-2 w-full max-w-md rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
 
                 <label class="mt-5 block text-sm font-semibold">연락 가능한 이메일 *</label>
                 <input v-model.trim="form.managerEmail" type="email" required
-                class="mt-2 w-full rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
-                <p v-if="errors.managerEmail" class="mt-1 text-xs text-red-600">{{ errors.managerEmail }}</p>
+                        class="mt-2 w-full max-w-md rounded-md border border-slate-300 bg-slate-100 px-4 py-2 outline-none"/>
+                </div>
+
+                <!-- 버튼 영역 -->
+                <div class="md:col-span-2 flex items-center justify-between">
+                <button type="button"
+                        :disabled="isValid"
+                        @click="onDelete"
+                        class="rounded-md px-6 py-2 font-semibold text-white bg-red-600 hover:bg-red-500">
+                    계정탈퇴
+                </button>
+
+                <div class="flex gap-3">
+                    <button type="button"
+                            @click="onCancel"
+                            class="rounded-md px-6 py-2 font-semibold text-slate-800 ring-1 ring-slate-300 bg-white hover:bg-slate-100">
+                    취소
+                    </button>
+                    <button type="submit"
+                            :disabled="!isValid"
+                            class="rounded-md px-6 py-2 font-semibold text-white disabled:cursor-not-allowed
+                                disabled:bg-slate-400 bg-slate-800 hover:bg-slate-700">
+                    수정하기
+                    </button>
+                </div>
+                </div>
             </div>
 
-            <!-- next -->
-            <div class="md:col-span-2 flex justify-end">
-                <button type="submit"
-                :disabled="!isValid"
-                class="rounded-md px-6 py-2 font-semibold text-white
-                        transition disabled:cursor-not-allowed
-                        disabled:bg-slate-400 bg-slate-800 hover:bg-slate-700">
-                다음
-                </button>
-            </div>
+            <!-- 우측(1칸): 매니저 리스트 -->
+            <aside class="md:col-span-1">
+                <div class="rounded-2xl bg-white/80 ring-1 ring-black/5 p-4 md:p-5 sticky top-6">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-bold">초대한 매니저</h3>
+                    <span class="text-sm text-slate-500">{{ employees.length }}명</span>
+                </div>
+
+                <ul class="mt-4 space-y-3 max-h-[520px] overflow-auto pr-1">
+                    <li v-for="emp in employees" :key="emp.id" class="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-semibold truncate">{{ emp.name || '이름 없음' }}</span>
+                        <span class="text-xs rounded px-2 py-0.5 ring-1 ring-slate-200"
+                            :class="emp.role === 'MANAGER' ? 'bg-amber-100' : 'bg-slate-100'">
+                        {{ emp.role }}
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-0.5 truncate">{{ emp.email }}</p>
+                    <p v-if="emp.phone" class="text-xs text-slate-500 truncate">{{ emp.phone }}</p>
+                    </li>
+
+                    <li v-if="employees.length === 0" class="text-sm text-slate-500">
+                    초대한 매니저가 없습니다.
+                    </li>
+                </ul>
+                </div>
+            </aside>
+
             </div>
         </section>
         </form>
     </main>
-    </template>
+</template>
 
-    <script setup>
-    import { reactive, computed, ref, watch, onMounted } from 'vue'
-    import { useRouter } from 'vue-router'
+<script setup>
+import { reactive, computed, ref, watch, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import api from '@/api/axios'
 
-    const API = `${(import.meta.env.VITE_API_URL ?? 'http://localhost:8080').replace(/\/$/,'')}/api/v1`
+const API = `${(import.meta.env.VITE_API_URL ?? 'http://localhost:8080').replace(/\/$/,'')}/api/v1`
 
-    const router = useRouter()
-    const form = reactive({
+const auth = useAuthStore()
+const companySlug = computed(() => auth.companySlug)
+
+const router = useRouter()
+const form = reactive({
     username:'', password:'', phone:'', email:'',
     companyName:'', bizRegNo:'', managerName:'',
     managerPhone:'', managerEmail:'', code:''
-    })
-    const ui = reactive({ sending:false, confirming:false })
-    const errors = reactive({})
+})
+const ui = reactive({ sending:false, confirming:false })
+const errors = reactive({})
 
-    const emailVerified = ref(false)
+const emailVerified = ref(false)
+const employees = ref([])
 
-    const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
-    const isPhone = v => /^[0-9\-+()\s]{7,20}$/.test(v)
-    const isBizNo = v => /^\d{10}$/.test(v)
+const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+const isPhone = v => /^[0-9\-+()\s]{7,20}$/.test(v)
+const isBizNo = v => /^\d{10}$/.test(v)
 
-    form.email = form.email.trim().toLowerCase()
-    form.code  = (form.code ?? '').trim().replace(/\D/g,'')
+form.email = form.email.trim().toLowerCase()
+form.code  = (form.code ?? '').trim().replace(/\D/g,'')
 
-    const isValid = computed(() =>
-    form.username && form.password && isPhone(form.phone) && isEmail(form.email) &&
-    form.companyName && isBizNo(form.bizRegNo) &&
-    form.managerName && isPhone(form.managerPhone) && isEmail(form.managerEmail) &&
-    emailVerified.value
-    )
+const isValid = computed(() =>
+form.companyName && isBizNo(form.bizRegNo) &&
+form.managerName && isPhone(form.managerPhone) && isEmail(form.managerEmail)
+)
 
     // 인증번호 요청
     async function verifyEmail() {
@@ -163,29 +205,95 @@
             } catch { emailVerified.value = false }
     }
 
-    watch(() => form.email, () => { emailVerified.value = false; form.code=''; })
-    onMounted(() => { if (form.email) loadEmailStatus() })
+watch(() => form.email, () => { emailVerified.value = false; form.code=''; })
 
-    function validateAll() {
-    errors.username = form.username ? '' : '이름를 입력하세요.'
-    errors.password = form.password ? '' : '비밀번호를 입력하세요.'
-    errors.phone = isPhone(form.phone) ? '' : '전화번호 형식이 올바르지 않습니다.'
-    errors.email = isEmail(form.email) ? '' : '이메일 형식이 올바르지 않습니다.'
-    errors.companyName = form.companyName ? '' : '기업명을 입력하세요.'
-    errors.bizRegNo = isBizNo(form.bizRegNo) ? '' : '사업자번호 10자리를 입력하세요.'
-    errors.managerName = form.managerName ? '' : '담당자명을 입력하세요.'
-    errors.managerPhone = isPhone(form.managerPhone) ? '' : '대표 연락처 형식이 올바르지 않습니다.'
-    errors.managerEmail = isEmail(form.managerEmail) ? '' : '이메일 형식이 올바르지 않습니다.'
-    // 하나라도 메시지가 있으면 false
-    return Object.values(errors).every(v => !v)
-    }
+onMounted(async () => {
+    await loadMe()
+    if (form.email) await loadEmailStatus()
+})
 
-    async function nextStep() {
-    await loadEmailStatus()
-    if (!emailVerified.value) { errors.email='이메일 인증이 필요합니다.'; return }
-    if (!validateAll()) return
-    sessionStorage.setItem('specguard.signup.form', JSON.stringify({ ...form }))
-    router.push('/company/signup/condition')
-    }
-    console.log('API=', API)
+function validateAll() {
+errors.username = form.username ? '' : '이름를 입력하세요.'
+errors.password = form.password ? '' : '비밀번호를 입력하세요.'
+errors.phone = isPhone(form.phone) ? '' : '전화번호 형식이 올바르지 않습니다.'
+errors.email = isEmail(form.email) ? '' : '이메일 형식이 올바르지 않습니다.'
+errors.companyName = form.companyName ? '' : '기업명을 입력하세요.'
+errors.bizRegNo = isBizNo(form.bizRegNo) ? '' : '사업자번호 10자리를 입력하세요.'
+errors.managerName = form.managerName ? '' : '담당자명을 입력하세요.'
+errors.managerPhone = isPhone(form.managerPhone) ? '' : '대표 연락처 형식이 올바르지 않습니다.'
+errors.managerEmail = isEmail(form.managerEmail) ? '' : '이메일 형식이 올바르지 않습니다.'
+// 하나라도 메시지가 있으면 false
+return Object.values(errors).every(v => !v)
+}
+
+// me 조회로 기본값 세팅 + employees 세팅
+async function loadMe() {
+  if (!companySlug.value) return
+  try {
+    const { data } = await api.get(`/company/${companySlug.value}/users/me`)
+    // 계정
+    form.username = data?.user?.name ?? ''
+    form.email    = data?.user?.email ?? ''
+    form.phone    = data?.user?.phone ?? ''
+    // 회사
+    form.companyName  = data?.company?.name ?? ''
+    form.bizRegNo     = data?.company?.businessNumber ?? ''
+    form.managerName  = data?.company?.managerName ?? ''
+    form.managerPhone = data?.company?.contactMobile ?? ''
+    form.managerEmail = data?.company?.contactEmail ?? ''
+    // 매니저 리스트
+    employees.value   = Array.isArray(data?.employees) ? data.employees : []
+  } catch (e) {
+    console.debug('me 조회 실패', e?.response?.status, e?.message)
+  }
+}
+
+function sanitize(v) { return typeof v === 'string' ? v.trim() : v }
+
+function onCancel() {
+  router.back()
+}
+
+async function nextStep() {
+  if (!isValid.value || !companySlug.value) return;
+
+const userPayload = { name: sanitize(form.username) }
+const companyPayload = {
+name:          sanitize(form.companyName),
+managerName:   sanitize(form.managerName),
+contactEmail:  sanitize(form.managerEmail),
+contactMobile: sanitize(form.managerPhone),
+}
+// 빈 문자열 제거
+Object.keys(companyPayload).forEach(k => {
+if (!companyPayload[k]) delete companyPayload[k]
+})
+
+try {
+// 1) 유저 이름 먼저
+const uRes = await api.patch(`/company/${companySlug.value}/users/me`, userPayload)
+form.username = uRes.data?.name ?? userPayload.name ?? form.username
+} catch (e) {
+console.error('USER PATCH 실패', e?.response?.status, e?.response?.data || e?.message);
+alert('사용자 정보 수정 실패');
+return;
+}
+
+try {
+// 2) 회사 정보
+const cRes = await api.patch(`/company/${companySlug.value}`, companyPayload)
+const body = cRes.data ?? {}
+form.companyName  = body.name         ?? companyPayload.name         ?? form.companyName
+form.managerName  = body.managerName  ?? companyPayload.managerName  ?? form.managerName
+form.managerEmail = body.contactEmail ?? companyPayload.contactEmail ?? form.managerEmail
+form.managerPhone = body.contactMobile?? companyPayload.contactMobile?? form.managerPhone
+alert('수정되었습니다.');
+} catch (e) {
+console.error('COMPANY PATCH 실패', e?.response?.status, e?.response?.data || e?.message);
+alert('회사 정보 수정 실패');
+}
+}
+
+
+console.log('API=', API)
 </script>
