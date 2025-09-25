@@ -7,13 +7,23 @@
 
 | 서현원 | 김택곤 | 이원진 | 이인화 | 조상원 | 최정우 |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-|  이미지   | 이미지  |  이미지  |  이미지  | 이미지  | 이미지 |
+|  <img src="docs/현원님.png"  width="100"/>   | <img src="docs/택곤님.png"  width="100"/>  |  <img src="docs/이원진.png"  width="100"/>  |  <img src="docs/인화님.png"  width="100"/>  | <img src="docs/상원님.png"  width="100"/>  | <img src="docs/정우님.png"  width="100"/> |
 |<a href="https://github.com/viroovr" target="_blank"><img src="https://img.shields.io/badge/github-181717.svg?style=for-the-badge&logo=github&logoColor=white" /></a> | <a href="https://github.com/dobbyRR" target="_blank"><img src="https://img.shields.io/badge/github-181717.svg?style=for-the-badge&logo=github&logoColor=white" /></a> | <a href="https://github.com/sumgo-ssri" target="_blank"><img src="https://img.shields.io/badge/github-181717.svg?style=for-the-badge&logo=github&logoColor=white" /></a> | <a href="https://github.com/Inhwa1003" target="_blank"><img src="https://img.shields.io/badge/github-181717.svg?style=for-the-badge&logo=github&logoColor=white" /></a> | <a href="https://github.com/sangwon5579" target="_blank"><img src="https://img.shields.io/badge/github-181717.svg?style=for-the-badge&logo=github&logoColor=white" /></a> | <a href="https://github.com/JJJJungw" target="_blank"><img src="https://img.shields.io/badge/github-181717.svg?style=for-the-badge&logo=github&logoColor=white" /></a> |
 
 ## 📚 목차
 
 1. [프로젝트 개요](#1-프로젝트-개요)  
-2. [화면 및 기능 설계서](#2-화면-및-기능-설계서)
+2. [요구사항 명세서](#2-요구사항-명세서)  
+3. [기술 스택](#3-기술-스택)  
+4. [시스템 아키텍처](#4-시스템-아키텍처)  
+5. [데이터베이스 설계 (ERD)](#5-데이터베이스-설계-erd)
+6. [테이블-명세서](#6-테이블-명세서)
+7. [화면 기능 설계서 및 API 설계](#7-화면-기능-설계서-및-api-설계)
+8. [테스트 결과서](#8-테스트-결과서)  
+9. [기여 가이드](#9-기여-가이드)
+10. [향후 개선 계획](#10-향후-개선-계획)
+11. [회고록](#11-회고록)
+
 
 <br/>
 
@@ -46,12 +56,163 @@
 
 <br/>
 
-## 2. 화면 및 기능 설계서
+## 2. 요구사항 명세서
 
-### 2.1 화면 기능 설계서
+### 기능 요구사항
+
+#### 2.1 요약
+
+| 요구사항 ID | 대분류 | 중분류 | 소분류 | 상세 설명 | 중요도 |
+|-------------|--------|--------|--------|-----------|--------|
+| FR-01 | 이력서 제출 | 폼 입력 | 기본 정보 입력 | 지원자가 이름, 연락처, 학력 등을 입력 | ★★★ |
+| FR-02 | 정합성 분석 | Gemini 활용 | 요약 | 자기소개서 요약 생성 (3~5문장) | ★★☆ |
+| FR-03 | 정합성 분석 | Cos 유사도 계산 |일치율 판단 | 자소서 vs 포트폴리오 간 유사도 측정 | ★★★ |
+| FR-04 | 크롤링 | URL |포트폴리오 수집 | Notion, Velog 등 외부 포트폴리오 수집 | ★★☆ |
+| FR-05 | 검증 리포트 | PDF 형식 |검증 결과 제공 | 검증 점수 및 사유 포함 리포트 자동 생성 | ★★★ |
+
+#### 2.2 전문
+<details>
+<summary>요구사항 명세서 링크</summary>
+<div markdown="1">
+  
+[요구사항 명세서](https://docs.google.com/spreadsheets/d/1_VCJofMDKv3oDyNVuIkYaGBFm2pezy_r_WRvxPwOQ-A/edit?gid=1380067657#gid=1380067657)
+
+</div>
+</details>
+
+<br/>
+
+## 3. 기술 스택
+
+
+#**Frontend**
+<br>
+![Vue.js](https://img.shields.io/badge/Vue.js%203-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+
+#**Backend**
+<br>
+![Java 21](https://img.shields.io/badge/Java%2021-007396?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot%203.5-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
+![Spring Data JPA](https://img.shields.io/badge/Spring%20Data%20JPA-59666C?style=for-the-badge&logo=hibernate&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
+![ChromeDriver](https://img.shields.io/badge/ChromeDriver-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+
+
+#**Crawler**
+<br>
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Playwright](https://img.shields.io/badge/-playwright-%232EAD33?style=for-the-badge&logo=playwright&logoColor=white)
+
+#**NLP 분석**
+<br>![google-genai](https://img.shields.io/badge/google--genai-1.38-green?style=for-the-badge)
+
+
+
+#**Database**
+<br>![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+
+#**API Platform**
+<br>
+![Swagger UI](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
+![Postman](https://img.shields.io/badge/Postman-FF6C37?style=for-the-badge&logo=postman&logoColor=white)
+
+#**Tools&External References**
+<br>![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)
+![Notion](https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white)
+![Figma](https://img.shields.io/badge/Figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white)
+![Velog](https://img.shields.io/badge/Velog-20C997?style=for-the-badge&logo=velog&logoColor=white)
+  <a href="https://www.erdcloud.com" target="_blank"> <img src="https://img.shields.io/badge/ERD%20Cloud-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white"/> </a>
+
+
+
+
+<br/>
+
+## 4. 시스템 아키텍처
+
+![시스템 아키텍쳐](docs/아키택쳐.png)
+
+<br/>
+
+## 5. 데이터베이스 설계 (ERD)
+
+### ERD
+[ERD CLOUD](https://www.erdcloud.com/d/jAJ6DJnaAkz2GKoJX)
+<details>
+  
+![erd](docs/ERD2.png)
+
+</details>
+<br>
+
+## 6. 테이블 명세서
+
+[테이블 명세서](https://docs.google.com/spreadsheets/d/1rohN4_s3YLDfYMuYjYqJgqTp1kEWab0ajzBy4B2j8YY/edit?usp=sharing)
+
+<br>
+
+## 7. 화면 기능 설계서 및 API 설계
+
+### 7.1 화면 기능 설계서
 [화면 기능 설계서](https://www.figma.com/design/lgxhAzsihIkBahgsgE6fPL/SpecGuard-%ED%99%94%EB%A9%B4-%EC%84%A4%EA%B3%84%EC%84%9C?node-id=66-137&t=0YHbF7USg7Nyz9WU-1)
 
+### 7.2 API 명세서
+[API 명세서](https://www.notion.so/API-2455605940ec80d0a6cecfb101029e19?source=copy_link)
 
 <br/>
 
+
+## 8. 테스트 결과서
+
+## 8.1 벡엔드 테스트 결과서
+<br>
+[벡엔드 테스트 결과서](https://www.notion.so/2775605940ec801286d6f888af3e93d2?v=2775605940ec80ba931c000c1fcfe3ed)
+
+
+## 8.2 프론트엔드 테스트 결과서
+<br>
+[프론트엔드 테스트 결과서](https://www.notion.so/2775605940ec80b7aadee6394114d26c?v=2775605940ec811dafd4000ce77c5a78)
+
+## 9. 기여 가이드
+이슈 등록
+
+feature/이슈명 브랜치 생성
+
+커밋 메시지 규칙: feat: ..., fix: ..., docs: ...
+
+Pull Request 템플릿 기반 작성 후 리뷰 요청
+
+
 <br/>
+
+
+## 10. 향후 개선 계획
+
+분석 정확도 개선을 위한 모델 업그레이드
+
+적절한 에러처리
+
+통계 및 리포트 페이지 구현
+
+B2B 고객사를 위한 SaaS 대시보드 고도화
+
+<br/>
+
+# 11. 회고록
+
+|   조원 이름	|  회고  	|
+|---	|---	|
+|   서현원   |    |
+|   최정우   |   	|
+|   조상원   |   	|
+|   이인화   |   	|
+|   김택곤 	 |   	|
+|   이원진 	 |   	|
+
+
+
+
