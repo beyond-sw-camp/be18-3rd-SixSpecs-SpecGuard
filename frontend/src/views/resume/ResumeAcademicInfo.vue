@@ -66,7 +66,7 @@
                 <input v-model="hs.periodStart" type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2" />
                 <span class="col-span-0 text-center">~</span>
                 <input v-model="hs.periodEnd" type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2" />
-                <p class="col-span-12 sm:col-span-4 text-xs text-slate-500">2025.08.01 이전 졸업(예정)만 최종학력으로 인정</p>
+                <p class="col-span-12 sm:col-span-4 text-xs text-slate-500">2026.02.28 이전 졸업(예정)만 최종학력으로 인정</p>
             </div>
             </div>
 
@@ -140,7 +140,7 @@
                 <input v-model="u.periodStart" type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2" />
                 <span class="col-span-0 text-center">~</span>
                 <input v-model="u.periodEnd" type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2" />
-                <p class="col-span-12 sm:col-span-4 text-xs text-slate-500">2025.08.01 이전 졸업(예정)만 최종학력으로 인정</p>
+                <p class="col-span-12 sm:col-span-4 text-xs text-slate-500">2026.02.28 이전 졸업(예정)만 최종학력으로 인정</p>
             </div>
 
             <div class="flex flex-wrap gap-2 items-center text-sm">
@@ -237,7 +237,7 @@
                 @click="g.degree = opt.value"
                 >
                 {{ opt.label }}
-                </button>
+                </button>             
             </div>
             </div>
 
@@ -271,7 +271,8 @@
                 <input v-model="g.periodStart" type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2" />
                 <span class="col-span-0 text-center">~</span>
                 <input v-model="g.periodEnd" type="date" class="col-span-5 sm:col-span-2 rounded-md border px-3 py-2" />
-                <p class="col-span-12 sm:col-span-4 text-xs text-slate-500">2025.08.01 이전 졸업(예정)만 최종학력으로 인정</p>
+                <!--하반기는 26년 2월 졸업예정자까지 받아서, 그거에 맞춰서 수정했습니다.-->
+                <p class="col-span-12 sm:col-span-4 text-xs text-slate-500">2026.02.28 이전 졸업(예정)만 최종학력으로 인정</p>
             </div>
 
             <div class="flex flex-wrap gap-2 items-center text-sm">
@@ -410,7 +411,7 @@
             <p class="text-sm text-gray-500 mt-1">
                 <span v-if="l.linkType === 'NOTION'">공개 설정된 Notion 페이지 링크를 입력해주세요.</span>
                 <span v-else-if="l.linkType === 'GITHUB'">깃허브 메인 프로필 페이지 (예: https://github.com/username)</span>
-                <span v-else-if="l.linkType === 'VELOG'">Velog 블로그 (예: https://velog.io/@username/posts)</span>
+                <span v-else-if="l.linkType === 'VELOG'">Velog 블로그 (예: https://velog.io/@username/posts) <br/> * /posts가 포함되어있는 꼭! 확인해주세요.</span>
             </p>
             </div>
             

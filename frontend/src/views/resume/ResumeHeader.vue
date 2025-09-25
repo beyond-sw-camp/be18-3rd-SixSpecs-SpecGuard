@@ -54,6 +54,18 @@ function handleTabClick(to) {
       <h1 v-else class="text-gray-400">불러오는 중...</h1>
     </div>
 
+      <!-- 저장 후 나가기 버튼만 만들었어요. -->
+      <div class="w-full flex justify-end pr-6">
+      <button
+        type="button"
+        class="rounded-md bg-rose-500 px-4 py-2 text-white text-sm font-semibold hover:bg-rose-600 disabled:opacity-50"
+        :disabled="saving"
+        @click="goLogin"
+      >
+        {{ saving ? '저장 중...' : '저장 후 나가기' }}
+      </button>
+      </div>
+
     <!-- 탭 네비게이션 -->
     <nav class="grid grid-cols-5 border-b text-sm font-semibold">
       <button
@@ -67,4 +79,5 @@ function handleTabClick(to) {
       </button>
     </nav>
   </header>
+
 </template>
