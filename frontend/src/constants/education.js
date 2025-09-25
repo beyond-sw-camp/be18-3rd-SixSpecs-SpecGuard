@@ -47,7 +47,8 @@ export const univDegreeOptions = [
 
 // 대학원 상태
 export const gradDegreeOptions = [
-{ value: 'MASTER', label: '학사' },
+// 대학원 상태가 기존, '학사'랑 '박사'로 되어있었음.
+{ value: 'MASTER', label: '석사' },
 { value: 'DOCTORATE', label: '박사' },
 { value: 'OTHER', label: '기타' },
 ]

@@ -19,10 +19,26 @@
             <div class="flex flex-col items-center text-center">
                 <div class="relative w-28 h-28 rounded-full border-2 border-sky-400 grid place-items-center">
                 <div class="absolute -top-2 -right-2 h-7 w-7 rounded-full bg-sky-500 text-white grid place-items-center text-sm">✓</div>
-                <svg class="w-12 h-12 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <!--<svg class="w-12 h-12 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/>
                     <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422A12.083 12.083 0 016 8.58M12 14v7"/>
-                </svg>
+                </svg>-->
+
+            <!--학사모 모양으로 수정-->
+            <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            class="w-12 h-12 text-slate-500" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            stroke-width="2" 
+            stroke-linecap="round" 
+            stroke-linejoin="round"
+            >
+            <path d="M22 10L12 4 2 10l10 6 10-6z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+
                 </div>
                 <div class="mt-2 text-xs text-emerald-600 font-semibold">완료</div>
                 <div class="text-sm">학력/연구/NCS</div>

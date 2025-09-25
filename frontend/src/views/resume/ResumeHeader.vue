@@ -40,6 +40,21 @@ function isActive(to) {
 function handleTabClick(to) {
   emit("tabClick", to)
 }
+
+// 나가는 건 되는데, 저장을 하고, 나가는 지는 모르겠어요...(사실 안되는 듯)
+function goLogin() {
+  try {
+    // (선택) 저장 로직이 있다면 먼저 실행
+    // await save()
+
+    // 그 다음 로그인 페이지로 이동
+    router.push(`/${companySlug.value}/applicant/login`)
+  } catch (e) {
+    console.error("저장 후 나가기 실패:", e)
+    alert("저장에 실패했습니다. 다시 시도해주세요.")
+  }
+}
+
 </script>
 
 
@@ -54,6 +69,18 @@ function handleTabClick(to) {
       <h1 v-else class="text-gray-400">불러오는 중...</h1>
     </div>
 
+      <!-- 저장 후 나가기 버튼만 만들었어요. -->
+      <div class="w-full flex justify-end pr-6">
+      <button
+        type="button"
+        class="rounded-md bg-rose-500 px-4 py-2 text-white text-sm font-semibold hover:bg-rose-600 disabled:opacity-50"
+        :disabled="saving"
+        @click="goLogin"
+      >
+        {{ saving ? '저장 중...' : '저장 후 나가기' }}
+      </button>
+      </div>
+
     <!-- 탭 네비게이션 -->
     <nav class="grid grid-cols-5 border-b text-sm font-semibold">
       <button
@@ -67,4 +94,5 @@ function handleTabClick(to) {
       </button>
     </nav>
   </header>
+
 </template>
